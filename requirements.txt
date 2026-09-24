@@ -1,0 +1,15 @@
+numpy>=2.0
+scipy>=1.13
+rasterio>=1.4
+pystac-client>=0.8
+planetary-computer>=1.0
+xgboost>=2.1  # CUDA-сборка из PyPI: обучение и инференс на GPU
+scikit-learn>=1.5
+joblib>=1.4
+h3>=4.0
+shapely>=2.0
+pyproj>=3.6
+requests>=2.31
+pillow>=10.0
+fastapi>=0.110
+uvicorn[standard]>=0.29

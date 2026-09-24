@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.env
+
+# Из data/ в репозиторий попадает только то, что нужно для запуска сервиса (~65 МБ):
+# готовые гексы/ряды, маски воды, метаданные сцен и кэш течений. Снимки и MARIDA — нет.
+data/*
+!data/web/
+!data/models/
+data/models/*
+!data/models/metrics.json
+!data/processed/
+data/processed/*/*
+!data/processed/*/water.tif
+!data/processed/*/*/
+data/processed/*/*/*
+!data/processed/*/*/meta.json
+!data/processed/*/*/met.npz
