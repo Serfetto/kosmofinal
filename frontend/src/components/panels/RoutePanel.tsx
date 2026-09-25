@@ -9,7 +9,7 @@ export function RoutePanel() {
         <label>Скорость, уз<input type="number" id="r-speed" defaultValue="12" min="2" max="40" /></label>
         <label>Выход через, ч<input type="number" id="r-delay" defaultValue="6" min="0" max="48" /></label>
       </div>
-      <button className="primary" id="route-run"><ShipWheel size={16} />Построить маршрут</button>
+      <button className="primary" id="route-run" data-tooltip="Рассчитать порядок точек с учётом дрейфа и времени прибытия"><ShipWheel size={16} />Построить маршрут</button>
       <div id="route-result" />
     </div>
   );

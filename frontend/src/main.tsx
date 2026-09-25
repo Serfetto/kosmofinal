@@ -18,5 +18,4 @@ if (!root) throw new Error('Не найден корневой элемент п
 
 createRoot(root).render(<App />);
 
-// Картографический модуль запускаем после монтирования DOM-узлов React.
 import('./legacy');

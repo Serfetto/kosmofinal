@@ -8,7 +8,7 @@ export function HexPanel() {
         <div className="kpis" id="hex-kpis" />
         <div id="hex-conc" className="conc-box" />
         <div className="chart-box tall"><canvas id="hex-chart" /></div>
-        <button className="primary" id="hex-drift"><Navigation size={16} />Прогноз дрейфа из этого гекса</button>
+        <button className="primary mb-2" id="hex-drift" data-tooltip="Смоделировать перенос из центра выбранной ячейки"><Navigation size={16} />Прогноз дрейфа из этого гекса</button>
         <p className="muted small" id="hex-drift-info" />
       </div>
     </div>

@@ -72,10 +72,8 @@ TAGS = [
     {"name": Tag.METRICS, "description": "Результаты проверок детектора, моделей концентрации и прогноза дрейфа."},
 ]
 
-app = FastAPI(title="Flux — мониторинг плавающего мусора", version="1.0.0", description=DESCRIPTION,
+app = FastAPI(title="AquaFlow – мониторинг океанического пластика", version="1.0.0", description=DESCRIPTION,
               openapi_tags=TAGS, docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/openapi.json")
-app.include_router(router)
-app.include_router(report_router)
 FRONTEND_DIST = ROOT / "frontend" / "dist"
 
 WHERE = {"path": "путь", "query": "параметр запроса", "body": "тело запроса"}
@@ -333,6 +331,12 @@ def route(aoi: AoiPath, date: DatePath,
     _aoi_date(aoi, date)
     return plan(aoi, date, n_stops=n, speed_kn=speed, delay_h=delay)
 
+
+# Additional case-study and report endpoints must be registered before the
+# catch-all frontend mount. Otherwise requests such as /api/profiles are
+# handled by StaticFiles and return 404 even though the routes are defined.
+app.include_router(router)
+app.include_router(report_router)
 
 app.mount("/data", StaticFiles(directory=WEB), name="data")
 app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True, check_dir=False), name="frontend")
