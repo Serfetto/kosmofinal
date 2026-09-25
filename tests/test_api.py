@@ -82,3 +82,24 @@ def test_zones_consistent_with_series():
             assert p["zone_area_km2"] > 0 and p["detection_status"] == "detected"
             assert p["conc_B_status"] in ("model_estimate", "research_estimate", "unavailable")
             assert p["conc_A_status"] == "unavailable"  # профиль A вне бассейна Чёрного моря
+
+
+def test_report_is_pdf():
+    d = _date()
+    r = client.get(f"/api/report?aoi={AOI}&date={d}&profile=B")
+    assert r.status_code == 200 and r.headers["content-type"] == "application/pdf"
+    assert r.content.startswith(b"%PDF") and f"report_{AOI}_{d}_B.pdf" in r.headers["content-disposition"]
+    assert client.get(f"/api/report?aoi=nope&date={d}").status_code == 404
+    assert client.get(f"/api/report?aoi={AOI}&date=2000-01-01").status_code == 404
+    assert client.get(f"/api/report?aoi={AOI}&date={d}&profile=Z").status_code == 422
+
+
+def test_report_districts_take_densest_window():
+    import numpy as np
+
+    from backend.report import districts
+
+    col, row = np.array([10.0, 12, 14, 500, 900]), np.array([10.0, 11, 12, 500, 900])
+    ds = districts(col, row, np.array([5.0, 5, 5, 12, 1]), 100, 60, 2000, 2000, k=2)
+    assert [round(d["cover"]) for d in ds] == [15, 12]
+    assert sorted(ds[0]["members"].tolist()) == [0, 1, 2]

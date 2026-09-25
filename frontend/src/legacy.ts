@@ -42,15 +42,16 @@ const S = {
 };
 
 // ---------- утилиты ----------
-async function api(url, opts) {
+async function request(url, opts) {
   const r = await fetch(url, opts);
   if (!r.ok) {
     let msg = await r.text();
     try { msg = JSON.parse(msg).detail || msg; } catch { /* текст как есть */ }
     throw new Error(`${r.status}: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`);
   }
-  return r.json();
+  return r;
 }
+const api = async (url, opts) => (await request(url, opts)).json();
 let toastTimer;
 function toast(msg, ms = 2600) {
   const t = $('#toast');
@@ -936,6 +937,15 @@ function exportLayer(layer, format) {
   a.download = '';
   a.click();
 }
+async function downloadReport(trigger = $('#exp-report')) {
+  return withButtonLoading(trigger, 'Готовим отчёт…', async () => {
+    try {
+      const q = new URLSearchParams({ aoi: S.aoi.id, date: S.series.dates[S.di], profile: S.profile });
+      const r = await request(`/api/report?${q}`);
+      download(`report_${q.get('aoi')}_${q.get('date')}_${q.get('profile')}.pdf`, await r.blob(), 'application/pdf');
+    } catch (err) { toast(`Не удалось сформировать отчёт: ${err.message}`); }
+  });
+}
 async function saveQuery(trigger = $('#query-save')) {
   return withButtonLoading(trigger, '', async () => {
     try {
@@ -1075,6 +1085,7 @@ $('#drift-hour').oninput = (e) => { if (S.anim) playDrift(); showDriftHour(+e.ta
 $('#route-run').onclick = runRoute;
 $('#map-fit').onclick = fitAoi;
 $('#map-fullscreen').onclick = toggleFullscreen;
+$('#exp-report').onclick = downloadReport;
 $('#exp-zones-geojson').onclick = () => exportLayer('zones', 'geojson');
 $('#exp-zones-csv').onclick = () => exportLayer('zones', 'csv');
 $('#exp-hexes-geojson').onclick = () => exportLayer('hexes', 'geojson');

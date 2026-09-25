@@ -17,6 +17,7 @@ shapely>=2.0
 pyproj>=3.6
 requests>=2.31
 pillow>=10.0
+matplotlib>=3.8  # PDF-отчёт (backend/report.py)
 fastapi>=0.110
 uvicorn[standard]>=0.29
 pytest>=8.0

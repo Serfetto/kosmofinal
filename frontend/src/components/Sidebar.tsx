@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Download, FlaskConical, Layers3, MapPin, RotateCcw, Satellite, Save, ShieldCheck, Shapes, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, FileText, FlaskConical, Layers3, MapPin, RotateCcw, Satellite, Save, ShieldCheck, Shapes, Sparkles } from 'lucide-react';
 import { BrandMark } from './BrandMark';
 import { Section } from './Section';
 
@@ -114,6 +114,7 @@ export function Sidebar() {
 
       <Section title="Выгрузка и запрос">
         <div className="export-grid">
+          <button className="report-btn" id="exp-report" title="PDF: карта скоплений, фрагменты снимка по районам и таблица крупнейших зон с координатами"><FileText size={14} />Скачать отчёт · PDF</button>
           <button className="ghost" id="exp-zones-geojson" title="Зоны детекции с концентрацией и статусами"><Download size={13} />Зоны · GeoJSON</button>
           <button className="ghost" id="exp-zones-csv"><Download size={13} />Зоны · CSV</button>
           <button className="ghost" id="exp-hexes-geojson"><Download size={13} />Гексы · GeoJSON</button>

@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.case_api import DATE_RE, router
+from backend.report import router as report_router
 from pipeline.aggregate import WEB
 from pipeline.config import AOIS, H3_RES, ROOT
 from pipeline.drift import accumulation, simulate
@@ -22,6 +23,7 @@ from pipeline.route import plan
 
 app = FastAPI(title="Flux — мониторинг макропластика")
 app.include_router(router)
+app.include_router(report_router)
 FRONTEND_DIST = ROOT / "frontend" / "dist"
 
 
