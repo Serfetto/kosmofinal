@@ -195,6 +195,8 @@ function initLayers(firstUrl, corners) {
 async function loadAoi(id) {
   S.aoi = S.aois.find((a) => a.id === id);
   $('#workspace-aoi').textContent = S.aoi.name;
+  $('#aoi-note').textContent = S.aoi.note || '';
+  $('#aoi-note').hidden = !S.aoi.note;
   toast('Загрузка акватории…', 0);
   const [hexes, series] = await Promise.all([api(`/api/aois/${id}/hexes`), api(`/api/aois/${id}/series`)]);
   S.hexes = hexes; S.series = series; S.sel = null; S.accum = null;

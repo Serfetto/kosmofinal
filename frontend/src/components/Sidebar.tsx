@@ -27,6 +27,7 @@ export function Sidebar() {
           <select id="aoi" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide/30" aria-label="Выберите акваторию" defaultValue="" />
           <ChevronRight size={15} aria-hidden="true" />
         </div>
+        <div id="aoi-note" className="muted small scene-info" hidden />
       </Section>
 
       <Section title="Наблюдение">

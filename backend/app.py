@@ -44,7 +44,7 @@ def aois():
             continue
         s = _json(p)
         out.append({"id": k, "name": a["name"], "bbox": a["bbox"], "kind": a["kind"], "port": a["port"], "tz": a["tz"],
-                    "rivers": a["rivers"], "dates": s["dates"],
+                    "rivers": a["rivers"], "note": a.get("note"), "dates": s["dates"],
                     "total_area": [sc["area_m2"] for sc in s["scenes"]]})
     return out
 

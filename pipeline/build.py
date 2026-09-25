@@ -2,6 +2,7 @@
 
 python -m pipeline.build run sochi vladivostok
 python -m pipeline.build add azov "Таганрогский залив" 38.6 46.9 39.3 47.3 --port 38.93,47.2 --tz 3
+python -m pipeline.build add event "Разлив" 36.5 44.8 37.4 45.2 --port 37.3,44.9 --start 2024-12-01 --end 2025-03-31 --max-cloud 60
 """
 import argparse
 import json
@@ -16,6 +17,12 @@ def add(args) -> None:
     lon, lat = map(float, args.port.split(","))
     extra[args.id] = {"name": args.name, "bbox": [args.lon0, args.lat0, args.lon1, args.lat1],
                       "kind": args.kind, "tz": args.tz, "port": [lon, lat], "rivers": {}}
+    if args.start or args.end:
+        extra[args.id]["period"] = [args.start or download.START, args.end or download.END]
+    if args.max_cloud is not None:
+        extra[args.id]["max_cloud"] = args.max_cloud
+    if args.note:
+        extra[args.id]["note"] = args.note
     path.write_text(json.dumps(extra, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"добавлена акватория {args.id}; запустите: python -m pipeline.build run {args.id}")
 
@@ -40,5 +47,9 @@ if __name__ == "__main__":
     a.add_argument("--kind", choices=["sea", "inland"], default="sea")
     a.add_argument("--port", required=True, help="lon,lat точки выхода судна")
     a.add_argument("--tz", type=int, default=3)
+    a.add_argument("--start", help="начало периода съёмки, YYYY-MM-DD")
+    a.add_argument("--end", help="конец периода съёмки, YYYY-MM-DD")
+    a.add_argument("--max-cloud", type=float, help="порог облачности тайла, %%")
+    a.add_argument("--note", help="пояснение к акватории в интерфейсе")
     args = p.parse_args()
     {"add": add, "run": run}[args.cmd](args)

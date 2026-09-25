@@ -17,7 +17,8 @@ import rasterio
 import requests
 from PIL import Image
 from rasterio.warp import transform as warp_transform
-from scipy.ndimage import binary_erosion, binary_opening, uniform_filter
+from scipy.ndimage import (binary_dilation, binary_erosion, binary_opening, distance_transform_edt, label,
+                           uniform_filter)
 
 from .config import AOIS, BAND_IDX, GROUPS, MODELS, PROCESSED
 from .features import WATER_REF, features, fdi
@@ -59,8 +60,26 @@ def dates(aoi_id: str) -> list[str]:
     return sorted(d.name for d in (PROCESSED / aoi_id).iterdir() if (d / "meta.json").exists())
 
 
+def main_basin(water: np.ndarray, width: int = 30) -> np.ndarray:
+    """Только основная акватория: лиманы и озёра за протоками уже 2·width пикселей отбрасываются.
+
+    Ядро — вода дальше width от берега; берётся крупнейшая связная часть ядра и
+    наращивается обратно по воде (через сушу — косы, дамбы — не перекидывается).
+    """
+    core = distance_transform_edt(water) > width
+    lab, n = label(core)
+    if n == 0:
+        return water
+    main = lab == np.argmax(np.bincount(lab.ravel())[1:]) + 1
+    # Квадратный шаг (шахматная метрика ≤ евклидовой): иначе на косом берегу теряется прибрежная полоса
+    return binary_dilation(main, np.ones((3, 3), bool), iterations=width + 1, mask=water)
+
+
 def build_water_mask(aoi_id: str) -> np.ndarray:
-    """Постоянная вода: пиксель — вода по SCL в ≥50% безоблачных наблюдений; минус 30 м от берега."""
+    """Постоянная вода: пиксель — вода по SCL в ≥50% безоблачных наблюдений; минус 30 м от берега.
+
+    sea_only в описании акватории — оставить только основную акваторию (см. main_basin).
+    """
     water_n = clear_n = None
     for d in dates(aoi_id):
         with rasterio.open(PROCESSED / aoi_id / d / "scl.tif") as src:
@@ -75,6 +94,8 @@ def build_water_mask(aoi_id: str) -> np.ndarray:
     water = (clear_n >= 3) & (water_n >= 0.5 * clear_n)
     water = binary_opening(water, iterations=2)  # убрать одиночные «водные» пиксели на суше
     water = binary_erosion(water, iterations=3)
+    if AOIS[aoi_id].get("sea_only"):
+        water = main_basin(water)
     prof.update(dtype="uint8", count=1, nodata=None)
     with rasterio.open(PROCESSED / aoi_id / "water.tif", "w", **prof) as dst:
         dst.write(water.astype(np.uint8), 1)

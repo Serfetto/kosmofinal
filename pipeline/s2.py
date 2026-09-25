@@ -1,7 +1,8 @@
 """Загрузка Sentinel-2 L2A из Microsoft Planetary Computer (STAC, без ключа).
 
 Каждая акватория получает фиксированную сетку 10 м в своей зоне UTM, поэтому
-все даты одной акватории совпадают попиксельно.
+все даты одной акватории совпадают попиксельно. Акватория на стыке тайлов
+собирается из соседних тайлов одного пролёта.
 """
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ from rasterio.transform import from_origin
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 from shapely.geometry import box, shape
+from shapely.ops import unary_union
 
 from .config import AOIS, BANDS, PROCESSED
 
@@ -30,6 +32,7 @@ GDAL_ENV = dict(
     GDAL_HTTP_RETRY_DELAY="1",
     VSI_CACHE="TRUE",
 )
+MIN_COVER = 0.97
 
 
 @dataclass
@@ -45,6 +48,22 @@ class Grid:
         return (t.c, t.f + t.e * self.height, t.c + t.a * self.width, t.f)
 
 
+@dataclass
+class Scene:
+    """Снимок акватории на дату: один тайл или соседние тайлы одного пролёта (первый — основной)."""
+    items: list
+    cover: float  # доля акватории с данными
+    cloud: float  # облачность тайлов, взвешенная по их доле в акватории, %
+
+    @property
+    def datetime(self):
+        return self.items[0].datetime
+
+    @property
+    def date(self) -> str:
+        return self.datetime.strftime("%Y-%m-%d")
+
+
 def aoi_grid(aoi_id: str, res: float = 10.0) -> Grid:
     lon0, lat0, lon1, lat1 = AOIS[aoi_id]["bbox"]
     zone = int(((lon0 + lon1) / 2 + 180) // 6) + 1
@@ -56,8 +75,12 @@ def aoi_grid(aoi_id: str, res: float = 10.0) -> Grid:
     return Grid(crs, from_origin(x0, y1, res, res), w, h)
 
 
-def search(aoi_id: str, start: str, end: str, max_cloud: float = 30) -> list:
-    """Сцены, почти полностью покрывающие акваторию, по одной на дату (лучшее покрытие)."""
+def search(aoi_id: str, start: str, end: str, max_cloud: float = 30) -> list[Scene]:
+    """Сцены, почти полностью покрывающие акваторию, по одной на дату.
+
+    Если акватория целиком в одном тайле, берётся он (как и раньше — с лучшим покрытием).
+    Иначе склеиваются тайлы одного пролёта: одинаковые время съёмки и атмосфера.
+    """
     bbox = AOIS[aoi_id]["bbox"]
     aoi = box(*bbox)
     client = Client.open(STAC_URL, modifier=pc.sign_inplace)
@@ -65,15 +88,30 @@ def search(aoi_id: str, start: str, end: str, max_cloud: float = 30) -> list:
         collections=["sentinel-2-l2a"], bbox=bbox, datetime=f"{start}/{end}",
         query={"eo:cloud_cover": {"lt": max_cloud}},
     ).item_collection()
-    best = {}
+    passes: dict[tuple, dict] = {}
     for it in items:
-        cov = shape(it.geometry).intersection(aoi).area / aoi.area
-        if cov < 0.97:
+        key = (it.datetime.strftime("%Y-%m-%d"), it.properties.get("platform"), it.properties.get("sat:relative_orbit"))
+        geom = shape(it.geometry).intersection(aoi)
+        tile = it.properties.get("s2:mgrs_tile")
+        # Один тайл может прийти в двух обработках — оставляем с большим покрытием
+        old = passes.setdefault(key, {}).get(tile)
+        if old is None or geom.area > old[1].area:
+            passes[key][tile] = (it, geom)
+    best: dict[str, Scene] = {}
+    for (date, *_), tiles in passes.items():
+        parts = sorted(tiles.values(), key=lambda p: -p[1].area)
+        if parts[0][1].area / aoi.area >= MIN_COVER:
+            parts = parts[:1]
+        cover = unary_union([g for _, g in parts]).area / aoi.area
+        if cover < MIN_COVER:
             continue
-        date = it.datetime.strftime("%Y-%m-%d")
-        if date not in best or cov > best[date][0]:
-            best[date] = (cov, it)
-    return [best[d][1] for d in sorted(best)]
+        w = np.array([g.area for _, g in parts])
+        cloud = float(np.dot(w, [i.properties.get("eo:cloud_cover") or 0 for i, _ in parts]) / w.sum())
+        sc = Scene([i for i, _ in parts], cover, cloud)
+        old = best.get(date)
+        if old is None or (len(sc.items), -sc.cover, sc.cloud) < (len(old.items), -old.cover, old.cloud):
+            best[date] = sc
+    return [best[d] for d in sorted(best)]
 
 
 def _offset(item) -> float:
@@ -89,8 +127,7 @@ def _read(href: str, grid: Grid, resampling: Resampling) -> np.ndarray:
             return vrt.read(1)
 
 
-def load_scene(item, grid: Grid) -> tuple[np.ndarray, np.ndarray]:
-    """Возвращает (reflectance float32 [11,H,W], SCL uint8 [H,W])."""
+def _load_item(item, grid: Grid) -> tuple[np.ndarray, np.ndarray]:
     off = _offset(item)
     jobs = [(item.assets[b].href, Resampling.bilinear) for b in BANDS]
     jobs.append((item.assets["SCL"].href, Resampling.nearest))
@@ -103,9 +140,22 @@ def load_scene(item, grid: Grid) -> tuple[np.ndarray, np.ndarray]:
     return refl, arrs[-1].astype(np.uint8)
 
 
-def save_scene(aoi_id: str, item, grid: Grid, refl: np.ndarray, scl: np.ndarray) -> None:
-    date = item.datetime.strftime("%Y-%m-%d")
-    out = PROCESSED / aoi_id / date
+def load_scene(scene: Scene, grid: Grid) -> tuple[np.ndarray, np.ndarray]:
+    """Возвращает (reflectance float32 [11,H,W], SCL uint8 [H,W]); пробелы основного тайла — из соседних."""
+    refl, scl = _load_item(scene.items[0], grid)
+    for item in scene.items[1:]:
+        gap = np.isnan(refl[1])
+        if not gap.any():
+            break
+        r, s = _load_item(item, grid)
+        gap &= np.isfinite(r[1])
+        refl[:, gap] = r[:, gap]
+        scl[gap] = s[gap]
+    return refl, scl
+
+
+def save_scene(aoi_id: str, scene: Scene, grid: Grid, refl: np.ndarray, scl: np.ndarray) -> None:
+    out = PROCESSED / aoi_id / scene.date
     out.mkdir(parents=True, exist_ok=True)
     prof = dict(driver="GTiff", crs=grid.crs, transform=grid.transform, width=grid.width,
                 height=grid.height, compress="deflate", tiled=True, predictor=2)
@@ -114,12 +164,15 @@ def save_scene(aoi_id: str, item, grid: Grid, refl: np.ndarray, scl: np.ndarray)
         dst.write(dn)
     with rasterio.open(out / "scl.tif", "w", count=1, dtype="uint8", **prof) as dst:
         dst.write(scl, 1)
+    item = scene.items[0]
     meta = {
-        "id": item.id, "date": date, "datetime": item.datetime.isoformat(),
-        "cloud_cover": item.properties.get("eo:cloud_cover"),
+        "id": item.id, "date": scene.date, "datetime": item.datetime.isoformat(),
+        "cloud_cover": round(scene.cloud, 2) if len(scene.items) > 1 else item.properties.get("eo:cloud_cover"),
         "platform": item.properties.get("platform"),
-        "tile": item.properties.get("s2:mgrs_tile"),
+        "tile": "+".join(i.properties.get("s2:mgrs_tile") for i in scene.items),
     }
+    if len(scene.items) > 1:
+        meta["items"] = [i.id for i in scene.items]
     (out / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
