@@ -19,9 +19,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# libgomp — OpenMP для xgboost/lightgbm; остальное (GDAL, PROJ) приходит в колёсах rasterio/pyproj
+# libgomp — OpenMP для xgboost/lightgbm; libexpat — колесо rasterio ждёт её от системы, а в slim-образе её нет.
+# Остальное (GDAL, PROJ) приходит в колёсах rasterio/pyproj
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgomp1 \
+    && apt-get install -y --no-install-recommends libgomp1 libexpat1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
