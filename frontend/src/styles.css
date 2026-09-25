@@ -861,6 +861,38 @@ input[type="range"] { accent-color: #00f5ff; }
   border-radius: 10px;
 }
 
+button[data-loading="true"] {
+  cursor: progress !important;
+  pointer-events: none;
+  opacity: .92 !important;
+  transform: none !important;
+}
+
+.button-spinner {
+  box-sizing: border-box;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: .88;
+  animation: button-spin 720ms linear infinite;
+}
+
+.button-loading-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes button-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .button-spinner { animation: none; border-top-color: transparent; }
+}
+
 #panel {
   top: 76px;
   right: 0;

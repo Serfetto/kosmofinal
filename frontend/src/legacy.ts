@@ -43,6 +43,35 @@ function toast(msg, ms = 2600) {
   clearTimeout(toastTimer);
   if (ms) toastTimer = setTimeout(() => (t.hidden = true), ms);
 }
+
+async function withButtonLoading(button, loadingLabel, action) {
+  button = button?.currentTarget || button;
+  if (!button || button.dataset.loading === 'true') return action();
+  const originalMarkup = button.innerHTML;
+  const originalMinWidth = button.style.minWidth;
+  const originalWidth = button.style.width;
+  const measuredWidth = Math.ceil(button.getBoundingClientRect().width);
+
+  button.dataset.loading = 'true';
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  if (measuredWidth) {
+    button.style.width = `${measuredWidth}px`;
+    button.style.minWidth = `${measuredWidth}px`;
+  }
+  button.innerHTML = `<span class="button-spinner" aria-hidden="true"></span>${loadingLabel ? `<span class="button-loading-label">${loadingLabel}</span>` : ''}`;
+
+  try {
+    return await action();
+  } finally {
+    button.innerHTML = originalMarkup;
+    button.style.width = originalWidth;
+    button.style.minWidth = originalMinWidth;
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+    delete button.dataset.loading;
+  }
+}
 function lerpColor(stops, t) {
   t = Math.max(0, Math.min(1, t));
   for (let i = 1; i < stops.length; i++) {
@@ -425,21 +454,21 @@ function renderHexPanel() {
   $('#hex-drift-info').textContent = '';
 }
 
-async function hexDrift() {
+async function hexDrift(trigger = $('#hex-drift')) {
   const p = S.hexes.features[S.sel].properties;
-  const btn = $('#hex-drift'); btn.disabled = true;
-  try {
-    const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift_point?lon=${p.lon}&lat=${p.lat}&hours=72&n=40`);
-    map.getSource('cone').setData({ type: 'FeatureCollection', features: r.tracks.map((t) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: t } })) });
-    const end = r.center[r.center.length - 1];
-    map.getSource('coneCenter').setData({ type: 'FeatureCollection', features: [
-      { type: 'Feature', geometry: { type: 'LineString', coordinates: r.center } },
-      { type: 'Feature', geometry: { type: 'Point', coordinates: end } }] });
-    const km = haversine(p.lon, p.lat, end[0], end[1]);
-    $('#hex-drift-info').innerHTML = `Через 72 ч центр ансамбля сместится на <b>${nf(km)} км</b>, разброс ±${nf(r.spread_km[72])} км` +
-      ` (24 ч: ±${nf(r.spread_km[24])} км). На берег выброшено ${nf(r.beached_frac * 100, 0)}% частиц.`;
-  } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
-  btn.disabled = false;
+  return withButtonLoading(trigger, 'Рассчитываем прогноз…', async () => {
+    try {
+      const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift_point?lon=${p.lon}&lat=${p.lat}&hours=72&n=40`);
+      map.getSource('cone').setData({ type: 'FeatureCollection', features: r.tracks.map((t) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: t } })) });
+      const end = r.center[r.center.length - 1];
+      map.getSource('coneCenter').setData({ type: 'FeatureCollection', features: [
+        { type: 'Feature', geometry: { type: 'LineString', coordinates: r.center } },
+        { type: 'Feature', geometry: { type: 'Point', coordinates: end } }] });
+      const km = haversine(p.lon, p.lat, end[0], end[1]);
+      $('#hex-drift-info').innerHTML = `Через 72 ч центр ансамбля сместится на <b>${nf(km)} км</b>, разброс ±${nf(r.spread_km[72])} км` +
+        ` (24 ч: ±${nf(r.spread_km[24])} км). На берег выброшено ${nf(r.beached_frac * 100, 0)}% частиц.`;
+    } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
+  });
 }
 function haversine(lon1, lat1, lon2, lat2) {
   const R = 6371, r = Math.PI / 180;
@@ -552,12 +581,12 @@ function clearDrift() {
   $('#drift-ctrl').hidden = true;
   $('#drift-play').textContent = '▶';
 }
-async function runDrift() {
-  const btn = $('#drift-run'); btn.disabled = true;
-  toast('Прогноз дрейфа: течения SMOC + ветер ERA5, ансамбль частиц…', 0);
-  try {
-    const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift?hours=72`);
-    if (!r.n) { toast('На эту дату детекций нет — нечего переносить'); btn.disabled = false; return; }
+async function runDrift(trigger = $('#drift-run')) {
+  return withButtonLoading(trigger, 'Рассчитываем прогноз…', async () => {
+    toast('Прогноз дрейфа: течения SMOC + ветер ERA5, ансамбль частиц…', 0);
+    try {
+      const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift?hours=72`);
+      if (!r.n) { toast('На эту дату детекций нет — нечего переносить'); return; }
     S.drift = r;
     const n = r.frames[0].length;
     const tracks = [];
@@ -577,9 +606,9 @@ async function runDrift() {
       [`${nf(beached * 100, 0)}%`, 'выброшено на берег'],
     ].map(([b, t]) => `<div class="kpi"><b>${b}</b><span>${t}</span></div>`).join('');
     $('#toast').hidden = true;
-    playDrift();
-  } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
-  btn.disabled = false;
+      playDrift();
+    } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
+  });
 }
 function showDriftHour(h) {
   const r = S.drift; if (!r) return;
@@ -614,14 +643,14 @@ function clearRoute() {
   ['route', 'routeDrift', 'routeObs'].forEach((id) => map.getSource(id)?.setData(EMPTY));
   $('#route-result').innerHTML = '';
 }
-async function runRoute() {
-  const btn = $('#route-run'); btn.disabled = true;
+async function runRoute(trigger = $('#route-run')) {
   const n = $('#r-n').value, sp = $('#r-speed').value, dl = $('#r-delay').value;
-  try {
-    const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/route?n=${n}&speed=${sp}&delay=${dl}`);
+  return withButtonLoading(trigger, 'Строим маршрут…', async () => {
+    try {
+      const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/route?n=${n}&speed=${sp}&delay=${dl}`);
     clearRoute();
     S.route = r;
-    if (!r.stops.length) { $('#route-result').innerHTML = `<p class="muted">${r.note || 'Нет целей в пределах смены.'}</p>`; btn.disabled = false; return; }
+      if (!r.stops.length) { $('#route-result').innerHTML = `<p class="muted">${r.note || 'Нет целей в пределах смены.'}</p>`; return; }
     map.getSource('route').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: r.line } });
     map.getSource('routeDrift').setData({ type: 'FeatureCollection', features: r.stops.map((s) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: [s.observed, s.predicted] } })) });
     map.getSource('routeObs').setData({ type: 'FeatureCollection', features: r.stops.map((s) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: s.observed } })) });
@@ -648,9 +677,9 @@ async function runRoute() {
     $('#exp-geojson').onclick = exportGeoJSON;
     $('#exp-gpx').onclick = exportGPX;
     const b = r.line.reduce((bb, c) => [[Math.min(bb[0][0], c[0]), Math.min(bb[0][1], c[1])], [Math.max(bb[1][0], c[0]), Math.max(bb[1][1], c[1])]], [[180, 90], [-180, -90]]);
-    map.fitBounds(b, { padding: { top: 80, bottom: 40, left: 40, right: 420 }, maxZoom: 13 });
-  } catch (err) { toast(`Ошибка маршрута: ${err.message}`); }
-  btn.disabled = false;
+      map.fitBounds(b, { padding: { top: 80, bottom: 40, left: 40, right: 420 }, maxZoom: 13 });
+    } catch (err) { toast(`Ошибка маршрута: ${err.message}`); }
+  });
 }
 function exportGeoJSON() {
   const r = S.route;
@@ -674,15 +703,21 @@ function fitAoi() {
   map.fitBounds([[x0, y0], [x1, y1]], { padding: 42, duration: 650 });
 }
 
-async function toggleFullscreen() {
-  if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-  else await document.exitFullscreen();
-  requestAnimationFrame(() => map.resize());
+async function toggleFullscreen(trigger = $('#map-fullscreen')) {
+  return withButtonLoading(trigger, '', async () => {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+      requestAnimationFrame(() => map.resize());
+    } catch (err) { toast(`Полноэкранный режим недоступен: ${err.message}`); }
+  });
 }
 
 // ---------- о методе ----------
 let metrics = null;
 async function renderAbout() {
+  const trigger = $('#tools button[data-tool="about"]');
+  const render = async () => {
   if (!metrics) { try { metrics = await api('/api/metrics'); } catch { metrics = null; } }
   const rep = metrics?.report || {};
   const names = { debris: 'Мусор', organic: 'Водоросли/органика', ship: 'Суда', cloud: 'Облака', water: 'Вода', foam: 'Пена/волны' };
@@ -710,6 +745,10 @@ async function renderAbout() {
       <li>Мусор и органику (плавник, водоросли) спектрально разделить полностью нельзя. Для подтверждения нужны судно или дрон, и сервис строит для них маршрут.</li>
       <li>Прогноз течений на 0,08° не разрешает мелкие бухты и порты.</li>
     </ul></div>`;
+  };
+
+  if (!metrics) return withButtonLoading(trigger, 'Загрузка…', render);
+  return render();
 }
 
 // ---------- события ----------
