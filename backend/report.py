@@ -629,7 +629,7 @@ def _footer(p: Page, c: dict, k: int, n: int):
     ax = p.canvas(MARGIN, y - 0.1, CONTENT_W, 0.02)
     ax.plot([0, CONTENT_W], [0, 0], color=LINE, lw=0.6)
     model = f" · модель {c['conc_model']}" if c["conc_model"] else ""
-    p.text(MARGIN, y, f"Flux · Sentinel-2 L2A, детектор P ≥ {nf(c['s']['detector']['p_det'], 2)}{model} · "
+    p.text(MARGIN, y, f"AquaFlow · Sentinel-2 L2A, детектор P ≥ {nf(c['s']['detector']['p_det'], 2)}{model} · "
                       f"{c['aoi']}/{c['date']}", 6, MUTED)
     p.text(PAGE_W - MARGIN, y, f"стр. {k} / {n}", 6, MUTED, ha="right")
 
@@ -646,7 +646,7 @@ def figures(aoi: str, date: str, profile: str) -> list[Figure]:
 def build_report(aoi: str, date: str, profile: str) -> bytes:
     with _lock, matplotlib.rc_context(RC):
         buf = io.BytesIO()
-        with PdfPages(buf, metadata={"Title": f"Flux: {AOIS[aoi]['name']}, {ru_date(date)}", "Creator": "Flux",
+        with PdfPages(buf, metadata={"Title": f"AquaFlow: {AOIS[aoi]['name']}, {ru_date(date)}", "Creator": "AquaFlow",
                                      "CreationDate": None}) as pdf:
             for fig in figures(aoi, date, profile):
                 pdf.savefig(fig, dpi=200)

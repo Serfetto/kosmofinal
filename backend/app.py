@@ -10,6 +10,7 @@ from functools import lru_cache
 
 import h3
 import numpy as np
+import requests
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -105,6 +106,15 @@ async def validation_error(request: Request, exc: RequestValidationError):
     errs = exc.errors()
     return JSONResponse(status_code=422, content={"detail": "; ".join(_explain(e) for e in errs),
                                                   "errors": jsonable_encoder(errs)})
+
+
+@app.exception_handler(requests.RequestException)
+async def weather_unavailable(request: Request, exc: requests.RequestException):
+    """Дрейф, зоны скопления и маршрут скачивают течения и ветер из Open-Meteo; его сбой или лимит — не 500."""
+    code = getattr(exc.response, "status_code", None)
+    why = "ограничил частоту запросов" if code == 429 else "не ответил"
+    return JSONResponse(status_code=503, headers={"Retry-After": "60"},
+                        content={"detail": f"сервис погоды Open-Meteo {why}, повторите запрос через минуту"})
 
 
 def _json(path):
@@ -262,7 +272,7 @@ def _drift_all(aoi: str, date: str, hours: int, max_seeds: int = 300, n_ens: int
 
 
 @app.get("/api/aois/{aoi}/{date}/drift", tags=[Tag.DRIFT], summary="Прогноз дрейфа всех детекций",
-         responses={200: {"model": DriftOut}, **errors(404, 422)})
+         responses={200: {"model": DriftOut}, **errors(404, 422, 503)})
 def drift_all(aoi: AoiPath, date: DatePath, hours: HoursQuery = 72):
     """Куда унесёт обнаруженный мусор: ансамбль частиц (до 300 самых крупных детекций × 4 члена ансамбля)
     по течениям и ветру с момента съёмки. Кадры по часам — для анимации, распределение по гексам на 24, 48 ч
@@ -273,7 +283,7 @@ def drift_all(aoi: AoiPath, date: DatePath, hours: HoursQuery = 72):
 
 
 @app.get("/api/aois/{aoi}/{date}/drift_point", tags=[Tag.DRIFT], summary="Дрейф из точки (конус неопределённости)",
-         response_model=DriftPointOut, responses=errors(404, 422))
+         response_model=DriftPointOut, responses=errors(404, 422, 503))
 def drift_point(aoi: AoiPath, date: DatePath,
                 lon: float = Query(ge=-180, le=180, description="Долгота точки старта", examples=[39.72]),
                 lat: float = Query(ge=-90, le=90, description="Широта точки старта", examples=[43.55]),
@@ -310,7 +320,7 @@ def _accum(aoi: str, date: str):
 
 
 @app.get("/api/aois/{aoi}/{date}/accumulation", tags=[Tag.DRIFT], summary="Зоны вероятного скопления течениями",
-         response_model=AccumulationOut, responses=errors(404, 422))
+         response_model=AccumulationOut, responses=errors(404, 422, 503))
 def accum(aoi: AoiPath, date: DatePath):
     """Куда течения и ветер сгоняют плавающий мусор независимо от детекций: частицы засеваются равномерно
     по воде (шаг 600 м) и прогоняются 72 ч. `factor` > 1 — в гексе собирается больше частиц, чем в среднем
@@ -320,7 +330,7 @@ def accum(aoi: AoiPath, date: DatePath):
 
 
 @app.get("/api/aois/{aoi}/{date}/route", tags=[Tag.DRIFT], summary="Маршрут судна-сборщика",
-         response_model=RouteOut, responses=errors(404, 422))
+         response_model=RouteOut, responses=errors(404, 422, 503))
 def route(aoi: AoiPath, date: DatePath,
           n: int = Query(8, ge=1, le=20, description="Максимум остановок"),
           speed: float = Query(12, gt=1, le=40, description="Скорость судна, узлы"),

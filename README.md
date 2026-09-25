@@ -64,6 +64,10 @@ cd frontend && npm install && npm run build && cd ..
 # http://localhost:8000
 ```
 
+На сервере: `.venv/bin/python -m uvicorn backend.app:app --host 0.0.0.0 --port 8000` — без `--host 0.0.0.0`
+сервис слушает только localhost и снаружи не открывается. Каталог `data/` должен быть доступен на запись (кеш
+течений и зон скопления, сохранённые запросы), нужен выход в интернет к Open-Meteo.
+
 Пример сохранённого запроса лежит в `data/queries/0a0b3aaaf8f9.json`: зоны «Батуми — Кобулети» на 05.06.2024,
 профиль B, GeoJSON. Повтор: `curl -X POST http://localhost:8000/api/queries/0a0b3aaaf8f9/rerun` — поле `match`
 сравнивает sha256 результата с сохранённым. В интерфейсе:

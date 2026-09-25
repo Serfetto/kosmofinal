@@ -143,3 +143,18 @@ def test_errors_are_readable():
     assert r.status_code == 422 and "hours" in r.json()["detail"]
     r = client.get("/api/aois/nope")
     assert r.status_code == 404 and isinstance(r.json()["detail"], str)
+
+
+def test_weather_outage_is_503(monkeypatch):
+    import requests
+
+    import pipeline.drift
+
+    def rate_limited(*a, **kw):
+        resp = requests.Response()
+        resp.status_code = 429
+        raise requests.HTTPError("429 Too Many Requests", response=resp)
+
+    monkeypatch.setattr(pipeline.drift, "fetch_met", rate_limited)
+    r = client.get(f"/api/aois/{AOI}/{_date()}/drift_point?lon=39.72&lat=43.55&hours=24&n=5")
+    assert r.status_code == 503 and "Open-Meteo" in r.json()["detail"] and r.headers["Retry-After"]
