@@ -158,5 +158,11 @@ def route(aoi: str, date: str, n: int = Query(8, ge=1, le=20), speed: float = Qu
     return plan(aoi, date, n_stops=n, speed_kn=speed, delay_h=delay)
 
 
+# Additional case-study and report endpoints must be registered before the
+# catch-all frontend mount. Otherwise requests such as /api/profiles are
+# handled by StaticFiles and return 404 even though the routes are defined.
+app.include_router(router)
+app.include_router(report_router)
+
 app.mount("/data", StaticFiles(directory=WEB), name="data")
 app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True, check_dir=False), name="frontend")

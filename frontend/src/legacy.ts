@@ -1,10 +1,8 @@
-// @ts-nocheck – модуль постепенно типизируется без риска для проверенной геологики карты.
+// @ts-nocheck
 import * as maplibregl from 'maplibre-gl';
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import Chart from 'chart.js/auto';
 
-// Vite не может автоматически определить worker URL из ESM-сборки MapLibre 6.
-// Без явного URL растры работают, а GeoJSON/H3 остаётся необработанным.
 maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
 Chart.defaults.color = '#94a3b8';
@@ -20,9 +18,14 @@ const ruDate = (d) => d.split('-').reverse().join('.');
 const shortDate = (d) => { const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-// Покрытие (вспомогательный показатель детектора), м²/км²
 const CLS_COL = ['rgba(0,0,0,0)', '#ffe38a', '#ffb24a', '#ff6a3d', '#d9214f'];
-const CLS_NAME = ['не обнаружено', 'низкий', 'умеренный', 'высокий', 'очень высокий'];
+const CLS_NAME = ['нет', 'низкое', 'умеренное', 'высокое', 'очень высокое'];
+const DET_COL = { detected: '#ff5c5c', not_detected: '#2b8f87', insufficient_data: '#6b7688' };
+const DET_NAME = { detected: 'обнаружено', not_detected: 'не обнаружено', insufficient_data: 'недостаточно данных' };
+const CONC_NAME = { model_estimate: 'модельная оценка', research_estimate: 'исследовательская оценка', unavailable: 'концентрация недоступна' };
+const CONC_STOPS = [[0, '#1e3a8a'], [0.3, '#2f7fb8'], [0.55, '#c58a20'], [0.8, '#e06b32'], [1, '#d7263d']];
+const CONC_MIN = 10, CONC_MAX = 3000;
+const concT = (v) => (Math.log10(Math.max(v, CONC_MIN)) - Math.log10(CONC_MIN)) / (Math.log10(CONC_MAX) - Math.log10(CONC_MIN));
 const COL_A = '#ffb648', COL_B = '#9b8cff';
 const accentColor = () => document.documentElement.dataset.theme === 'light' ? '#087f75' : '#d8ff45';
 
@@ -34,12 +37,11 @@ const S = {
   route: null, markers: [], stopMarkers: [], charts: {}, tool: null, anim: null,
 };
 
-// ---------- утилиты ----------
 async function request(url, opts) {
   const r = await fetch(url, opts);
   if (!r.ok) {
     let msg = await r.text();
-    try { msg = JSON.parse(msg).detail || msg; } catch { /* текст как есть */ }
+    try { msg = JSON.parse(msg).detail || msg; } catch {}
     throw new Error(`${r.status}: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`);
   }
   return r;
@@ -138,10 +140,6 @@ function concAt(di, i) {
 }
 const badge = (key, text) => `<span class="badge ${key}">${esc(text)}</span>`;
 
-// ---------- подложка Esri ----------
-// Где у Esri нет тайла нужного уровня (World Imagery над открытым морем — с z14), сервер отвечает кодом 200
-// и серой заглушкой «Map data not yet available». Узнаём её побайтно по эталону — тайлу тёмной подложки
-// за пределами её уровней — и отдаём прозрачный тайл: под ним виден тот же снимок с z13 (слой sat-lo).
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
 const TRANSPARENT = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNgYGBgAAAABQABeqhXUAAAAABJRU5ErkJggg=='), (ch) => ch.charCodeAt(0));
 let esriBlank = null;
@@ -162,7 +160,6 @@ maplibregl.addProtocol('esri', async (params, abortController) => {
   return { data: sameBytes(data, await esriBlank) ? TRANSPARENT.slice().buffer : data };
 });
 
-// ---------- карта ----------
 const initialTheme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
 
 const map = new maplibregl.Map({
@@ -208,8 +205,6 @@ window.addEventListener('aquaflow-theme-change', (event) => {
   else map.once('load', () => applyMapTheme(theme));
 });
 
-// CSS-grid меняет ширину карты во время сворачивания sidebar. MapLibre сам
-// этого не отслеживает, поэтому синхронизируем WebGL canvas с контейнером.
 const mapResizeObserver = new ResizeObserver(() => {
   requestAnimationFrame(() => map.resize());
 });
@@ -226,7 +221,6 @@ function initLayers(firstUrl, corners) {
   ['hexes', 'sel', 'accumPts', 'draw', 'cmpA', 'cmpB', 'tracks', 'particles', 'cone', 'coneCenter', 'route', 'routeDrift', 'routeObs', 'zones', 'field', 'objects'].forEach(addGeo);
   map.addSource('debris', { type: 'image', url: firstUrl.debris, coordinates: corners });
   map.addLayer({ id: 'debris', type: 'raster', source: 'debris', paint: { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } });
-  // Сетка должна лежать выше обоих растров: иначе тонкие линии теряются на ярком RGB-снимке.
   map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes', paint: {
     'fill-color': ['get', 'col'],
     'fill-opacity': ['get', 'op'],
@@ -237,12 +231,9 @@ function initLayers(firstUrl, corners) {
     'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.7, 12, 1.15, 15, 1.65],
     'line-opacity': 0.78,
   } });
-  // Исследовательская оценка — жёлтый пунктир по границе гекса: модельные оценки и измерения должны отличаться
-  // с первого взгляда (заливка-штриховка fill-pattern в MapLibre 6 ломает отрисовку всего источника)
   map.addLayer({ id: 'hex-research', type: 'line', source: 'hexes', filter: ['==', ['get', 'hatch'], 1], paint: {
     'line-color': '#fbbf24', 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.8, 13, 1.6], 'line-dasharray': [1.2, 1.4], 'line-opacity': 0.9 } });
   map.addLayer({ id: 'sel', type: 'line', source: 'sel', paint: { 'line-color': '#ffffff', 'line-width': 2.2 } });
-  // Зоны детекции — результат детектора (площадь зоны), не измерение концентрации
   map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', filter: ['==', ['get', 'show'], 1], paint: { 'fill-color': '#ff3b3b', 'fill-opacity': 0.35 } });
   map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', filter: ['==', ['get', 'show'], 1], paint: {
     'line-color': '#ffd1d1', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, 2.5] } });
@@ -252,7 +243,6 @@ function initLayers(firstUrl, corners) {
     map.addLayer({ id: `${id}-fill`, type: 'fill', source: id, paint: { 'fill-color': col, 'fill-opacity': 0.08 } });
     map.addLayer({ id: `${id}-line`, type: 'line', source: id, paint: { 'line-color': col, 'line-width': 2, 'line-dasharray': [2, 1] } });
   }
-  // Полевые измерения: сплошная линия/кружок с белой обводкой — не путать с модельными гексами
   const fieldColor = ['interpolate', ['linear'], ['log10', ['max', ['get', 'conc_items_km2'], CONC_MIN]],
     1, CONC_STOPS[0][1], 1.75, CONC_STOPS[1][1], 2.35, CONC_STOPS[2][1], 2.9, CONC_STOPS[3][1], 3.48, CONC_STOPS[4][1]];
   map.addLayer({ id: 'field-casing', type: 'line', source: 'field', filter: ['!=', '$type', 'Point'], paint: { 'line-color': '#fff', 'line-width': 7 } });
@@ -281,6 +271,8 @@ function initLayers(firstUrl, corners) {
     map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
   }
   map.on('click', (e) => {
+    $('#tip').hidden = true;
+    map.getCanvas().style.cursor = '';
     if (S.drawing) return onDrawClick(e);
     const hit = map.queryRenderedFeatures(e.point, { layers: ['field-pt', 'field-line', 'zones-dot', 'zones-fill', 'hex-fill'].filter((l) => map.getLayer(l)) });
     if (!hit.length) return;
@@ -292,7 +284,6 @@ function initLayers(firstUrl, corners) {
   map.on('dblclick', onDrawFinish);
 }
 
-// ---------- загрузка акватории ----------
 async function loadAoi(id, preferDate) {
   S.aoi = S.aois.find((a) => a.id === id) || S.aois[0];
   $('#aoi').value = S.aoi.id;
@@ -311,7 +302,7 @@ async function loadAoi(id, preferDate) {
   map.fitBounds([[x0, y0], [x1, y1]], { padding: 30, duration: 0 });
   placeMarkers();
   buildTimeline();
-  // По умолчанию – самая «грязная» дата из спокойных
+  renderField();
   let best = di, bestA = -1;
   series.scenes.forEach((s, i) => { if (!s.storm && s.area_m2 > bestA) { bestA = s.area_m2; best = i; } });
   const want = preferDate ? series.dates.indexOf(preferDate) : -1;
@@ -346,21 +337,20 @@ function placeMarkers() {
   }
 }
 
-// ---------- профиль ----------
 function renderProfiles() {
   $('#profile').innerHTML = S.profiles.filter((p) => p.show_in_ui).map((p) => `<option value="${p.id}">${p.id} · ${esc(p.label)}</option>`).join('');
   $('#profile').value = S.profile;
+  window.dispatchEvent(new Event('aquaflow-profile-sync'));
 }
 function renderProfileNote() {
   const p = profileInfo();
   const avail = S.aoi?.concentration?.[S.profile];
   const na = !S.conc || !S.conc.available;
   $('#profile-note').innerHTML = `${esc(p.material || '')}; ${esc(p.size_class || '')}; ${esc(p.method || '')}.` +
-    `<br>Модель: ${esc(p.model_type || '—')} · обучение ${p.n_train ?? '—'} событий, отложено ${p.n_holdout ?? '—'}.` +
+    `<br>Модель: ${esc(p.model_type || '–')} · обучение ${p.n_train ?? '–'} событий, отложено ${p.n_holdout ?? '–'}.` +
     (na ? `<br><span style="color:#fbbf24">Концентрация недоступна для этой акватории: ${esc(avail?.reason || S.conc?.reason || 'профиль не применим')}.</span>` : '');
 }
 
-// ---------- дата ----------
 function buildTimeline() {
   S.charts.timeline?.destroy();
   const s = S.series;
@@ -414,7 +404,6 @@ async function setDate(i) {
   if (S.cmp.A || S.cmp.B) renderCompare();
 }
 
-// ---------- гексы ----------
 const PERSIST = [[0, '#34416b'], [0.2, '#6b5cff'], [0.45, '#c04fe0'], [1, '#ff5c8a']];
 const ACC = [[0, '#12475a'], [0.5, '#1f9fc4'], [1, '#b7f4ff']];
 const QUAL = [[0, '#6b7688'], [0.5, '#475569'], [1, '#0f766e']];
@@ -483,13 +472,21 @@ function renderLegend() {
   const e = S.series?.cover_class_edges || [0, 15, 40, 100];
   const classes = () => [1, 2, 3, 4].map((k) => `<div class="leg-row"><span class="sw" style="background:${CLS_COL[k]}"></span>${CLS_NAME[k]} <span class="muted">${k < 4 ? `${nf(e[k - 1], 0)}–${nf(e[k], 0)}` : `> ${nf(e[3], 0)}`} м²/км²</span></div>`).join('');
   const concGrad = `<div class="grad" style="background:linear-gradient(90deg,${CONC_STOPS.map((s) => s[1]).join(',')})"></div><div class="grad-lbl small"><span>≤${CONC_MIN}</span><span>100</span><span>1000</span><span>≥${CONC_MAX} шт./км²</span></div>`;
-  const fieldRow = `<div class="leg-row"><span class="sw field-sw"></span>полевое измерение (C = N/A), цвет — та же шкала</div>`;
+  const fieldRow = `<div class="leg-row"><span class="sw field-sw"></span>полевое измерение (C = N/A), цвет – та же шкала</div>`;
   const statusRows = Object.entries(DET_NAME).map(([k, v]) => `<div class="leg-row"><span class="sw" style="background:${DET_COL[k]}"></span>${v}</div>`).join('');
   const na = !S.conc || !S.conc.available;
   const L = {
-    date: `${classes()}<div class="leg-row"><span class="sw" style="background:#6b7688"></span>нет данных (облака)</div>
-      <p class="muted small">Концентрация – эквивалентная площадь плавающего мусора на км² акватории (доля покрытия пикселя × 100 м²).</p>`,
-    mean: `${classes()}<p class="muted small">Средняя концентрация по всем безоблачным и нештормовым снимкам.</p>`,
+    conc: na
+      ? `<p class="small" style="color:#d48628">Концентрация недоступна для профиля ${S.profile} в этой акватории: вне области применения модели.</p>${fieldRow}`
+      : `${concGrad}<div class="leg-row"><span class="sw hatch-sw"></span>пунктир – исследовательская оценка (перенос не подтверждён)</div>${fieldRow}
+      <div class="leg-row"><span class="sw" style="background:#ff3b3b"></span>зона детекции (площадь, не концентрация)</div>
+      <p class="muted small">Модельная оценка по полевым данным профиля в центре гекса на момент снимка. Интервал и причины статуса – в карточке гекса.</p>`,
+    status: `${statusRows}<p class="muted small">«Не обнаружено» ставится только при ≥50% видимой воды и спокойном море; иначе – «недостаточно данных».</p>`,
+    quality: `<div class="grad" style="background:linear-gradient(90deg,${QUAL.map((s) => s[1]).join(',')})"></div><div class="grad-lbl small"><span>0% воды видно</span><span>100%</span></div>
+      <p class="muted small">Доля пригодных пикселей воды (без облаков, теней, льда). Попиксельная маска – слой «Маска качества».</p>`,
+    cover: `${classes()}<div class="leg-row"><span class="sw" style="background:#6b7688"></span>нет данных (облака)</div>
+      <p class="muted small">Покрытие – эквивалентная площадь плавающего мусора на км² по доле пикселя. Вспомогательный показатель детектора; в шт./км² не переводится.</p>`,
+    mean: `${classes()}<p class="muted small">Среднее покрытие по безоблачным и нештормовым снимкам.</p>`,
     persist: `<div class="grad" style="background:linear-gradient(90deg,${PERSIST.map((s) => s[1]).join(',')})"></div><div class="grad-lbl small"><span>редко</span><span>≥50% снимков</span></div>
       <p class="muted small">Доля снимков, на которых в гексе был мусор. Устойчивые зоны – места хронического скопления.</p>`,
     trend: `<div class="grad" style="background:linear-gradient(90deg,#3cc6e8,#1d3f55,#5a2a2a,#ff4d3d)"></div><div class="grad-lbl small"><span>снижение</span><span>рост</span></div>
@@ -503,9 +500,9 @@ function renderLegend() {
   const fieldDates = (S.field?.features || []).filter((f) => f.properties.profile === S.profile).map((f) => f.properties.date_utc).sort();
   $('#legend-meta').innerHTML = `Единица: <b>шт./км²</b> (концентрация), м²/км² (покрытие)` +
     `<br>Профиль ${S.profile}: <b>${esc(p.size_class || '')}</b>` +
-    `<br>Снимок: <b>${sc ? ruDate(S.series.dates[S.di]) : '—'}</b> · измерения профиля: <b>${fieldDates.length ? `${ruDate(fieldDates[0])}–${ruDate(fieldDates[fieldDates.length - 1])}` : '—'}</b>` +
+    `<br>Снимок: <b>${sc ? ruDate(S.series.dates[S.di]) : '–'}</b> · измерения профиля: <b>${fieldDates.length ? `${ruDate(fieldDates[0])}–${ruDate(fieldDates[fieldDates.length - 1])}` : '–'}</b>` +
     `<br>Источник: Sentinel-2 L2A (Planetary Computer); полевой реестр кейса` +
-    `<br>Модель: <b>${esc(S.conc?.model_version || p.model_version || '—')}</b> · детектор P ≥ ${nf(S.series?.detector?.p_det, 2)}`;
+    `<br>Модель: <b>${esc(S.conc?.model_version || p.model_version || '–')}</b> · детектор P ≥ ${nf(S.series?.detector?.p_det, 2)}`;
 }
 
 function onHexHover(e) {
@@ -555,7 +552,6 @@ async function setMode(m) {
   syncUrl();
 }
 
-// ---------- сводка ----------
 function renderKpis() {
   const s = S.series, di = S.di, sc = s.scenes[di];
   const nz = S.zones?.features?.length || 0;
@@ -570,7 +566,7 @@ function renderKpis() {
   const med = median(vals);
   $('#kpis').innerHTML = [
     [nf(nz, 0), 'зон детекции на дату'],
-    [med == null ? '—' : nf(med, 0), med == null ? 'шт./км²: концентрация недоступна' : `шт./км², медиана по гексам (профиль ${S.profile}, ${CONC_NAME[concAt(di, 0).status] || ''})`],
+    [med == null ? '–' : nf(med, 0), med == null ? 'шт./км²: концентрация недоступна' : `шт./км², медиана по гексам (профиль ${S.profile}, ${CONC_NAME[concAt(di, 0).status] || ''})`],
     [`${det} / ${insuff}`, `гексов «обнаружено» / «недостаточно данных» из ${S.hexes.features.length}`],
     [nf(sc.area_m2, 0), 'м² покрытия (вспомогательно)'],
   ].map(([b, t]) => `<div class="kpi"><b>${b}</b><span>${t}</span></div>`).join('');
@@ -582,12 +578,14 @@ function renderKpis() {
   $$('#hotlist li[data-z]').forEach((li) => li.onclick = () => openZone(li.dataset.z, true));
 }
 
-// ---------- панель инструментов ----------
 const TOOL_TITLE = { card: 'Карточка', hex: 'Участок акватории', compare: 'Сравнение участков', drift: 'Прогноз распространения', route: 'План обследования', about: 'О методе' };
 function openTool(t, title) {
   if (S.tool === t && !$('#panel').hidden && !title) { closePanel(); return; }
+  $('#tip').hidden = true;
+  map.getCanvas().style.cursor = '';
   S.tool = t;
   $('#panel').hidden = false;
+  $('#app-shell').classList.add('analysis-open');
   $('#panel-title').textContent = title || TOOL_TITLE[t];
   $$('.tool').forEach((el) => el.classList.toggle('on', el.dataset.tool === t));
   $$('#tools button').forEach((b) => b.classList.toggle('on', b.dataset.tool === t));
@@ -595,11 +593,11 @@ function openTool(t, title) {
 }
 function closePanel() {
   $('#panel').hidden = true; S.tool = null;
+  $('#app-shell').classList.remove('analysis-open');
   $$('#tools button').forEach((b) => b.classList.remove('on'));
   stopDrawing();
 }
 
-// ---------- карточки: зона и полевое измерение ----------
 function kv(rows) {
   return `<table class="kv">${rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</table>`;
 }
@@ -612,7 +610,7 @@ function openZone(zoneId, fly = false) {
   const reasons = (z[`conc_${P}_reasons`] || '').split('; ').filter(Boolean);
   $('#card-body').innerHTML = `
     <p>${badge('detected', DET_NAME.detected)} ${badge(st, CONC_NAME[st])}</p>
-    <div class="big-value">${c == null ? '—' : nf(c, 0)}<small>шт./км²</small></div>
+    <div class="big-value">${c == null ? '–' : nf(c, 0)}<small>шт./км²</small></div>
     <p>Профиль ${P}: ${esc(p.label || '')}. ${c == null ? '' : `80%: ${nf(z[`conc_${P}_lo80`], 0)}–${nf(z[`conc_${P}_hi80`], 0)}; 95%: ${nf(z[`conc_${P}_lo95`], 0)}–${nf(z[`conc_${P}_hi95`], 0)} шт./км².`}</p>
     ${reasons.length ? `<ul class="reasons">${reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
     <h3>Зона детекции (результат детектора)</h3>
@@ -636,7 +634,7 @@ function openZone(zoneId, fly = false) {
       ['Расстояние / разница дат', `${nf(z.field_distance_km, 0)} км · ${nf(z.field_date_gap_days, 0)} сут.`],
       ['Измерено', `${nf(z.field_conc_items_km2, 1)} шт./км² · ${ruDate(z.field_date)}`],
     ]) : '<p>нет</p>'}
-    <p class="small">Модель: ${esc(z[`conc_${P}_model`] || '—')}. Концентрация взята из модели по полевым данным профиля и не выводится из площади маски.</p>
+    <p class="small">Модель: ${esc(z[`conc_${P}_model`] || '–')}. Концентрация взята из модели по полевым данным профиля и не выводится из площади маски.</p>
     <div class="export-grid"><button id="card-exp-geojson">Зоны даты · GeoJSON</button><button id="card-exp-csv">Зоны даты · CSV</button></div>`;
   $$('#card-body a[data-ev]').forEach((a) => a.onclick = (ev) => { ev.preventDefault(); openField(a.dataset.ev, true); });
   $('#card-exp-geojson').onclick = () => exportLayer('zones', 'geojson');
@@ -651,7 +649,7 @@ async function openField(eventId, fly = false) {
     const m = r.measurements[0];
     if (fly && m) map.flyTo({ center: [m.lon, m.lat], zoom: 10 });
     const rows = r.rows.map((x) => `<tr><td>${esc(x.sample_id)}</td><td>${esc(x.target_scope)}</td><td>${x.decision === 'included' ? `профиль ${esc(x.profile)} (${esc(x.role)})` : esc(x.reason_code)}</td></tr>`).join('');
-    const pairs = r.pairs.map((p) => `<tr><td class="small">${esc((p.scene_datetime_utc || '—').replace('T', ' ').slice(0, 16))}</td><td>${esc(p.sync_tier || '')}</td><td>${badge(p.decision === 'accepted' ? 'model_estimate' : 'unavailable', p.reason_code)}</td></tr>`).join('');
+    const pairs = r.pairs.map((p) => `<tr><td class="small">${esc((p.scene_datetime_utc || '–').replace('T', ' ').slice(0, 16))}</td><td>${esc(p.sync_tier || '')}</td><td>${badge(p.decision === 'accepted' ? 'model_estimate' : 'unavailable', p.reason_code)}</td></tr>`).join('');
     $('#card-body').innerHTML = m ? `
       <p>${badge('measurement', 'измерение')} ${badge('', `профиль ${m.profile} · ${m.role}`)}</p>
       <div class="big-value">${nf(m.conc_items_km2, 1)}<small>шт./км²</small></div>
@@ -663,17 +661,16 @@ async function openField(eventId, fly = false) {
         ['Дата, время UTC', `${ruDate(m.date_utc)} ${m.time_known ? `${m.t_start_utc.slice(11, 16)}–${m.t_end_utc.slice(11, 16)}` : '(время неизвестно)'}`],
         ['Геометрия', `${esc(m.geometry_type)}${m.length_km ? ` · ${nf(m.length_km, 1)} км × ${nf(m.width_m, 0)} м` : ''}`],
         ['Источник', `${esc(m.source_id)} · <span class="small">${esc(m.source_doi)} (${esc(m.source_license)})</span>`],
-        ['Флаги качества', `<span class="small">${esc(m.quality_flags || '—')}</span>`],
+        ['Флаги качества', `<span class="small">${esc(m.quality_flags || '–')}</span>`],
       ])}
       <p class="small">Концентрация относится ко всей обследованной полосе, а не к точке на карте.</p>
-      <h3>Строки реестра события</h3><table><tr><th>sample_id</th><th>scope</th><th>решение</th></tr>${rows}</table>
-      <h3>Сопоставление со снимками</h3>${pairs ? `<table><tr><th>снимок</th><th>ярус</th><th>решение</th></tr>${pairs}</table>` : '<p>нет кандидатов</p>'}`
-      : `<p>Событие не вошло ни в один профиль.</p><table>${rows}</table>`;
+      <h3>Строки реестра события</h3><table class="card-table field-registry-table"><tr><th>ID образца</th><th>Совокупность</th><th>Решение</th></tr>${rows}</table>
+      <h3>Сопоставление со снимками</h3>${pairs ? `<table class="card-table field-pairs-table"><tr><th>Снимок</th><th>Ярус</th><th>Решение</th></tr>${pairs}</table>` : '<p>Нет кандидатов</p>'}`
+      : `<p>Событие не вошло ни в один профиль.</p><table class="card-table field-registry-table">${rows}</table>`;
     openTool('card', `Измерение ${eventId}`);
   } catch (err) { toast(`Не удалось открыть событие: ${err.message}`); }
 }
 
-// ---------- участок ----------
 function selectHex(i) {
   S.sel = i;
   const f = S.hexes.features[i];
@@ -686,9 +683,9 @@ async function renderHexPanel() {
   $('#hex-empty').hidden = true; $('#hex-body').hidden = false;
   const st = detStatus(di, i), c = concAt(di, i);
   $('#hex-kpis').innerHTML = [
-    [k == null ? '–' : nf(c), `м²/км² на ${ruDate(s.dates[S.di])}`],
-    [k == null ? 'облака' : CLS_NAME[k], 'уровень'],
-    [nf(p.mean_conc), 'средняя, м²/км²'],
+    [c.value == null ? '–' : nf(c.value, 0), `шт./км² (профиль ${S.profile}) на ${ruDate(s.dates[di])}`],
+    [DET_NAME[st], 'статус детекции'],
+    [nf(s.cover[di][i]), 'покрытие, м²/км² (вспомогательно)'],
     [`${nf(p.persistence * 100, 0)}%`, `снимков с мусором (${p.n_obs})`],
     [`${p.trend_cover > 0 ? '+' : ''}${nf(p.trend_cover, 2)}`, 'тренд покрытия, м²/км² в мес'],
     [`${nf(p.water_km2, 2)} · ${nf(p.dist_coast_km, 1)}`, 'км² воды · км до берега'],
@@ -703,6 +700,10 @@ async function renderHexPanel() {
       plugins: { legend: { display: false }, title: { display: true, text: 'Покрытие по датам, м²/км² (вспомогательный показатель)', color: '#94a3b8', font: { weight: 'normal' } } },
       scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.12)' }, ticks: { maxTicksLimit: 4 } } },
       onClick: (e, els) => { if (els.length) setDate(els[0].index); } },
+  });
+  requestAnimationFrame(() => {
+    S.charts.hex?.resize();
+    S.charts.hex?.update('none');
   });
   $('#hex-drift-info').textContent = '';
   try {
@@ -738,7 +739,6 @@ function haversine(lon1, lat1, lon2, lat2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-// ---------- сравнение ----------
 function startDrawing(which) {
   S.drawing = which; S.draft = [];
   map.doubleClickZoom.disable();
@@ -768,7 +768,6 @@ function onDrawClick(e) {
 function onDrawFinish(e) {
   if (!S.drawing) return;
   e.preventDefault();
-  // dblclick добавил две одинаковые вершины – убираем дубли
   const pts = S.draft.filter((c, i, a) => i === 0 || Math.hypot(c[0] - a[i - 1][0], c[1] - a[i - 1][1]) > 1e-6);
   if (pts.length < 3) { toast('Нужно минимум 3 вершины'); return; }
   const which = S.drawing;
@@ -811,9 +810,10 @@ function renderCompare() {
   const rows = [
     ['Акватория, км²', (s) => nf(s.km2)],
     ['Гексов', (s) => s.n],
-    [`На ${ruDate(S.series.dates[S.di])}, м²/км²`, (s) => nf(s.cur, 2)],
-    ['Средняя, м²/км²', (s) => nf(s.mean, 2)],
-    ['Максимум, м²/км²', (s) => nf(s.max, 1)],
+    [`Зон детекции на ${ruDate(S.series.dates[S.di])}`, (s) => s.zones],
+    [`Концентрация (модель, профиль ${S.profile}), шт./км²`, (s) => nf(s.conc, 0)],
+    [`Покрытие на дату, м²/км²`, (s) => nf(s.cur, 2)],
+    ['Среднее покрытие, м²/км²', (s) => nf(s.mean, 2)],
     ['Доля снимков с мусором', (s) => (s.share == null ? '–' : `${nf(s.share * 100, 0)}%`)],
     ['Устойчивых гексов (≥20%)', (s) => s.hot],
     ['Тренд покрытия, м²/км² в мес', (s) => `${s.trend > 0 ? '+' : ''}${nf(s.trend, 2)}`],
@@ -822,8 +822,8 @@ function renderCompare() {
   if (A && B && A.mean != null && B.mean != null) {
     const [hi, lo, nh, nl] = A.mean >= B.mean ? [A, B, 'A', 'B'] : [B, A, 'B', 'A'];
     const ratio = lo.mean > 0 ? hi.mean / lo.mean : null;
-    verdict = `<div class="verdict">Участок <b>${nh}</b> загрязнён сильнее: средняя концентрация ${ratio ? `в <b>${nf(ratio, 1)} раза</b> выше` : 'выше (на участке ' + nl + ' мусор не найден)'}.` +
-      ` Приоритет обследования – <b>${nh}</b>${hi.trend > 0 ? ', загрязнение растёт' : ''}.</div>`;
+      verdict = `<div class="verdict">На участке <b>${nh}</b> детектор чаще видит скопления: среднее покрытие ${ratio ? `в <b>${nf(ratio, 1)} раза</b> выше` : 'выше (на участке ' + nl + ' мусор не найден)'}.` +
+        ` Приоритет обследования – <b>${nh}</b>${hi.trend > 0 ? ', покрытие растёт' : ''}. Модельная концентрация по полевым данным от детекций не зависит и здесь служит фоном.</div>`;
   }
   $('#cmp-result').innerHTML = `<table><tr><th></th><th style="color:${COL_A}">A</th><th style="color:${COL_B}">B</th></tr>` +
     rows.map(([n, f]) => `<tr><td>${n}</td><td>${col(A, f)}</td><td>${col(B, f)}</td></tr>`).join('') + '</table>' + verdict;
@@ -839,7 +839,6 @@ function renderCompare() {
   });
 }
 
-// ---------- дрейф ----------
 function clearDrift() {
   cancelAnimationFrame(S.anim); S.anim = null; S.drift = null;
   ['tracks', 'particles', 'cone', 'coneCenter'].forEach((id) => map.getSource(id)?.setData(EMPTY));
@@ -881,7 +880,6 @@ function showDriftHour(h) {
   $('#drift-hour').value = h;
   const t = new Date(new Date(r.t0).getTime() + h * 3600e3).toISOString();
   $('#drift-hlabel').textContent = `+${h} ч · ${localTime(t, S.aoi.tz)}`;
-  // Выброшенная частица дальше не движется: считаем её на берегу с момента, когда позиция совпала с финальной
   const last = r.frames[r.hours];
   map.getSource('particles').setData({ type: 'FeatureCollection', features: r.frames[h].map((c, k) => ({
     type: 'Feature',
@@ -901,7 +899,6 @@ function playDrift() {
   S.anim = requestAnimationFrame(step);
 }
 
-// ---------- маршрут ----------
 function clearRoute() {
   S.route = null;
   S.stopMarkers.forEach((m) => m.remove()); S.stopMarkers = [];
@@ -962,7 +959,6 @@ function exportGPX() {
   download(`route_${S.aoi.id}_${S.series.dates[S.di]}.gpx`, gpx, 'application/gpx+xml');
 }
 
-// ---------- выгрузка и сохранённый запрос ----------
 function exportParams(layer, format) {
   return new URLSearchParams({ aoi: S.aoi.id, date: S.series.dates[S.di], profile: S.profile, layer, format });
 }
@@ -1001,6 +997,7 @@ async function rerunQuery(trigger = $('#query-rerun')) {
         `<br>сохранён ${r.saved_sha256.slice(0, 16)}… · сейчас ${r.rerun_sha256.slice(0, 16)}…`;
       if (r.params.aoi !== S.aoi.id || r.params.date !== S.series.dates[S.di] || r.params.profile !== S.profile) {
         S.profile = r.params.profile; $('#profile').value = S.profile;
+        window.dispatchEvent(new Event('aquaflow-profile-sync'));
         await loadAoi(r.params.aoi, r.params.date);
       }
     } catch (err) { toast(`Не удалось повторить запрос: ${err.message}`); }
@@ -1029,7 +1026,6 @@ async function toggleFullscreen(trigger = $('#map-fullscreen')) {
   });
 }
 
-// ---------- о методе ----------
 let metrics = null;
 const pct = (v) => nf(v * 100, 1);
 async function renderAbout() {
@@ -1047,7 +1043,7 @@ async function renderAbout() {
     const tc = r.transfer_check ? `<p class="small">Перенос (обучение на ${r.n_dev} событиях S4 → проверка на ${r.transfer_check.n_events} событиях S3, Северное море, >2 см): MAE ${Object.entries(r.transfer_check).filter(([, v]) => v?.mae != null).map(([m, v]) => `${m} ${nf(v.mae, 0)}`).join(', ')} шт./км²; медианы ${nf(r.transfer_check.target_median_train, 0)} → ${nf(r.transfer_check.target_median_check, 0)}. <b>Перенос на другое море не подтверждён.</b></p>` : '';
     return `<h3>Профиль ${pid}: признаки ${esc(r.features.join(', '))}</h3>
       <table><tr><th>Модель</th><th>CV MAE</th><th>CV RMSE</th><th>Отлож. MAE</th><th>Отлож. RMSE</th></tr>${rows}</table>
-      <p class="small">Обучение ${r.n_dev} событий, отложено ${r.n_holdout}, групп ${r.n_groups}. ★ — модель сервиса (минимум MAE на CV). Покрытие 80%-интервала на отложенной выборке: ${pct(r.holdout_interval_coverage['0.8'])}%.` +
+      <p class="small">Обучение ${r.n_dev} событий, отложено ${r.n_holdout}, групп ${r.n_groups}. ★ – модель сервиса (минимум MAE на CV). Покрытие 80%-интервала на отложенной выборке: ${pct(r.holdout_interval_coverage['0.8'])}%.` +
       (r.poisson_floor_mae_dev ? ` Нижняя граница MAE из-за счётного шума: ${nf(r.poisson_floor_mae_dev, 1)} шт./км².` : '') + `</p>${tc}`;
   }).join('');
   const pf = metrics?.pair_features || [];
@@ -1055,16 +1051,13 @@ async function renderAbout() {
     <p>Сервис разделяет три величины: <b>зоны детекции</b> (где со снимка видны скопления), <b>полевые измерения</b> (C = N/A по полосе учёта) и <b>модельную концентрацию</b> в шт./км² для заявленного профиля. Площадь маски в число предметов не переводится.</p>
     <h3>Как считается</h3>
     <ol>
-      <li><b>Sentinel-2 L2A</b>, 11 каналов, 10 м. Маски облаков по SCL, постоянная маска воды по всему ряду снимков.</li>
-      <li><b>Нормализация фона</b>: из пикселя вычитаем локальный спектр воды (медиана по блокам 320 м). Уходят солнечный блик, дымка и разница атмосферной коррекции.</li>
-      <li><b>Классификатор LightGBM</b> на размеченном архиве MARIDA (спектр, индексы FDI, FAI, NDVI, PI и текстура). Классы: мусор, водоросли, суда, облака, вода, пена.</li>
-      <li><b>Фильтры ложных срабатываний</b>: CFAR (аномалия ≥ 5σ локального шума), спектральный тест против пены, маска постоянных объектов (причалы, буи, садки), учёт ветра ERA5 (при ≥ 8 м/с остаются только крупные скопления).</li>
-      <li><b>Концентрация</b>: линейное смешение «вода + плотное скопление» даёт долю покрытия пикселя. Сумма по гексу H3 даёт м² мусора на км².</li>
-      <li><b>Динамика</b>: устойчивость (доля снимков с мусором) и тренд по каждому гексу.</li>
-      <li><b>Прогноз</b>: лагранжев ансамбль частиц. Течения SMOC (включая прилив и стоксов дрейф) + 1–3% ветра ERA5, выброс на берег. Для водохранилищ – только ветровой дрейф.</li>
-      <li><b>Обследование</b>: маршрут из порта по целям с максимальной отдачей «площадь / время». Позиции целей пересчитаны на момент прибытия.</li>
+      <li><b>Sentinel-2 L2A</b>, 11 каналов, 10 м. Облака и тени по SCL, постоянная маска воды, маска качества пикселя отдельно от решения «мусор / не мусор».</li>
+      <li><b>Нормализация фона</b>: из пикселя вычитается локальный спектр воды – так компенсируются блик, дымка и разница атмосферной коррекции.</li>
+      <li><b>Классификатор XGBoost</b> на MARIDA (спектр, FDI, FAI, NDVI, PI, текстура) и фильтры: пена, соседство, CFAR 5σ, постоянные объекты, кильватер, лёд, шторм ≥ 8 м/с.</li>
+      <li><b>Концентрация</b>: отдельная модель по полевым данным профиля; используются признаки, доступные при применении, групповая проверка, конформные интервалы и область применимости.</li>
+      <li><b>Прогноз</b> (дополнительная функция): лагранжев ансамбль, течения SMOC + 1–3% ветра, выброс на берег и маршрут обследования.</li>
     </ol>
-    <h3>Детектор: MARIDA test (${det?.n_test_scenes ?? '—'} сцен, ${det?.n_test_patches ?? '—'} патчей)</h3>
+    <h3>Детектор: MARIDA test (${det?.n_test_scenes ?? '–'} сцен, ${det?.n_test_patches ?? '–'} патчей)</h3>
     <table><tr><th>Метод</th><th>P</th><th>R</th><th>F1 (95% ДИ)</th><th>IoU</th></tr>${detRows}</table>
     <p class="small muted">Положительный класс: ${esc(det?.positive_class || '')}. Игнорируются: ${esc(det?.ignored || '')}. Порог основного P ≥ ${nf(det?.thresholds?.xgb, 2)} задан до проверки; пороги базовых подобраны на val.</p>
     ${metrics?.detector_lro ? `<h3>Перенос детектора на новый регион (обучение без региона)</h3>
@@ -1084,9 +1077,10 @@ async function renderAbout() {
     <table><tr><th>Вывод</th><th>Полевые</th><th>MARIDA</th><th>Пары</th></tr>${(metrics?.validated_where || []).map((r) => `<tr><td>${esc(r.claim)}</td><td>${esc(r.field)}</td><td>${esc(r.satellite_labels)}</td><td>${esc(r.pairs)}</td></tr>`).join('')}</table>
     <h3>Ограничения</h3>
     <ul>
-      <li>Со спутника видны скопления и полосы мусора (от ~20–30% пикселя 10 м), а не отдельные бутылки. Концентрация – эквивалентная площадь покрытия, а не число предметов.</li>
-      <li>Мусор и органику (плавник, водоросли) спектрально разделить полностью нельзя. Для подтверждения нужны судно или дрон, и сервис строит для них маршрут.</li>
-      <li>Прогноз течений на 0,08° не разрешает мелкие бухты и порты.</li>
+      <li>При разрешении 10 м видны скопления и полосы (от ~20–30% пикселя), а не отдельные предметы: рассеянный мусор из полевых учётов со спутника не виден.</li>
+      <li>Профиль B описывает весь плавающий мусор (не только пластик) по данным DOORS 2024 у берегов Болгарии, Турции и Грузии; для побережья РФ это исследовательская оценка.</li>
+      <li>Пластик, плавник и водоросли спектрально разделяются не полностью; результат нужно подтверждать судном или дроном.</li>
+      <li>Прогноз течений 1/12° не разрешает мелкие бухты и порты; для водохранилищ используется только ветровой дрейф.</li>
     </ul></div>`;
   };
 
@@ -1094,7 +1088,6 @@ async function renderAbout() {
   return render();
 }
 
-// ---------- события ----------
 $('#aoi').onchange = (e) => loadAoi(e.target.value);
 $('#profile').onchange = async (e) => {
   S.profile = e.target.value;

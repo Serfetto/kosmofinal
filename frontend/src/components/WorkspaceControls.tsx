@@ -1,18 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Activity,
+  CircleGauge,
   CalendarDays,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   CloudSun,
+  Download,
+  FileText,
+  FlaskConical,
   Focus,
   Layers3,
   MapPin,
   Moon,
   Repeat2,
+  RotateCcw,
   Satellite,
+  Save,
+  ScanSearch,
+  ShieldCheck,
+  Shapes,
   Sigma,
   Sparkles,
   Sun,
@@ -218,13 +227,28 @@ export function CommandBar({ activeSheet, onOpenSheet, theme, onThemeChange }: C
 type ModeItem = readonly [id: string, label: string, description: string, icon: LucideIcon];
 
 const modes: readonly ModeItem[] = [
-  ['date', 'На дату', 'Состояние на выбранном спутниковом снимке', CalendarDays],
-  ['mean', 'Среднее', 'Средняя концентрация за весь период', Sigma],
+  ['conc', 'Концентрация', 'Модельная оценка количества предметов на км²', CircleGauge],
+  ['status', 'Статус', 'Обнаружено, не обнаружено или недостаточно данных', ScanSearch],
+  ['quality', 'Качество', 'Доля видимой воды в ячейке на дату снимка', ShieldCheck],
+  ['cover', 'Покрытие', 'Оценка площади мусора на км²', Sparkles],
+  ['mean', 'Среднее', 'Среднее покрытие за весь период', Sigma],
   ['persist', 'Устойчивость', 'Как часто загрязнение возвращается в зону', Repeat2],
-  ['trend', 'Тренд', 'Рост или снижение концентрации со временем', TrendingUp],
+  ['trend', 'Тренд', 'Рост или снижение покрытия со временем', TrendingUp],
   ['accum', 'Скопление', 'Зоны, куда течения стягивают мусор', Focus],
-  ['forecast', 'Прогноз', 'Ожидаемая концентрация через 72 часа', CloudSun],
+  ['forecast', 'Прогноз', 'Ожидаемое покрытие через 72 часа', CloudSun],
 ];
+
+const detectionStatuses = [
+  ['detected', 'обнаружено'],
+  ['not_detected', 'не обнаружено'],
+  ['insufficient_data', 'недостаточно данных'],
+] as const;
+
+const concentrationStatuses = [
+  ['model_estimate', 'модельная оценка'],
+  ['research_estimate', 'исследовательская оценка'],
+  ['unavailable', 'недоступна'],
+] as const;
 
 export function ModePicker() {
   const [open, setOpen] = useState(false);
@@ -248,11 +272,11 @@ export function ModePicker() {
         data-tooltip="Изменить показатель, которым окрашена карта"
       >
         <span className="mode-orbit"><Layers3 size={18} /></span>
-        <span><small>Показатель карты</small><strong id="mode-current">На дату</strong></span>
+        <span><small>Показатель карты</small><strong id="mode-current">Концентрация</strong></span>
         <ChevronDown className="mode-chevron" size={16} />
       </button>
       <div className="mode-menu" id="mode" aria-label="Показатель карты">
-        <div className="mode-menu-head"><span>Что показать на карте</span><kbd>6 режимов</kbd></div>
+        <div className="mode-menu-head"><span>Что показать на карте</span><kbd>{modes.length} режимов</kbd></div>
         {modes.map(([mode, label, description, Icon], index) => (
           <button
             key={mode}
@@ -271,11 +295,127 @@ export function ModePicker() {
 }
 
 export function MapLegend() {
+  const [open, setOpen] = useState(true);
+
   return (
-    <aside className="map-legend" aria-label="Легенда карты">
-      <div className="legend-title"><span>Легенда</span><i /></div>
-      <div id="legend" />
+    <aside className={`map-legend ${open ? 'is-open' : ''}`} aria-label="Легенда карты">
+      <button
+        className="legend-title"
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-controls="legend-content"
+      >
+        <span>Легенда</span>
+        <span className="legend-toggle-label">{open ? 'Скрыть' : 'Раскрыть'}<ChevronDown size={15} /></span>
+      </button>
+      <div className="legend-content" id="legend-content">
+        <div id="legend" />
+        <div id="legend-meta" className="legend-meta muted small" />
+      </div>
     </aside>
+  );
+}
+
+function ProfilePicker() {
+  const [options, setOptions] = useState<AoiOption[]>([]);
+  const [selected, setSelected] = useState('');
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const nativeSelect = useRef<HTMLSelectElement>(null);
+
+  useEffect(() => {
+    const select = nativeSelect.current;
+    if (!select) return;
+
+    const sync = () => {
+      const nextOptions = Array.from(select.options).map((option) => ({
+        value: option.value,
+        label: option.textContent || option.value,
+      }));
+      setOptions(nextOptions);
+      setSelected(select.value || nextOptions[0]?.value || '');
+    };
+    const closeOutside = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    const observer = new MutationObserver(sync);
+
+    observer.observe(select, { childList: true, subtree: true, attributes: true });
+    select.addEventListener('change', sync);
+    window.addEventListener('aquaflow-profile-sync', sync);
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    sync();
+
+    return () => {
+      observer.disconnect();
+      select.removeEventListener('change', sync);
+      window.removeEventListener('aquaflow-profile-sync', sync);
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, []);
+
+  const choose = (value: string) => {
+    const select = nativeSelect.current;
+    if (!select) return;
+    select.value = value;
+    setSelected(value);
+    setOpen(false);
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
+  const currentLabel = options.find((option) => option.value === selected)?.label || 'Загрузка профилей…';
+
+  return (
+    <div className={`profile-picker ${open ? 'is-open' : ''}`} ref={root}>
+      <span className="profile-picker-label">Профиль концентрации</span>
+      <select
+        className="native-profile-select"
+        id="profile"
+        ref={nativeSelect}
+        aria-hidden="true"
+        tabIndex={-1}
+        defaultValue=""
+      />
+      <button
+        className="profile-select-button"
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls="profile-options"
+      >
+        <span className="profile-select-icon"><CircleGauge size={16} /></span>
+        <span>{currentLabel}</span>
+        <ChevronDown size={15} aria-hidden="true" />
+      </button>
+      <div className="profile-menu" id="profile-options" role="listbox" aria-label="Профили концентрации">
+        <div className="profile-menu-head"><span>Выберите профиль</span><span>{options.length}</span></div>
+        {options.map((option) => {
+          const isSelected = option.value === selected;
+          return (
+            <button
+              type="button"
+              role="option"
+              aria-selected={isSelected}
+              className={isSelected ? 'is-selected' : ''}
+              key={option.value}
+              onClick={() => choose(option.value)}
+            >
+              <span className="profile-option-code">{option.value}</span>
+              <span>{option.label.replace(new RegExp(`^${option.value}\\s*[·:]?\\s*`), '')}</span>
+              <Check size={15} aria-hidden="true" />
+            </button>
+          );
+        })}
+        {!options.length && <div className="profile-options-empty">Загружаем профили…</div>}
+      </div>
+    </div>
   );
 }
 
@@ -307,6 +447,10 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
             <div><span className="eyebrow">Спутниковый ряд</span><h3>Динамика загрязнения</h3></div>
             <span className="live-badge"><i /> Sentinel-2</span>
           </div>
+          <div className="profile-control">
+            <ProfilePicker />
+            <div id="profile-note" className="muted small" />
+          </div>
           <div className="chart-box timeline-chart"><canvas id="timeline" /></div>
           <div id="scene-info" className="scene-info muted small" />
           <div id="aoi-note" className="aoi-note muted small" hidden />
@@ -319,6 +463,31 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
           <div className="kpis" id="kpis" />
           <div className="subhead">Приоритетные зоны</div>
           <ol id="hotlist" className="hotlist" />
+          <div className="filter-block">
+            <div className="subhead">Фильтр детекции</div>
+            <div className="status-filter" id="filter-detection">
+              {detectionStatuses.map(([key, label]) => (
+                <label key={key} className={`st-chip st-${key}`}><input type="checkbox" data-status={key} defaultChecked /><span>{label}</span></label>
+              ))}
+            </div>
+            <div className="subhead">Фильтр концентрации</div>
+            <div className="status-filter" id="filter-conc">
+              {concentrationStatuses.map(([key, label]) => (
+                <label key={key} className={`st-chip st-${key}`}><input type="checkbox" data-status={key} defaultChecked /><span>{label}</span></label>
+              ))}
+            </div>
+          </div>
+          <div className="subhead">Выгрузка и запрос</div>
+          <div className="export-grid">
+            <button className="report-btn" id="exp-report" data-tooltip="PDF с картой, снимками и крупнейшими зонами"><FileText size={14} />Отчёт PDF</button>
+            <button className="ghost" id="exp-zones-geojson"><Download size={13} />Зоны GeoJSON</button>
+            <button className="ghost" id="exp-zones-csv"><Download size={13} />Зоны CSV</button>
+            <button className="ghost" id="exp-hexes-geojson"><Download size={13} />Гексы GeoJSON</button>
+            <button className="ghost" id="exp-hexes-csv"><Download size={13} />Гексы CSV</button>
+            <button className="ghost" id="query-save"><Save size={13} />Сохранить</button>
+            <button className="ghost" id="query-rerun"><RotateCcw size={13} />Повторить</button>
+          </div>
+          <div id="query-info" className="muted small query-info" />
         </section>
       </div>
 
@@ -338,6 +507,26 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
             <span className="layer-icon accent-coral"><Sparkles size={19} /></span>
             <span><strong>Детекции мусора</strong><small>Результат спектрального анализа</small></span>
             <input type="checkbox" id="l-debris" defaultChecked />
+          </label>
+          <label data-tooltip="Показывает облака, блики и другие невалидные пиксели">
+            <span className="layer-icon accent-sky"><ShieldCheck size={19} /></span>
+            <span><strong>Маска качества</strong><small>Видимость и надёжность сцены</small></span>
+            <input type="checkbox" id="l-quality" />
+          </label>
+          <label data-tooltip="Объединённые области подтверждённых детекций">
+            <span className="layer-icon accent-coral"><Shapes size={19} /></span>
+            <span><strong>Зоны детекции</strong><small>Контуры найденных скоплений</small></span>
+            <input type="checkbox" id="l-zones" defaultChecked />
+          </label>
+          <label data-tooltip="Результаты полевых измерений для проверки модели">
+            <span className="layer-icon"><FlaskConical size={19} /></span>
+            <span><strong>Полевые измерения</strong><small>Контрольные маршруты и пробы</small></span>
+            <input type="checkbox" id="l-field" defaultChecked />
+          </label>
+          <label data-tooltip="Отдельные предметы из полевых наблюдений">
+            <span className="layer-icon accent-coral"><MapPin size={19} /></span>
+            <span><strong>Отдельные предметы</strong><small>Контекст полевых наблюдений</small></span>
+            <input type="checkbox" id="l-objects" />
           </label>
           <label data-tooltip="Равные зоны для корректного сравнения концентрации">
             <span className="layer-icon accent-lime"><Layers3 size={19} /></span>

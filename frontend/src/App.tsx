@@ -12,7 +12,6 @@ function readTheme(): ThemeName {
     const saved = window.localStorage.getItem(THEME_KEY);
     if (saved === 'light' || saved === 'dark') return saved;
   } catch {
-    // Local storage may be unavailable in a privacy-restricted browser.
   }
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
@@ -29,7 +28,6 @@ function App() {
     try {
       window.localStorage.setItem(THEME_KEY, theme);
     } catch {
-      // The UI still switches theme even when persistence is unavailable.
     }
     window.dispatchEvent(new CustomEvent('aquaflow-theme-change', { detail: { theme } }));
   }, [theme]);
