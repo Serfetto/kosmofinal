@@ -247,12 +247,13 @@ function initLayers(corners) {
   }
   const fieldColor = ['interpolate', ['linear'], ['log10', ['max', ['get', 'conc_items_km2'], CONC_MIN]],
     1, CONC_STOPS[0][1], 1.75, CONC_STOPS[1][1], 2.35, CONC_STOPS[2][1], 2.9, CONC_STOPS[3][1], 3.48, CONC_STOPS[4][1]];
-  map.addLayer({ id: 'field-casing', type: 'line', source: 'field', filter: ['!=', '$type', 'Point'], paint: { 'line-color': '#fff', 'line-width': 7 } });
-  map.addLayer({ id: 'field-line', type: 'line', source: 'field', filter: ['!=', '$type', 'Point'], paint: { 'line-color': fieldColor, 'line-width': 4 } });
+  map.addLayer({ id: 'field-casing', type: 'line', source: 'field', minzoom: 6, filter: ['!=', '$type', 'Point'], paint: { 'line-color': '#fff', 'line-width': 7 } });
+  map.addLayer({ id: 'field-line', type: 'line', source: 'field', minzoom: 6, filter: ['!=', '$type', 'Point'], paint: { 'line-color': fieldColor, 'line-width': 4 } });
   map.addLayer({ id: 'field-pt', type: 'circle', source: 'field', filter: ['==', '$type', 'Point'], paint: {
     'circle-radius': 8, 'circle-color': fieldColor, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2.5 } });
-  // Полосы учёта длиной 10–25 км на мелком масштабе не видны — там вместо них кружки в центре полосы
-  map.addLayer({ id: 'field-dot', type: 'circle', source: 'fieldDots', maxzoom: 9, paint: {
+  // Полосы учёта длиной 8–30 км мельче зума 6 превращаются в штрих в несколько пикселей — там вместо них кружок
+  // в центре полосы. С зума 6 — только сама полоса: кружок поверх неё выглядел бы отдельной точкой
+  map.addLayer({ id: 'field-dot', type: 'circle', source: 'fieldDots', maxzoom: 6, paint: {
     'circle-radius': 5, 'circle-color': fieldColor, 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
   map.addLayer({ id: 'objects', type: 'circle', source: 'objects', layout: { visibility: 'none' }, paint: {
     'circle-radius': 3, 'circle-color': '#e2e8f0', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 1 } });
