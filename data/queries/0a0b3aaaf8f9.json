@@ -1,0 +1,23 @@
+{
+ "id": "0a0b3aaaf8f9",
+ "params": {
+  "aoi": "batumi",
+  "date": "2024-06-05",
+  "profile": "B",
+  "layer": "zones",
+  "format": "geojson"
+ },
+ "created_utc": "2026-09-25T16:00:58+00:00",
+ "result_sha256": "8caf14905bf5552599a527a73f67bf5a60588b8113fb7aecd2f1bd5aac541be3",
+ "result_bytes": 173555,
+ "versions": {
+  "configs": {
+   "profiles.yaml": "e893e113d2ea",
+   "concentration.yaml": "c6bce5631d2b",
+   "detector.yaml": "828442195860",
+   "pairs.yaml": "4801d97d49cc"
+  },
+  "conc_A": "conc-A-c6bce5631d2b",
+  "conc_B": "conc-B-c6bce5631d2b"
+ }
+}

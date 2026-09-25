@@ -1,0 +1,129 @@
+{
+ "profile": "A",
+ "main": "nb_glm",
+ "baselines": [
+  "median",
+  "idw"
+ ],
+ "features": [
+  "lat",
+  "lon"
+ ],
+ "serve_model": "nb_glm",
+ "selected_by": "минимум MAE на групповой CV (без отложенной выборки)",
+ "feature_selection": [
+  {
+   "features": [
+    "wind24_ms"
+   ],
+   "cv_mae": 41.69350560911387
+  },
+  {
+   "features": [
+    "lat",
+    "lon"
+   ],
+   "cv_mae": 30.40702470734955
+  },
+  {
+   "features": [
+    "wind24_ms",
+    "lat"
+   ],
+   "cv_mae": 50.337908692759235
+  },
+  {
+   "features": [
+    "wind24_ms",
+    "lat",
+    "lon"
+   ],
+   "cv_mae": 34.28174122066649
+  }
+ ],
+ "n_dev": 50,
+ "n_holdout": 13,
+ "n_groups": 25,
+ "cv": {
+  "nb_glm": {
+   "mae": 30.40702470734955,
+   "rmse": 42.68450170042349,
+   "medae": 22.71995663196298,
+   "n": 50,
+   "bias_median_ratio": 1.4767501992487748
+  },
+  "median": {
+   "mae": 37.13203177778666,
+   "rmse": 51.454264040323,
+   "medae": 24.078017481714447,
+   "n": 50,
+   "bias_median_ratio": 1.0
+  },
+  "idw": {
+   "mae": 36.317637240136165,
+   "rmse": 47.84853075949435,
+   "medae": 26.366568788984125,
+   "n": 50,
+   "bias_median_ratio": 1.366879613198544
+  }
+ },
+ "holdout": {
+  "nb_glm": {
+   "mae": 22.852552941670734,
+   "rmse": 26.572432512916635,
+   "medae": 16.908582066723923,
+   "n": 13,
+   "bias_median_ratio": 1.1499944541541658
+  },
+  "median": {
+   "mae": 24.77715144137898,
+   "rmse": 28.52856164793593,
+   "medae": 25.22487272619287,
+   "n": 13,
+   "bias_median_ratio": 1.131418735688895
+  },
+  "idw": {
+   "mae": 20.6327691665582,
+   "rmse": 25.22505923754356,
+   "medae": 20.63795411551928,
+   "n": 13,
+   "bias_median_ratio": 0.8681128371176894
+  }
+ },
+ "interval_log_quantiles": {
+  "0.8": [
+   -1.2624890835791653,
+   0.6932588843897278
+  ],
+  "0.95": [
+   -1.9392422695479286,
+   1.9069296104050437
+  ]
+ },
+ "holdout_interval_coverage": {
+  "0.8": 0.7692307692307693,
+  "0.95": 0.9230769230769231
+ },
+ "poisson_floor_mae_dev": 12.19228686559859,
+ "poisson_floor_mae_holdout": 11.398920095965092,
+ "meta": {
+  "created_utc": "2026-09-25T15:57:35Z",
+  "git_commit": "6f8b8f8+dirty",
+  "configs": {
+   "concentration.yaml": "c6bce5631d2b",
+   "profiles.yaml": "e893e113d2ea"
+  },
+  "python": "3.12.14",
+  "packages": {
+   "numpy": "2.5.3",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "scikit-learn": "1.9.1",
+   "xgboost": "3.4.1",
+   "statsmodels": "0.15.0",
+   "rasterio": "1.5.1",
+   "shapely": "2.1.2",
+   "h3": "4.5.0"
+  }
+ }
+}

@@ -1,0 +1,72 @@
+# Модель концентрации (шт./км²), разбиение и область применимости. Читается pipeline/splits.py
+# и pipeline/concentration.py.
+
+seed: 20260925
+
+# Поля реестра, производные от ответа или недоступные при применении. Тест tests/test_leakage.py
+# проверяет, что ни одно из них не попало в признаки.
+forbidden_predictors:
+  - conc_items_km2
+  - conc_lo95
+  - conc_hi95
+  - conc_published
+  - conc_g_km2
+  - n_items
+  - area_km2
+  - concentration_items_km2
+  - concentration_g_km2
+  - concentration_value_orig
+  - concentration_unit_orig
+  - items_count
+  - density_numerator_items
+  - source_reported_total_items
+  - source_object_filtered_items
+  - reported_concentration_items_km2
+  - reported_concentration_g_km2
+  - parent_concentration_items_km2
+  - parent_sample_id
+  - zero_scope
+  - quality_flags
+  - calculation_method
+  - sea_state_beaufort
+  - wind_speed_kn
+  - ctx_seaweed_clumps_km2
+
+split:
+  holdout_frac: 0.2          # доля групп в финальной отложенной выборке
+  link_km: 30                # события ближе link_km и не дальше link_days — одна группа
+  link_days: 3
+  cv_folds: 5
+
+profiles:
+  # Набор признаков основной модели выбирается по MAE на групповой CV (отложенная выборка не участвует);
+  # таблица сравнения сохраняется в data/eval/concentration/<P>_metrics.json → feature_selection
+  A:
+    # Число предметов и площадь известны: отрицательно-биномиальная GLM со смещением log(A)
+    main: nb_glm
+    candidate_features:
+      - [wind24_ms]
+      - [lat, lon]
+      - [wind24_ms, lat]
+      - [wind24_ms, lat, lon]
+    baselines: [median, idw]
+  B:
+    # У S4 нет N и A: регрессия log C с L2-регуляризацией
+    main: loglinear_ridge
+    candidate_features:
+      - [log_dist_coast_km]
+      - [wind24_ms]
+      - [wind24_ms, log_dist_coast_km]
+      - [wind24_ms, log_dist_coast_km, lat, lon]
+    ridge_alpha: 1.0
+    baselines: [median, idw]
+
+idw: {power: 2, k: 8}
+interval_levels: [0.8, 0.95]
+
+applicability:
+  # Внутри бассейна профиля и не дальше validated_radius_km от обучающего события — «модельная оценка»;
+  # в бассейне, но дальше — «исследовательская оценка»; вне бассейна — «концентрация недоступна».
+  validated_radius_km: 60
+  # Признак (кроме координат) вне диапазона обучающих значений с запасом margin — «исследовательская оценка»
+  feature_margin: 0.1

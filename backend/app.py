@@ -5,6 +5,7 @@ uvicorn backend.app:app --port 8000
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 
 import h3
@@ -13,8 +14,10 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from backend.case_api import DATE_RE, router
+from backend.report import router as report_router
 from pipeline.aggregate import WEB
-from pipeline.config import AOIS, H3_RES, MODELS, ROOT
+from pipeline.config import AOIS, H3_RES, ROOT
 from pipeline.drift import accumulation, simulate
 from pipeline.route import plan
 
@@ -30,9 +33,12 @@ def _json(path):
 
 def _check(aoi: str, date: str | None = None):
     if aoi not in AOIS or not (WEB / aoi / "series.json").exists():
-        raise HTTPException(404, "акватория не найдена")
-    if date is not None and not (WEB / aoi / date / "points.json").exists():
-        raise HTTPException(404, "дата не найдена")
+        raise HTTPException(404, f"акватория {aoi!r} не найдена")
+    if date is not None:
+        if not re.match(DATE_RE, date):
+            raise HTTPException(422, "дата должна быть в формате YYYY-MM-DD")
+        if not (WEB / aoi / date / "points.json").exists():
+            raise HTTPException(404, f"нет обработанного снимка {aoi} на {date}")
 
 
 @app.get("/api/aois")
@@ -43,8 +49,13 @@ def aois():
         if not p.exists():
             continue
         s = _json(p)
+        conc = {}
+        for c in sorted((WEB / k).glob("conc_*.json")):
+            j = _json(c)
+            conc[j["profile"]] = {"available": j["available"], "reason": j.get("reason")}
         out.append({"id": k, "name": a["name"], "bbox": a["bbox"], "kind": a["kind"], "port": a["port"], "tz": a["tz"],
                     "rivers": a["rivers"], "note": a.get("note"), "dates": s["dates"],
+                    "basin": s.get("basin"), "water_type": s.get("water_type"), "concentration": conc,
                     "total_area": [sc["area_m2"] for sc in s["scenes"]]})
     return out
 
@@ -145,12 +156,6 @@ def route(aoi: str, date: str, n: int = Query(8, ge=1, le=20), speed: float = Qu
           delay: float = Query(6, ge=0, le=48)):
     _check(aoi, date)
     return plan(aoi, date, n_stops=n, speed_kn=speed, delay_h=delay)
-
-
-@app.get("/api/metrics")
-def metrics():
-    m = _json(MODELS / "metrics.json")
-    return JSONResponse({k: m[k] for k in ("report", "debris_ap", "confusion", "groups", "n_test", "importance")})
 
 
 app.mount("/data", StaticFiles(directory=WEB), name="data")

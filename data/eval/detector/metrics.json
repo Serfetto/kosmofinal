@@ -1,0 +1,462 @@
+{
+ "methods": {
+  "fdi_window": {
+   "precision": 0.010995571919000946,
+   "recall": 0.5800524934383202,
+   "f1": 0.02158203125,
+   "iou": 0.010908731921615084,
+   "tp": 221,
+   "fp": 19878,
+   "fn": 160,
+   "unlabeled_pos": 718073,
+   "object_recall": 0.6143497757847534,
+   "fp_by_class": {
+    "Dense Sargassum": {
+     "fp_px": 0,
+     "class_px": 760,
+     "fp_rate": 0.0
+    },
+    "Sparse Sargassum": {
+     "fp_px": 196,
+     "class_px": 881,
+     "fp_rate": 0.2224744608399546
+    },
+    "Natural Organic Material": {
+     "fp_px": 12,
+     "class_px": 49,
+     "fp_rate": 0.24489795918367346
+    },
+    "Ship": {
+     "fp_px": 383,
+     "class_px": 1174,
+     "fp_rate": 0.3262350936967632
+    },
+    "Clouds": {
+     "fp_px": 4978,
+     "class_px": 32843,
+     "fp_rate": 0.1515695886490272
+    },
+    "Marine Water": {
+     "fp_px": 30,
+     "class_px": 23443,
+     "fp_rate": 0.0012796996971377384
+    },
+    "Sediment-Laden Water": {
+     "fp_px": 13241,
+     "class_px": 93037,
+     "fp_rate": 0.14231972226103592
+    },
+    "Foam": {
+     "fp_px": 74,
+     "class_px": 387,
+     "fp_rate": 0.19121447028423771
+    },
+    "Turbid Water": {
+     "fp_px": 521,
+     "class_px": 32226,
+     "fp_rate": 0.01616707006764724
+    },
+    "Shallow Water": {
+     "fp_px": 33,
+     "class_px": 2506,
+     "fp_rate": 0.013168395849960097
+    },
+    "Waves": {
+     "fp_px": 256,
+     "class_px": 1865,
+     "fp_rate": 0.13726541554959787
+    },
+    "Cloud Shadows": {
+     "fp_px": 0,
+     "class_px": 3649,
+     "fp_rate": 0.0
+    },
+    "Wakes": {
+     "fp_px": 147,
+     "class_px": 1570,
+     "fp_rate": 0.09363057324840764
+    },
+    "Mixed Water": {
+     "fp_px": 7,
+     "class_px": 92,
+     "fp_rate": 0.07608695652173914
+    }
+   },
+   "ci95": {
+    "precision": [
+     0.005009939460478786,
+     0.042661070657834296
+    ],
+    "recall": [
+     0.4115925285279083,
+     0.7716795437821927
+    ],
+    "f1": [
+     0.009938602607858189,
+     0.08081939228849237
+    ],
+    "iou": [
+     0.004994118650482219,
+     0.04211140855947637
+    ]
+   },
+   "name": "Пороги FDI и NDVI (базовый, подобраны на val)"
+  },
+  "biermann_nb": {
+   "precision": 0.02192667145938174,
+   "recall": 0.32020997375328086,
+   "f1": 0.04104289318755256,
+   "iou": 0.020951399622187877,
+   "tp": 122,
+   "fp": 5442,
+   "fn": 259,
+   "unlabeled_pos": 241450,
+   "object_recall": 0.34080717488789236,
+   "fp_by_class": {
+    "Dense Sargassum": {
+     "fp_px": 0,
+     "class_px": 760,
+     "fp_rate": 0.0
+    },
+    "Sparse Sargassum": {
+     "fp_px": 34,
+     "class_px": 881,
+     "fp_rate": 0.03859250851305335
+    },
+    "Natural Organic Material": {
+     "fp_px": 10,
+     "class_px": 49,
+     "fp_rate": 0.20408163265306123
+    },
+    "Ship": {
+     "fp_px": 191,
+     "class_px": 1174,
+     "fp_rate": 0.16269165247018738
+    },
+    "Clouds": {
+     "fp_px": 5078,
+     "class_px": 32843,
+     "fp_rate": 0.15461437749292087
+    },
+    "Marine Water": {
+     "fp_px": 27,
+     "class_px": 23443,
+     "fp_rate": 0.0011517297274239646
+    },
+    "Sediment-Laden Water": {
+     "fp_px": 4,
+     "class_px": 93037,
+     "fp_rate": 4.2993647688554014e-05
+    },
+    "Foam": {
+     "fp_px": 9,
+     "class_px": 387,
+     "fp_rate": 0.023255813953488372
+    },
+    "Turbid Water": {
+     "fp_px": 0,
+     "class_px": 32226,
+     "fp_rate": 0.0
+    },
+    "Shallow Water": {
+     "fp_px": 0,
+     "class_px": 2506,
+     "fp_rate": 0.0
+    },
+    "Waves": {
+     "fp_px": 70,
+     "class_px": 1865,
+     "fp_rate": 0.03753351206434316
+    },
+    "Cloud Shadows": {
+     "fp_px": 4,
+     "class_px": 3649,
+     "fp_rate": 0.0010961907371882709
+    },
+    "Wakes": {
+     "fp_px": 11,
+     "class_px": 1570,
+     "fp_rate": 0.0070063694267515925
+    },
+    "Mixed Water": {
+     "fp_px": 4,
+     "class_px": 92,
+     "fp_rate": 0.043478260869565216
+    }
+   },
+   "ci95": {
+    "precision": [
+     0.006736151229253797,
+     0.22961461815121514
+    ],
+    "recall": [
+     0.1628227436012573,
+     0.5146619013149958
+    ],
+    "f1": [
+     0.013098881770101127,
+     0.2904134274048386
+    ],
+    "iou": [
+     0.006592618930385894,
+     0.16987351002368978
+    ]
+   },
+   "name": "Наивный Байес на FDI+NDVI, как Biermann et al. 2020 (базовый)"
+  },
+  "xgb": {
+   "precision": 0.6571428571428571,
+   "recall": 0.905511811023622,
+   "f1": 0.7615894039735098,
+   "iou": 0.6149732620320856,
+   "tp": 345,
+   "fp": 180,
+   "fn": 36,
+   "unlabeled_pos": 8438,
+   "object_recall": 0.9372197309417041,
+   "fp_by_class": {
+    "Dense Sargassum": {
+     "fp_px": 0,
+     "class_px": 760,
+     "fp_rate": 0.0
+    },
+    "Sparse Sargassum": {
+     "fp_px": 0,
+     "class_px": 881,
+     "fp_rate": 0.0
+    },
+    "Natural Organic Material": {
+     "fp_px": 13,
+     "class_px": 49,
+     "fp_rate": 0.2653061224489796
+    },
+    "Ship": {
+     "fp_px": 36,
+     "class_px": 1174,
+     "fp_rate": 0.030664395229982964
+    },
+    "Clouds": {
+     "fp_px": 29,
+     "class_px": 32843,
+     "fp_rate": 0.0008829887647291661
+    },
+    "Marine Water": {
+     "fp_px": 1,
+     "class_px": 23443,
+     "fp_rate": 4.2656656571257946e-05
+    },
+    "Sediment-Laden Water": {
+     "fp_px": 33,
+     "class_px": 93037,
+     "fp_rate": 0.00035469759343057064
+    },
+    "Foam": {
+     "fp_px": 3,
+     "class_px": 387,
+     "fp_rate": 0.007751937984496124
+    },
+    "Turbid Water": {
+     "fp_px": 0,
+     "class_px": 32226,
+     "fp_rate": 0.0
+    },
+    "Shallow Water": {
+     "fp_px": 1,
+     "class_px": 2506,
+     "fp_rate": 0.0003990422984836393
+    },
+    "Waves": {
+     "fp_px": 54,
+     "class_px": 1865,
+     "fp_rate": 0.028954423592493297
+    },
+    "Cloud Shadows": {
+     "fp_px": 0,
+     "class_px": 3649,
+     "fp_rate": 0.0
+    },
+    "Wakes": {
+     "fp_px": 6,
+     "class_px": 1570,
+     "fp_rate": 0.003821656050955414
+    },
+    "Mixed Water": {
+     "fp_px": 4,
+     "class_px": 92,
+     "fp_rate": 0.043478260869565216
+    }
+   },
+   "ci95": {
+    "precision": [
+     0.5283256787134116,
+     0.809340486123517
+    ],
+    "recall": [
+     0.8582779348420393,
+     0.9572761194029851
+    ],
+    "f1": [
+     0.6736985389165262,
+     0.8578066573649592
+    ],
+    "iou": [
+     0.5079527997328287,
+     0.7510170353419782
+    ]
+   },
+   "name": "XGBoost, P ≥ 0,5 (основной)"
+  },
+  "xgb_filters": {
+   "precision": 0.7783251231527094,
+   "recall": 0.8293963254593176,
+   "f1": 0.8030495552731893,
+   "iou": 0.6709129511677282,
+   "tp": 316,
+   "fp": 90,
+   "fn": 65,
+   "unlabeled_pos": 3204,
+   "object_recall": 0.8340807174887892,
+   "fp_by_class": {
+    "Dense Sargassum": {
+     "fp_px": 0,
+     "class_px": 760,
+     "fp_rate": 0.0
+    },
+    "Sparse Sargassum": {
+     "fp_px": 0,
+     "class_px": 881,
+     "fp_rate": 0.0
+    },
+    "Natural Organic Material": {
+     "fp_px": 13,
+     "class_px": 49,
+     "fp_rate": 0.2653061224489796
+    },
+    "Ship": {
+     "fp_px": 19,
+     "class_px": 1174,
+     "fp_rate": 0.016183986371379896
+    },
+    "Clouds": {
+     "fp_px": 7,
+     "class_px": 32843,
+     "fp_rate": 0.0002131352190725573
+    },
+    "Marine Water": {
+     "fp_px": 1,
+     "class_px": 23443,
+     "fp_rate": 4.2656656571257946e-05
+    },
+    "Sediment-Laden Water": {
+     "fp_px": 29,
+     "class_px": 93037,
+     "fp_rate": 0.00031170394574201664
+    },
+    "Foam": {
+     "fp_px": 0,
+     "class_px": 387,
+     "fp_rate": 0.0
+    },
+    "Turbid Water": {
+     "fp_px": 0,
+     "class_px": 32226,
+     "fp_rate": 0.0
+    },
+    "Shallow Water": {
+     "fp_px": 0,
+     "class_px": 2506,
+     "fp_rate": 0.0
+    },
+    "Waves": {
+     "fp_px": 17,
+     "class_px": 1865,
+     "fp_rate": 0.009115281501340482
+    },
+    "Cloud Shadows": {
+     "fp_px": 0,
+     "class_px": 3649,
+     "fp_rate": 0.0
+    },
+    "Wakes": {
+     "fp_px": 0,
+     "class_px": 1570,
+     "fp_rate": 0.0
+    },
+    "Mixed Water": {
+     "fp_px": 4,
+     "class_px": 92,
+     "fp_rate": 0.043478260869565216
+    }
+   },
+   "ci95": {
+    "precision": [
+     0.6535213438503092,
+     0.9071767040149393
+    ],
+    "recall": [
+     0.7388719124748724,
+     0.9209282309322033
+    ],
+    "f1": [
+     0.7242380393439679,
+     0.8777295847268674
+    ],
+    "iou": [
+     0.5676905737704918,
+     0.7821016949152542
+    ]
+   },
+   "name": "XGBoost + фильтры пены/шума/CFAR (основной, как в сервисе)"
+  }
+ },
+ "thresholds": {
+  "fdi_window": {
+   "fdi_lo": 0.02,
+   "fdi_hi": 0.06,
+   "ndvi_max": 0.2,
+   "val_f1": 0.26928705833159106
+  },
+  "biermann_nb": 0.2174563878594261,
+  "xgb": 0.5,
+  "xgb_filters": 0.5
+ },
+ "val_optimal_threshold_xgb": 0.6433492762399358,
+ "positive_class": "MARIDA 1 Marine Debris (плавающий мусор любого материала)",
+ "background_classes": {
+  "2": "Dense Sargassum",
+  "3": "Sparse Sargassum",
+  "4": "Natural Organic Material",
+  "5": "Ship",
+  "6": "Clouds",
+  "7": "Marine Water",
+  "8": "Sediment-Laden Water",
+  "9": "Foam",
+  "10": "Turbid Water",
+  "11": "Shallow Water",
+  "12": "Waves",
+  "13": "Cloud Shadows",
+  "14": "Wakes",
+  "15": "Mixed Water"
+ },
+ "ignored": "неразмеченные пиксели MARIDA (класс 0)",
+ "split": "официальное разбиение MARIDA: test — 15 сцен, не пересекается с train/val по сценам; пересекается по тайлам (16PCC, 16PDC, 16PEC, 16QED, 18QYF, 48PZC)",
+ "n_test_patches": 359,
+ "n_test_scenes": 15,
+ "meta": {
+  "created_utc": "2026-09-25T16:00:41Z",
+  "git_commit": "6f8b8f8+dirty",
+  "configs": {},
+  "python": "3.12.14",
+  "packages": {
+   "numpy": "2.5.3",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "scikit-learn": "1.9.1",
+   "xgboost": "3.4.1",
+   "statsmodels": "0.15.0",
+   "rasterio": "1.5.1",
+   "shapely": "2.1.2",
+   "h3": "4.5.0"
+  }
+ }
+}

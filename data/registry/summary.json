@@ -1,0 +1,47 @@
+{
+ "events": 220,
+ "candidates": 89,
+ "events_by_outcome": {
+  "rejected": 188,
+  "context": 23,
+  "accepted": 9
+ },
+ "rows_by_reason": {
+  "NO_SCENE": 162,
+  "UNRELIABLE_SYNC": 39,
+  "SENSOR_UNSUPPORTED": 23,
+  "ACCEPTED_UNCERTAIN_TIME": 9,
+  "INSUFFICIENT_COVERAGE": 7,
+  "DUPLICATE_BETTER_SCENE": 6,
+  "UNUSABLE_PIXELS": 4,
+  "GLINT": 1
+ },
+ "accepted_by_profile_tier": {
+  "B/B": 9
+ },
+ "no_scene_by_source": {
+  "S1_GPGP2018": 83,
+  "S2_SARGASSO_MSM41": 61,
+  "S3_SE_NORTH_SEA": 18
+ },
+ "meta": {
+  "created_utc": "2026-09-25T15:57:32Z",
+  "git_commit": "6f8b8f8+dirty",
+  "configs": {
+   "pairs.yaml": "4801d97d49cc",
+   "profiles.yaml": "e893e113d2ea"
+  },
+  "python": "3.12.14",
+  "packages": {
+   "numpy": "2.5.3",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "scikit-learn": "1.9.1",
+   "xgboost": "3.4.1",
+   "statsmodels": "0.15.0",
+   "rasterio": "1.5.1",
+   "shapely": "2.1.2",
+   "h3": "4.5.0"
+  }
+ }
+}

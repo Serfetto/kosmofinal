@@ -1,0 +1,23 @@
+{
+ "id": "34bb9dee1ba9",
+ "params": {
+  "aoi": "sochi",
+  "date": "2026-08-07",
+  "profile": "B",
+  "layer": "hexes",
+  "format": "csv"
+ },
+ "created_utc": "2026-09-25T16:00:58+00:00",
+ "result_sha256": "cf3d9ea6a81cdb440e6015554fb977e4de8999673b4eb39af149a8835b68b35a",
+ "result_bytes": 327336,
+ "versions": {
+  "configs": {
+   "profiles.yaml": "e893e113d2ea",
+   "concentration.yaml": "c6bce5631d2b",
+   "detector.yaml": "828442195860",
+   "pairs.yaml": "4801d97d49cc"
+  },
+  "conc_A": "conc-A-c6bce5631d2b",
+  "conc_B": "conc-B-c6bce5631d2b"
+ }
+}

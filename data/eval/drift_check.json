@@ -1,0 +1,119 @@
+{
+ "pairs": [
+  {
+   "aoi": "sochi",
+   "d1": "2026-08-21",
+   "d2": "2026-08-22",
+   "hours": 24,
+   "n_seed": 39,
+   "n_obs": 26,
+   "median_km_forecast": 1.546110334308176,
+   "median_km_persistence": 0.8529433166930822,
+   "within_1km_forecast": 0.15384615384615385,
+   "within_1km_persistence": 0.5769230769230769,
+   "beached_frac": 0.19230769230769232
+  },
+  {
+   "aoi": "sochi",
+   "d1": "2026-09-10",
+   "d2": "2026-09-11",
+   "hours": 24,
+   "n_seed": 21,
+   "n_obs": 26,
+   "median_km_forecast": 2.653066229309749,
+   "median_km_persistence": 1.257482896597761,
+   "within_1km_forecast": 0.15384615384615385,
+   "within_1km_persistence": 0.3076923076923077,
+   "beached_frac": 0.5119047619047619
+  },
+  {
+   "aoi": "sochi",
+   "d1": "2026-09-11",
+   "d2": "2026-09-13",
+   "hours": 48,
+   "n_seed": 26,
+   "n_obs": 24,
+   "median_km_forecast": 2.971114271701449,
+   "median_km_persistence": 1.4278586125354131,
+   "within_1km_forecast": 0.0,
+   "within_1km_persistence": 0.16666666666666666,
+   "beached_frac": 0.49038461538461536
+  },
+  {
+   "aoi": "vladivostok",
+   "d1": "2025-09-25",
+   "d2": "2025-09-27",
+   "hours": 48,
+   "n_seed": 76,
+   "n_obs": 84,
+   "median_km_forecast": 5.5892807018402815,
+   "median_km_persistence": 2.1831349778439675,
+   "within_1km_forecast": 0.34523809523809523,
+   "within_1km_persistence": 0.39285714285714285,
+   "beached_frac": 0.9407894736842105
+  },
+  {
+   "aoi": "vladivostok",
+   "d1": "2026-09-10",
+   "d2": "2026-09-12",
+   "hours": 48,
+   "n_seed": 88,
+   "n_obs": 298,
+   "median_km_forecast": 3.6391765987274565,
+   "median_km_persistence": 2.1118688272066,
+   "within_1km_forecast": 0.11073825503355705,
+   "within_1km_persistence": 0.09395973154362416,
+   "beached_frac": 0.8465909090909091
+  },
+  {
+   "aoi": "novorossiysk",
+   "d1": "2025-07-08",
+   "d2": "2025-07-10",
+   "hours": 48,
+   "n_seed": 10,
+   "n_obs": 45,
+   "median_km_forecast": 4.958823737556105,
+   "median_km_persistence": 7.690452384086673,
+   "within_1km_forecast": 0.0,
+   "within_1km_persistence": 0.06666666666666667,
+   "beached_frac": 0.975
+  },
+  {
+   "aoi": "novorossiysk",
+   "d1": "2025-07-26",
+   "d2": "2025-07-28",
+   "hours": 48,
+   "n_seed": 334,
+   "n_obs": 16,
+   "median_km_forecast": 0.5109975036874238,
+   "median_km_persistence": 0.9117266841132565,
+   "within_1km_forecast": 0.625,
+   "within_1km_persistence": 0.625,
+   "beached_frac": 0.9476047904191617
+  }
+ ],
+ "summary": {
+  "n_pairs": 7,
+  "median_km_forecast": 2.971114271701449,
+  "median_km_persistence": 1.4278586125354131,
+  "pairs_forecast_better": 2
+ },
+ "note": "течения и ветер — анализ/реанализ на даты между снимками; детекции d2 в прогнозе не участвуют",
+ "meta": {
+  "created_utc": "2026-09-25T15:38:53Z",
+  "git_commit": "6f8b8f8+dirty",
+  "configs": {},
+  "python": "3.12.14",
+  "packages": {
+   "numpy": "2.5.3",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "scikit-learn": "1.9.1",
+   "xgboost": "3.4.1",
+   "statsmodels": "0.15.0",
+   "rasterio": "1.5.1",
+   "shapely": "2.1.2",
+   "h3": "4.5.0"
+  }
+ }
+}

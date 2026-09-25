@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { AboutPanel } from './panels/AboutPanel';
+import { CardPanel } from './panels/CardPanel';
 import { ComparePanel } from './panels/ComparePanel';
 import { DriftPanel } from './panels/DriftPanel';
 import { HexPanel } from './panels/HexPanel';
@@ -12,6 +13,7 @@ export function DetailPanel() {
         <div><span className="panel-kicker">Инструмент анализа</span><h2 id="panel-title" /></div>
         <button className="icon tooltip-left" id="panel-close" data-tooltip="Закрыть · Esc" aria-label="Закрыть"><X size={18} /></button>
       </div>
+      <CardPanel />
       <HexPanel />
       <ComparePanel />
       <DriftPanel />

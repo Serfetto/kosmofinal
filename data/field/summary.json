@@ -1,0 +1,45 @@
+{
+ "rows": 935,
+ "events": 318,
+ "included_rows": 220,
+ "by_profile": {
+  "A/train": 63,
+  "B/train": 33,
+  "B/transfer_check": 41,
+  "C/optional": 83
+ },
+ "excluded_by_reason": {
+  "subpopulation_not_target": 362,
+  "object_context_not_label": 337,
+  "total_missing_or_conflict": 16
+ },
+ "geometry_types": {
+  "strip": 183,
+  "point": 33,
+  "segments": 4
+ },
+ "time_known": {
+  "A": 63,
+  "B": 41,
+  "C": 83
+ },
+ "meta": {
+  "created_utc": "2026-09-25T15:57:31Z",
+  "git_commit": "6f8b8f8+dirty",
+  "configs": {
+   "profiles.yaml": "e893e113d2ea"
+  },
+  "python": "3.12.14",
+  "packages": {
+   "numpy": "2.5.3",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "scikit-learn": "1.9.1",
+   "xgboost": "3.4.1",
+   "statsmodels": "0.15.0",
+   "rasterio": "1.5.1",
+   "shapely": "2.1.2",
+   "h3": "4.5.0"
+  }
+ }
+}
