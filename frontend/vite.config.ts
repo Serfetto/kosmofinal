@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    // Worker поставляется отдельным ESM-файлом и не должен попадать в prebundle.
+    exclude: ['maplibre-gl', 'maplibre-gl/dist/maplibre-gl-worker.mjs'],
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

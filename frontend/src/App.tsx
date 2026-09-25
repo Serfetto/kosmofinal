@@ -6,7 +6,6 @@ import { Toolbar } from './components/Toolbar';
 function App() {
   const toggleSidebar = (): void => {
     document.getElementById('app-shell')?.classList.toggle('sidebar-compact');
-    window.setTimeout(() => window.dispatchEvent(new Event('resize')), 240);
   };
 
   return (

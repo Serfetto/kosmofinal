@@ -10,6 +10,7 @@ maplibregl.setWorkerUrl(maplibreWorkerUrl);
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.font.family = 'Montserrat, "Segoe UI", Arial, sans-serif';
 Chart.defaults.font.size = 11;
+Chart.defaults.font.weight = 500;
 Chart.defaults.animation = { duration: 650, easing: 'easeOutQuart' };
 
 const $ = (s) => document.querySelector(s);
@@ -106,16 +107,15 @@ const map = new maplibregl.Map({
   },
   center: [39.8, 43.5], zoom: 10, attributionControl: { compact: true },
 });
-if (import.meta.env.DEV) {
-  globalThis.__fluxMap = map;
-  globalThis.__fluxMapErrors = [];
-  map.on('error', (event) => globalThis.__fluxMapErrors.push({
-    message: event.error?.message || String(event.error || 'MapLibre error'),
-    sourceId: event.sourceId || null,
-  }));
-}
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+
+// CSS-grid меняет ширину карты во время сворачивания sidebar. MapLibre сам
+// этого не отслеживает, поэтому синхронизируем WebGL canvas с контейнером.
+const mapResizeObserver = new ResizeObserver(() => {
+  requestAnimationFrame(() => map.resize());
+});
+mapResizeObserver.observe(document.querySelector('#map'));
 
 const EMPTY = { type: 'FeatureCollection', features: [] };
 function addGeo(id) { map.addSource(id, { type: 'geojson', data: EMPTY }); }
@@ -165,6 +165,7 @@ function initLayers(firstUrl, corners) {
 // ---------- загрузка акватории ----------
 async function loadAoi(id) {
   S.aoi = S.aois.find((a) => a.id === id);
+  $('#workspace-aoi').textContent = S.aoi.name;
   toast('Загрузка акватории…', 0);
   const [hexes, series] = await Promise.all([api(`/api/aois/${id}/hexes`), api(`/api/aois/${id}/series`)]);
   S.hexes = hexes; S.series = series; S.sel = null; S.accum = null;
@@ -236,6 +237,7 @@ function setDate(i) {
   S.di = Math.max(0, Math.min(s.dates.length - 1, i));
   const d = s.dates[S.di], sc = s.scenes[S.di];
   $('#date-label').textContent = ruDate(d);
+  $('#workspace-date').textContent = `${ruDate(d)} · Sentinel-2`;
   const glint = sc.glint > 0.03 ? 'сильный' : sc.glint > 0.01 ? 'умеренный' : 'слабый';
   $('#scene-info').innerHTML = `Пролёт ${localTime(sc.datetime || d, S.aoi.tz)} (UTC+${S.aoi.tz}) · блик: ${glint} · море: <b>${sc.sea}</b>` +
     (sc.wind != null ? `, ветер ${nf(sc.wind)} м/с` : '') + (sc.storm ? `<br><span style="color:#ffb24a">Ненадёжная сцена (${sc.reason}): оставлены только крупные скопления, дата не входит в статистику</span>` : '');
@@ -666,6 +668,18 @@ function exportGPX() {
   download(`route_${S.aoi.id}_${S.series.dates[S.di]}.gpx`, gpx, 'application/gpx+xml');
 }
 
+function fitAoi() {
+  if (!S.aoi) return;
+  const [x0, y0, x1, y1] = S.aoi.bbox;
+  map.fitBounds([[x0, y0], [x1, y1]], { padding: 42, duration: 650 });
+}
+
+async function toggleFullscreen() {
+  if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+  else await document.exitFullscreen();
+  requestAnimationFrame(() => map.resize());
+}
+
 // ---------- о методе ----------
 let metrics = null;
 async function renderAbout() {
@@ -713,6 +727,8 @@ $('#drift-run').onclick = runDrift;
 $('#drift-play').onclick = playDrift;
 $('#drift-hour').oninput = (e) => { if (S.anim) playDrift(); showDriftHour(+e.target.value); };
 $('#route-run').onclick = runRoute;
+$('#map-fit').onclick = fitAoi;
+$('#map-fullscreen').onclick = toggleFullscreen;
 $('#l-rgb').onchange = (e) => map.setLayoutProperty('rgb', 'visibility', e.target.checked ? 'visible' : 'none');
 $('#l-debris').onchange = (e) => map.setLayoutProperty('debris', 'visibility', e.target.checked ? 'visible' : 'none');
 $('#l-hex').onchange = (e) => ['hex-fill', 'hex-line'].forEach((l) => map.setLayoutProperty(l, 'visibility', e.target.checked ? 'visible' : 'none'));

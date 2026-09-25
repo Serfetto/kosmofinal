@@ -17,19 +17,19 @@ export function Sidebar() {
       <header className="brand">
         <BrandMark />
         <div className="brand-copy">
-          <div className="brand-topline"><span>Flux</span><em>OCEAN INTELLIGENCE</em></div>
-          <p>Мониторинг океанического пластика в реальном времени</p>
+          <div className="brand-topline"><span>Flux</span><i aria-hidden="true">.</i></div>
+          <div className="brand-signature" aria-hidden="true"><span /><span /><span /></div>
         </div>
       </header>
 
-      <Section index="01" title="Акватория">
+      <Section title="Акватория">
         <div className="select-wrap">
           <select id="aoi" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide/30" aria-label="Выберите акваторию" defaultValue="" />
           <ChevronRight size={15} aria-hidden="true" />
         </div>
       </Section>
 
-      <Section index="02" title="Наблюдение">
+      <Section title="Наблюдение">
         <div className="date-control">
           <button className="icon transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide/40" id="prev" title="Предыдущая дата · ←" aria-label="Предыдущая дата"><ChevronLeft size={17} /></button>
           <strong id="date-label">—</strong>
@@ -39,7 +39,7 @@ export function Sidebar() {
         <div id="scene-info" className="muted small scene-info" />
       </Section>
 
-      <Section index="03" title="Слой анализа">
+      <Section title="Слой анализа">
         <div className="seg" id="mode">
           {modes.map(([mode, label, description], index) => (
             <button
@@ -55,13 +55,13 @@ export function Sidebar() {
         <div id="legend" />
       </Section>
 
-      <Section index="04" title="Сводка">
+      <Section title="Сводка">
         <div className="kpis" id="kpis" />
         <div className="subhead">Приоритетные зоны</div>
         <ol id="hotlist" className="hotlist" />
       </Section>
 
-      <Section index="05" title="Отображение" className="layers">
+      <Section title="Отображение" className="layers">
         <label className="transition-colors hover:text-tide"><input type="checkbox" id="l-rgb" defaultChecked /><span>Снимок Sentinel-2</span><Satellite size={14} /></label>
         <label className="transition-colors hover:text-tide"><input type="checkbox" id="l-debris" defaultChecked /><span>Пиксели детекций</span><Sparkles size={14} /></label>
         <label className="transition-colors hover:text-tide"><input type="checkbox" id="l-hex" defaultChecked /><span>Сетка H3 · ~0,7 км²</span><Layers3 size={14} /></label>
