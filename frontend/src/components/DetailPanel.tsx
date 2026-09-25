@@ -9,8 +9,8 @@ export function DetailPanel() {
   return (
     <aside id="panel" hidden aria-label="Детали анализа">
       <div className="panel-head">
-        <div><span className="panel-kicker">Рабочая область</span><h2 id="panel-title" /></div>
-        <button className="icon transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide/40" id="panel-close" title="Закрыть · Esc" aria-label="Закрыть"><X size={18} /></button>
+        <div><span className="panel-kicker">Инструмент анализа</span><h2 id="panel-title" /></div>
+        <button className="icon tooltip-left" id="panel-close" data-tooltip="Закрыть · Esc" aria-label="Закрыть"><X size={18} /></button>
       </div>
       <HexPanel />
       <ComparePanel />

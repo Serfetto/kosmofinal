@@ -18,7 +18,7 @@ from pipeline.config import AOIS, H3_RES, MODELS, ROOT
 from pipeline.drift import accumulation, simulate
 from pipeline.route import plan
 
-app = FastAPI(title="Flux — мониторинг океанического пластика")
+app = FastAPI(title="AquaFlow – мониторинг океанического пластика")
 FRONTEND_DIST = ROOT / "frontend" / "dist"
 
 

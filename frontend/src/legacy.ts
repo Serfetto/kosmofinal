@@ -1,4 +1,4 @@
-// @ts-nocheck — модуль постепенно типизируется без риска для проверенной геологики карты.
+// @ts-nocheck – модуль постепенно типизируется без риска для проверенной геологики карты.
 import * as maplibregl from 'maplibre-gl';
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import Chart from 'chart.js/auto';
@@ -15,13 +15,14 @@ Chart.defaults.animation = { duration: 650, easing: 'easeOutQuart' };
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
-const nf = (v, d = 1) => (v == null || Number.isNaN(v)) ? '—' : Number(v).toLocaleString('ru-RU', { maximumFractionDigits: d });
+const nf = (v, d = 1) => (v == null || Number.isNaN(v)) ? '–' : Number(v).toLocaleString('ru-RU', { maximumFractionDigits: d });
 const ruDate = (d) => d.split('-').reverse().join('.');
 const shortDate = (d) => { const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y.slice(2)}`; };
 
 const CLS_COL = ['rgba(0,0,0,0)', '#ffe38a', '#ffb24a', '#ff6a3d', '#d9214f'];
 const CLS_NAME = ['не обнаружено', 'низкий', 'умеренный', 'высокий', 'очень высокий'];
-const COL_A = '#fbbf24', COL_B = '#a78bfa', ACCENT = '#00f5ff';
+const COL_A = '#ffb648', COL_B = '#9b8cff';
+const accentColor = () => document.documentElement.dataset.theme === 'light' ? '#087f75' : '#d8ff45';
 
 const S = {
   aois: [], aoi: null, hexes: null, series: null, di: 0, mode: 'date',
@@ -120,17 +121,21 @@ const localTime = (iso, tz) => {
 };
 
 // ---------- карта ----------
+const initialTheme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+
 const map = new maplibregl.Map({
   container: 'map',
   style: {
     version: 8,
     sources: {
       dark: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 16, attribution: 'Esri, HERE, Garmin, © OpenStreetMap' },
+      light: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 16, attribution: 'Esri, HERE, Garmin, © OpenStreetMap' },
       sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, attribution: 'Esri World Imagery' },
     },
     layers: [
-      { id: 'bg', type: 'background', paint: { 'background-color': '#0a111d' } },
-      { id: 'dark', type: 'raster', source: 'dark' },
+      { id: 'bg', type: 'background', paint: { 'background-color': initialTheme === 'light' ? '#dfe7e2' : '#071412' } },
+      { id: 'dark', type: 'raster', source: 'dark', layout: { visibility: initialTheme === 'dark' ? 'visible' : 'none' } },
+      { id: 'light', type: 'raster', source: 'light', layout: { visibility: initialTheme === 'light' ? 'visible' : 'none' } },
       { id: 'sat', type: 'raster', source: 'sat', layout: { visibility: 'none' } },
     ],
   },
@@ -138,6 +143,28 @@ const map = new maplibregl.Map({
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+
+function applyMapTheme(theme) {
+  if (!map.isStyleLoaded()) return;
+  const isLight = theme === 'light';
+  map.setPaintProperty('bg', 'background-color', isLight ? '#dfe7e2' : '#071412');
+  map.setLayoutProperty('light', 'visibility', isLight ? 'visible' : 'none');
+  map.setLayoutProperty('dark', 'visibility', isLight ? 'none' : 'visible');
+  const accent = accentColor();
+  if (map.getLayer('tracks')) map.setPaintProperty('tracks', 'line-color', accent);
+  if (map.getLayer('route')) map.setPaintProperty('route', 'line-color', accent);
+  colorTimeline();
+  if (S.charts.hex && S.series) {
+    S.charts.hex.data.datasets[0].backgroundColor = S.series.dates.map((d, j) => j === S.di ? accent : S.series.scenes[j].storm ? '#4a5568' : '#ff8a4c');
+    S.charts.hex.update('none');
+  }
+}
+
+window.addEventListener('aquaflow-theme-change', (event) => {
+  const theme = event.detail?.theme === 'light' ? 'light' : 'dark';
+  if (map.isStyleLoaded()) applyMapTheme(theme);
+  else map.once('load', () => applyMapTheme(theme));
+});
 
 // CSS-grid меняет ширину карты во время сворачивания sidebar. MapLibre сам
 // этого не отслеживает, поэтому синхронизируем WebGL canvas с контейнером.
@@ -173,7 +200,7 @@ function initLayers(firstUrl, corners) {
   }
   map.addLayer({ id: 'draw-line', type: 'line', source: 'draw', paint: { 'line-color': '#fff', 'line-width': 1.5, 'line-dasharray': [1, 1] } });
   map.addLayer({ id: 'draw-pts', type: 'circle', source: 'draw', filter: ['==', '$type', 'Point'], paint: { 'circle-radius': 4, 'circle-color': '#fff' } });
-  map.addLayer({ id: 'tracks', type: 'line', source: 'tracks', paint: { 'line-color': ACCENT, 'line-opacity': 0.16, 'line-width': 1 } });
+  map.addLayer({ id: 'tracks', type: 'line', source: 'tracks', paint: { 'line-color': accentColor(), 'line-opacity': 0.16, 'line-width': 1 } });
   map.addLayer({ id: 'particles', type: 'circle', source: 'particles', paint: {
     'circle-radius': 2.6, 'circle-color': ['case', ['==', ['get', 'b'], 1], '#ff6a3d', '#9ff0ff'],
     'circle-stroke-color': '#04121a', 'circle-stroke-width': 0.5 } });
@@ -182,7 +209,7 @@ function initLayers(firstUrl, corners) {
   map.addLayer({ id: 'coneEnd', type: 'circle', source: 'coneCenter', filter: ['==', '$type', 'Point'], paint: { 'circle-radius': 5, 'circle-color': '#fff' } });
   map.addLayer({ id: 'routeDrift', type: 'line', source: 'routeDrift', paint: { 'line-color': '#ffb24a', 'line-width': 1.8 } });
   map.addLayer({ id: 'routeObs', type: 'circle', source: 'routeObs', paint: { 'circle-radius': 3.5, 'circle-color': '#ffb24a' } });
-  map.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': ACCENT, 'line-width': 3, 'line-dasharray': [2, 1.2] } });
+  map.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': accentColor(), 'line-width': 3, 'line-dasharray': [2, 1.2] } });
 
   map.on('mousemove', 'hex-fill', onHexHover);
   map.on('mouseleave', 'hex-fill', () => { $('#tip').hidden = true; map.getCanvas().style.cursor = ''; });
@@ -208,7 +235,7 @@ async function loadAoi(id) {
   map.fitBounds([[x0, y0], [x1, y1]], { padding: 30, duration: 0 });
   placeMarkers();
   buildTimeline();
-  // По умолчанию — самая «грязная» дата из спокойных
+  // По умолчанию – самая «грязная» дата из спокойных
   let best = di, bestA = -1;
   series.scenes.forEach((s, i) => { if (!s.storm && s.area_m2 > bestA) { bestA = s.area_m2; best = i; } });
   setDate(best);
@@ -259,7 +286,7 @@ function buildTimeline() {
 }
 function colorTimeline() {
   const c = S.charts.timeline; if (!c) return;
-  c.data.datasets[0].backgroundColor = S.series.scenes.map((sc, i) => i === S.di ? ACCENT : sc.storm ? '#4a5568' : '#2c5d7a');
+  c.data.datasets[0].backgroundColor = S.series.scenes.map((sc, i) => i === S.di ? accentColor() : sc.storm ? '#4a5568' : '#2c5d7a');
   c.update('none');
 }
 
@@ -326,10 +353,10 @@ function renderLegend() {
   const classes = () => [1, 2, 3, 4].map((k) => `<div class="leg-row"><span class="sw" style="background:${CLS_COL[k]}"></span>${CLS_NAME[k]} <span class="muted">${k < 4 ? `${nf(e[k - 1], 0)}–${nf(e[k], 0)}` : `> ${nf(e[3], 0)}`} м²/км²</span></div>`).join('');
   const L = {
     date: `${classes()}<div class="leg-row"><span class="sw" style="background:#6b7688"></span>нет данных (облака)</div>
-      <p class="muted small">Концентрация — эквивалентная площадь плавающего мусора на км² акватории (доля покрытия пикселя × 100 м²).</p>`,
+      <p class="muted small">Концентрация – эквивалентная площадь плавающего мусора на км² акватории (доля покрытия пикселя × 100 м²).</p>`,
     mean: `${classes()}<p class="muted small">Средняя концентрация по всем безоблачным и нештормовым снимкам.</p>`,
     persist: `<div class="grad" style="background:linear-gradient(90deg,${PERSIST.map((s) => s[1]).join(',')})"></div><div class="grad-lbl small"><span>редко</span><span>≥50% снимков</span></div>
-      <p class="muted small">Доля снимков, на которых в гексе был мусор. Устойчивые зоны — места хронического скопления.</p>`,
+      <p class="muted small">Доля снимков, на которых в гексе был мусор. Устойчивые зоны – места хронического скопления.</p>`,
     trend: `<div class="grad" style="background:linear-gradient(90deg,#3cc6e8,#1d3f55,#5a2a2a,#ff4d3d)"></div><div class="grad-lbl small"><span>снижение</span><span>рост</span></div>
       <p class="muted small">Линейный тренд концентрации за период наблюдений.</p>`,
     accum: `<div class="grad" style="background:linear-gradient(90deg,${ACC.map((s) => s[1]).join(',')})"></div><div class="grad-lbl small"><span>×1,2</span><span>×4 и выше</span></div>
@@ -374,6 +401,8 @@ async function setMode(m) {
   }
   S.mode = m;
   $$('#mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
+  const activeMode = $(`#mode button[data-mode="${m}"]`);
+  if ($('#mode-current') && activeMode) $('#mode-current').textContent = activeMode.dataset.label;
   paintHexes();
 }
 
@@ -436,7 +465,7 @@ function renderHexPanel() {
   $('#hex-empty').hidden = true; $('#hex-body').hidden = false;
   const c = s.conc[S.di][i], k = s.valid[S.di][i] < 0.5 ? null : cls(c, s.ndet[S.di][i]);
   $('#hex-kpis').innerHTML = [
-    [k == null ? '—' : nf(c), `м²/км² на ${ruDate(s.dates[S.di])}`],
+    [k == null ? '–' : nf(c), `м²/км² на ${ruDate(s.dates[S.di])}`],
     [k == null ? 'облака' : CLS_NAME[k], 'уровень'],
     [nf(p.mean_conc), 'средняя, м²/км²'],
     [`${nf(p.persistence * 100, 0)}%`, `снимков с мусором (${p.n_obs})`],
@@ -447,7 +476,7 @@ function renderHexPanel() {
   S.charts.hex?.destroy();
   S.charts.hex = new Chart($('#hex-chart'), {
     type: 'bar',
-    data: { labels: s.dates.map(shortDate), datasets: [{ data, backgroundColor: s.dates.map((d, j) => j === S.di ? ACCENT : s.scenes[j].storm ? '#4a5568' : '#ff8a4c'), borderRadius: 2 }] },
+    data: { labels: s.dates.map(shortDate), datasets: [{ data, backgroundColor: s.dates.map((d, j) => j === S.di ? accentColor() : s.scenes[j].storm ? '#4a5568' : '#ff8a4c'), borderRadius: 2 }] },
     options: { responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
       plugins: { legend: { display: false }, title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#94a3b8', font: { weight: 'normal' } } },
       scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.12)' }, ticks: { maxTicksLimit: 4 } } },
@@ -484,7 +513,7 @@ function startDrawing(which) {
   map.doubleClickZoom.disable();
   map.getCanvas().style.cursor = 'crosshair';
   $$('#draw-a, #draw-b').forEach((b) => b.classList.toggle('on', b.id === `draw-${which.toLowerCase()}`));
-  toast(`Участок ${which}: кликайте вершины, двойной клик — завершить`, 3500);
+  toast(`Участок ${which}: кликайте вершины, двойной клик – завершить`, 3500);
   updateDraft();
 }
 function stopDrawing() {
@@ -508,7 +537,7 @@ function onDrawClick(e) {
 function onDrawFinish(e) {
   if (!S.drawing) return;
   e.preventDefault();
-  // dblclick добавил две одинаковые вершины — убираем дубли
+  // dblclick добавил две одинаковые вершины – убираем дубли
   const pts = S.draft.filter((c, i, a) => i === 0 || Math.hypot(c[0] - a[i - 1][0], c[1] - a[i - 1][1]) > 1e-6);
   if (pts.length < 3) { toast('Нужно минимум 3 вершины'); return; }
   const which = S.drawing;
@@ -544,14 +573,14 @@ function areaStats(poly) {
 }
 function renderCompare() {
   const A = S.cmp.A ? areaStats(S.cmp.A) : null, B = S.cmp.B ? areaStats(S.cmp.B) : null;
-  const col = (st, f) => (st ? f(st) : '—');
+  const col = (st, f) => (st ? f(st) : '–');
   const rows = [
     ['Акватория, км²', (s) => nf(s.km2)],
     ['Гексов', (s) => s.n],
     [`На ${ruDate(S.series.dates[S.di])}, м²/км²`, (s) => nf(s.cur, 2)],
     ['Средняя, м²/км²', (s) => nf(s.mean, 2)],
     ['Максимум, м²/км²', (s) => nf(s.max, 1)],
-    ['Доля снимков с мусором', (s) => (s.share == null ? '—' : `${nf(s.share * 100, 0)}%`)],
+    ['Доля снимков с мусором', (s) => (s.share == null ? '–' : `${nf(s.share * 100, 0)}%`)],
     ['Устойчивых гексов (≥20%)', (s) => s.hot],
     ['Тренд, м²/км² в мес', (s) => `${s.trend > 0 ? '+' : ''}${nf(s.trend, 2)}`],
   ];
@@ -560,7 +589,7 @@ function renderCompare() {
     const [hi, lo, nh, nl] = A.mean >= B.mean ? [A, B, 'A', 'B'] : [B, A, 'B', 'A'];
     const ratio = lo.mean > 0 ? hi.mean / lo.mean : null;
     verdict = `<div class="verdict">Участок <b>${nh}</b> загрязнён сильнее: средняя концентрация ${ratio ? `в <b>${nf(ratio, 1)} раза</b> выше` : 'выше (на участке ' + nl + ' мусор не найден)'}.` +
-      ` Приоритет обследования — <b>${nh}</b>${hi.trend > 0 ? ', загрязнение растёт' : ''}.</div>`;
+      ` Приоритет обследования – <b>${nh}</b>${hi.trend > 0 ? ', загрязнение растёт' : ''}.</div>`;
   }
   $('#cmp-result').innerHTML = `<table><tr><th></th><th style="color:${COL_A}">A</th><th style="color:${COL_B}">B</th></tr>` +
     rows.map(([n, f]) => `<tr><td>${n}</td><td>${col(A, f)}</td><td>${col(B, f)}</td></tr>`).join('') + '</table>' + verdict;
@@ -588,7 +617,7 @@ async function runDrift(trigger = $('#drift-run')) {
     toast('Прогноз дрейфа: течения SMOC + ветер ERA5, ансамбль частиц…', 0);
     try {
       const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift?hours=72`);
-      if (!r.n) { toast('На эту дату детекций нет — нечего переносить'); return; }
+      if (!r.n) { toast('На эту дату детекций нет – нечего переносить'); return; }
     S.drift = r;
     const n = r.frames[0].length;
     const tracks = [];
@@ -674,7 +703,7 @@ async function runRoute(trigger = $('#route-run')) {
         <span class="n">${s.order}</span>
         <span>${nf(s.area_m2, 0)} м² · ${s.n_pixels} пикс.<br><span class="meta">дрейф к прибытию ${nf(s.drift_km, 2)} км · переход ${nf(s.leg_km)} км</span></span>
         <span class="eta">${localTime(s.eta, tz)}<br><span class="meta">+${nf(s.eta_h)} ч</span></span></li>`).join('')}</ul>
-      <p class="muted small">Время местное (UTC+${tz}). Оранжевые отрезки — смещение пятна от снимка до прибытия судна.</p>
+      <p class="muted small">Время местное (UTC+${tz}). Оранжевые отрезки – смещение пятна от снимка до прибытия судна.</p>
       <div class="row gap8"><button class="ghost" id="exp-geojson">GeoJSON</button><button class="ghost" id="exp-gpx">GPX для навигатора</button></div>`;
     $('#exp-geojson').onclick = exportGeoJSON;
     $('#exp-gpx').onclick = exportGPX;
@@ -695,7 +724,7 @@ function exportGPX() {
   const r = S.route;
   const wpt = r.stops.map((s) => `  <wpt lat="${s.predicted[1]}" lon="${s.predicted[0]}"><name>T${s.order}</name><desc>${nf(s.area_m2, 0)} m2, ETA ${s.eta}</desc></wpt>`).join('\n');
   const rte = r.line.map((c, i) => `    <rtept lat="${c[1]}" lon="${c[0]}"><name>${i === 0 || i === r.line.length - 1 ? 'PORT' : `T${i}`}</name></rtept>`).join('\n');
-  const gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Drift" xmlns="http://www.topografix.com/GPX/1/1">\n${wpt}\n  <rte><name>Survey ${S.series.dates[S.di]}</name>\n${rte}\n  </rte>\n</gpx>\n`;
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="AquaFlow" xmlns="http://www.topografix.com/GPX/1/1">\n${wpt}\n  <rte><name>Survey ${S.series.dates[S.di]}</name>\n${rte}\n  </rte>\n</gpx>\n`;
   download(`route_${S.aoi.id}_${S.series.dates[S.di]}.gpx`, gpx, 'application/gpx+xml');
 }
 
@@ -735,7 +764,7 @@ async function renderAbout() {
       <li><b>Фильтры ложных срабатываний</b>: CFAR (аномалия ≥ 5σ локального шума), спектральный тест против пены, маска постоянных объектов (причалы, буи, садки), учёт ветра ERA5 (при ≥ 8 м/с остаются только крупные скопления).</li>
       <li><b>Концентрация</b>: линейное смешение «вода + плотное скопление» даёт долю покрытия пикселя. Сумма по гексу H3 даёт м² мусора на км².</li>
       <li><b>Динамика</b>: устойчивость (доля снимков с мусором) и тренд по каждому гексу.</li>
-      <li><b>Прогноз</b>: лагранжев ансамбль частиц. Течения SMOC (включая прилив и стоксов дрейф) + 1–3% ветра ERA5, выброс на берег. Для водохранилищ — только ветровой дрейф.</li>
+      <li><b>Прогноз</b>: лагранжев ансамбль частиц. Течения SMOC (включая прилив и стоксов дрейф) + 1–3% ветра ERA5, выброс на берег. Для водохранилищ – только ветровой дрейф.</li>
       <li><b>Обследование</b>: маршрут из порта по целям с максимальной отдачей «площадь / время». Позиции целей пересчитаны на момент прибытия.</li>
     </ol>
     <h3>Качество классификатора (MARIDA, тестовая выборка, ${nf(metrics?.n_test ?? 0, 0)} пикс.)</h3>
@@ -743,7 +772,7 @@ async function renderAbout() {
     <p class="small muted">AP для класса «мусор»: ${nf(metrics?.debris_ap, 3)}.</p>
     <h3>Ограничения</h3>
     <ul>
-      <li>Со спутника видны скопления и полосы мусора (от ~20–30% пикселя 10 м), а не отдельные бутылки. Концентрация — эквивалентная площадь покрытия, а не число предметов.</li>
+      <li>Со спутника видны скопления и полосы мусора (от ~20–30% пикселя 10 м), а не отдельные бутылки. Концентрация – эквивалентная площадь покрытия, а не число предметов.</li>
       <li>Мусор и органику (плавник, водоросли) спектрально разделить полностью нельзя. Для подтверждения нужны судно или дрон, и сервис строит для них маршрут.</li>
       <li>Прогноз течений на 0,08° не разрешает мелкие бухты и порты.</li>
     </ul></div>`;
