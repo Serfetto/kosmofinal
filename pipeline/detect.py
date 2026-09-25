@@ -153,7 +153,8 @@ def detect_scene(aoi_id: str, date: str, water: np.ndarray) -> dict:
     nb = uniform_filter((P > 0.3).astype(np.float32), 3) * 9
     b8 = xn[BAND_IDX["B08"]]
     hp = b8 - uniform_filter(b8, 5, mode="nearest")
-    noise = np.sqrt(uniform_filter(hp * hp, 51, mode="nearest"))
+    # uniform_filter на скользящих суммах даёт крошечные отрицательные значения — без клипа sqrt вернёт NaN
+    noise = np.sqrt(np.maximum(uniform_filter(hp * hp, 51, mode="nearest"), 0))
     snr = d8 / np.maximum(noise, 1e-4)
     flags = ((d8 > d2) * 1 + (nb >= 2) * 2 + (snr >= 5) * 4).astype(np.uint8)
 
