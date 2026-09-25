@@ -1,0 +1,7 @@
+services:
+  aquaflow:
+    build: .
+    image: aquaflow
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
