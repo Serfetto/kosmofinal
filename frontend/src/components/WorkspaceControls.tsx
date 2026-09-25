@@ -498,42 +498,42 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
           <p>Включайте источники независимо друг от друга. Изменения сразу применяются к карте.</p>
         </div>
         <div className="layers-grid layers">
-          <label data-tooltip="Оптический снимок поверхности воды в естественных цветах">
+          <label>
             <span className="layer-icon"><Satellite size={19} /></span>
             <span><strong>Снимок Sentinel-2</strong><small>Естественные цвета акватории</small></span>
             <input type="checkbox" id="l-rgb" defaultChecked />
           </label>
-          <label data-tooltip="Пиксели, в которых модель обнаружила плавающий мусор">
+          <label>
             <span className="layer-icon accent-coral"><Sparkles size={19} /></span>
             <span><strong>Детекции мусора</strong><small>Результат спектрального анализа</small></span>
             <input type="checkbox" id="l-debris" defaultChecked />
           </label>
-          <label data-tooltip="Показывает облака, блики и другие невалидные пиксели">
+          <label>
             <span className="layer-icon accent-sky"><ShieldCheck size={19} /></span>
             <span><strong>Маска качества</strong><small>Видимость и надёжность сцены</small></span>
             <input type="checkbox" id="l-quality" />
           </label>
-          <label data-tooltip="Объединённые области подтверждённых детекций">
+          <label>
             <span className="layer-icon accent-coral"><Shapes size={19} /></span>
             <span><strong>Зоны детекции</strong><small>Контуры найденных скоплений</small></span>
             <input type="checkbox" id="l-zones" defaultChecked />
           </label>
-          <label data-tooltip="Результаты полевых измерений для проверки модели">
+          <label>
             <span className="layer-icon"><FlaskConical size={19} /></span>
             <span><strong>Полевые измерения</strong><small>Контрольные маршруты и пробы</small></span>
             <input type="checkbox" id="l-field" defaultChecked />
           </label>
-          <label data-tooltip="Отдельные предметы из полевых наблюдений">
+          <label>
             <span className="layer-icon accent-coral"><MapPin size={19} /></span>
             <span><strong>Отдельные предметы</strong><small>Контекст полевых наблюдений</small></span>
             <input type="checkbox" id="l-objects" />
           </label>
-          <label data-tooltip="Равные зоны для корректного сравнения концентрации">
+          <label>
             <span className="layer-icon accent-lime"><Layers3 size={19} /></span>
             <span><strong>Аналитическая сетка</strong><small>Ячейки H3 · около 0,7 км²</small></span>
             <input type="checkbox" id="l-hex" defaultChecked />
           </label>
-          <label data-tooltip="Высокодетальная спутниковая подложка вместо тёмной карты">
+          <label>
             <span className="layer-icon accent-sky"><CloudSun size={19} /></span>
             <span><strong>Спутниковая подложка</strong><small>Контекст береговой линии</small></span>
             <input type="checkbox" id="l-sat" />
