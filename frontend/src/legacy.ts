@@ -145,18 +145,45 @@ function concAt(di, i) {
 }
 const badge = (key, text) => `<span class="badge ${key}">${esc(text)}</span>`;
 
+// ---------- подложка Esri ----------
+// Где у Esri нет тайла нужного уровня (World Imagery над открытым морем — с z14), сервер отвечает кодом 200
+// и серой заглушкой «Map data not yet available». Узнаём её побайтно по эталону — тайлу тёмной подложки
+// за пределами её уровней — и отдаём прозрачный тайл: под ним виден тот же снимок с z13 (слой sat-lo).
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const TRANSPARENT = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNgYGBgAAAABQABeqhXUAAAAABJRU5ErkJggg=='), (ch) => ch.charCodeAt(0));
+let esriBlank = null;
+function sameBytes(a, b) {
+  if (!b || a.byteLength !== b.byteLength) return false;
+  const x = new Uint8Array(a), y = new Uint8Array(b);
+  for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+  return true;
+}
+maplibregl.addProtocol('esri', async (params, abortController) => {
+  if (!esriBlank) {
+    esriBlank = fetch(`${ESRI}Canvas/World_Dark_Gray_Base/MapServer/tile/17/0/0`)
+      .then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null);
+  }
+  const r = await fetch(params.url.replace('esri://', ESRI), { signal: abortController.signal });
+  if (!r.ok) throw new Error(`${r.status}: ${params.url}`);
+  const data = await r.arrayBuffer();
+  return { data: sameBytes(data, await esriBlank) ? TRANSPARENT.slice().buffer : data };
+});
+
 // ---------- карта ----------
+const SAT_URL = 'esri://World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const map = new maplibregl.Map({
   container: 'map',
   style: {
     version: 8,
     sources: {
-      dark: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 16, attribution: 'Esri, HERE, Garmin, © OpenStreetMap' },
-      sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, attribution: 'Esri World Imagery' },
+      dark: { type: 'raster', tiles: ['esri://Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 16, attribution: 'Esri, HERE, Garmin, © OpenStreetMap' },
+      satLo: { type: 'raster', tiles: [SAT_URL], tileSize: 256, maxzoom: 13 },
+      sat: { type: 'raster', tiles: [SAT_URL], tileSize: 256, attribution: 'Esri World Imagery' },
     },
     layers: [
       { id: 'bg', type: 'background', paint: { 'background-color': '#0a111d' } },
       { id: 'dark', type: 'raster', source: 'dark' },
+      { id: 'sat-lo', type: 'raster', source: 'satLo', layout: { visibility: 'none' } },
       { id: 'sat', type: 'raster', source: 'sat', layout: { visibility: 'none' } },
     ],
   },
@@ -1106,7 +1133,7 @@ $('#l-objects').onchange = async (e) => {
   vis(['objects'], e.target.checked);
 };
 $('#l-hex').onchange = (e) => vis(['hex-fill', 'hex-research', 'hex-line'], e.target.checked);
-$('#l-sat').onchange = (e) => vis(['sat'], e.target.checked);
+$('#l-sat').onchange = (e) => vis(['sat-lo', 'sat'], e.target.checked);
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && S.drawing) stopDrawing();
   else if (e.key === 'Escape' && !$('#panel').hidden) closePanel();
