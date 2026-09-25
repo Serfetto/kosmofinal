@@ -18,7 +18,8 @@ from pipeline.config import AOIS, H3_RES, MODELS, ROOT
 from pipeline.drift import accumulation, simulate
 from pipeline.route import plan
 
-app = FastAPI(title="Дрейф — мониторинг плавающего макропластика")
+app = FastAPI(title="Flux — мониторинг океанического пластика")
+FRONTEND_DIST = ROOT / "frontend" / "dist"
 
 
 def _json(path):
@@ -153,4 +154,4 @@ def metrics():
 
 
 app.mount("/data", StaticFiles(directory=WEB), name="data")
-app.mount("/", StaticFiles(directory=ROOT / "frontend", html=True), name="frontend")
+app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True, check_dir=False), name="frontend")

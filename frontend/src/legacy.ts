@@ -1,9 +1,17 @@
-import * as maplibregl from './vendor/maplibre-gl.mjs';
+// @ts-nocheck — модуль постепенно типизируется без риска для проверенной геологики карты.
+import * as maplibregl from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import Chart from 'chart.js/auto';
 
-const Chart = window.Chart;
-Chart.defaults.color = '#8ea2bf';
-Chart.defaults.font.family = '"Segoe UI", system-ui, sans-serif';
+// Vite не может автоматически определить worker URL из ESM-сборки MapLibre 6.
+// Без явного URL растры работают, а GeoJSON/H3 остаётся необработанным.
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = 'Montserrat, "Segoe UI", Arial, sans-serif';
 Chart.defaults.font.size = 11;
+Chart.defaults.font.weight = 500;
+Chart.defaults.animation = { duration: 650, easing: 'easeOutQuart' };
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -13,7 +21,7 @@ const shortDate = (d) => { const [y, m, dd] = d.split('-'); return `${dd}.${m}.$
 
 const CLS_COL = ['rgba(0,0,0,0)', '#ffe38a', '#ffb24a', '#ff6a3d', '#d9214f'];
 const CLS_NAME = ['не обнаружено', 'низкий', 'умеренный', 'высокий', 'очень высокий'];
-const COL_A = '#f5b83d', COL_B = '#b58cff', ACCENT = '#3cc6e8';
+const COL_A = '#fbbf24', COL_B = '#a78bfa', ACCENT = '#00f5ff';
 
 const S = {
   aois: [], aoi: null, hexes: null, series: null, di: 0, mode: 'date',
@@ -34,6 +42,35 @@ function toast(msg, ms = 2600) {
   t.hidden = false;
   clearTimeout(toastTimer);
   if (ms) toastTimer = setTimeout(() => (t.hidden = true), ms);
+}
+
+async function withButtonLoading(button, loadingLabel, action) {
+  button = button?.currentTarget || button;
+  if (!button || button.dataset.loading === 'true') return action();
+  const originalMarkup = button.innerHTML;
+  const originalMinWidth = button.style.minWidth;
+  const originalWidth = button.style.width;
+  const measuredWidth = Math.ceil(button.getBoundingClientRect().width);
+
+  button.dataset.loading = 'true';
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  if (measuredWidth) {
+    button.style.width = `${measuredWidth}px`;
+    button.style.minWidth = `${measuredWidth}px`;
+  }
+  button.innerHTML = `<span class="button-spinner" aria-hidden="true"></span>${loadingLabel ? `<span class="button-loading-label">${loadingLabel}</span>` : ''}`;
+
+  try {
+    return await action();
+  } finally {
+    button.innerHTML = originalMarkup;
+    button.style.width = originalWidth;
+    button.style.minWidth = originalMinWidth;
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+    delete button.dataset.loading;
+  }
 }
 function lerpColor(stops, t) {
   t = Math.max(0, Math.min(1, t));
@@ -102,6 +139,13 @@ const map = new maplibregl.Map({
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
 
+// CSS-grid меняет ширину карты во время сворачивания sidebar. MapLibre сам
+// этого не отслеживает, поэтому синхронизируем WebGL canvas с контейнером.
+const mapResizeObserver = new ResizeObserver(() => {
+  requestAnimationFrame(() => map.resize());
+});
+mapResizeObserver.observe(document.querySelector('#map'));
+
 const EMPTY = { type: 'FeatureCollection', features: [] };
 function addGeo(id) { map.addSource(id, { type: 'geojson', data: EMPTY }); }
 
@@ -109,10 +153,19 @@ function initLayers(firstUrl, corners) {
   map.addSource('rgb', { type: 'image', url: firstUrl.rgb, coordinates: corners });
   map.addLayer({ id: 'rgb', type: 'raster', source: 'rgb', paint: { 'raster-opacity': 0.92, 'raster-fade-duration': 0 } });
   ['hexes', 'sel', 'accumPts', 'draw', 'cmpA', 'cmpB', 'tracks', 'particles', 'cone', 'coneCenter', 'route', 'routeDrift', 'routeObs'].forEach(addGeo);
-  map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': ['get', 'col'], 'fill-opacity': ['get', 'op'] } });
-  map.addLayer({ id: 'hex-line', type: 'line', source: 'hexes', paint: { 'line-color': 'rgba(120,180,220,0.13)', 'line-width': 0.6 } });
   map.addSource('debris', { type: 'image', url: firstUrl.debris, coordinates: corners });
   map.addLayer({ id: 'debris', type: 'raster', source: 'debris', paint: { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } });
+  // Сетка должна лежать выше обоих растров: иначе тонкие линии теряются на ярком RGB-снимке.
+  map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes', paint: {
+    'fill-color': ['get', 'col'],
+    'fill-opacity': ['get', 'op'],
+    'fill-outline-color': 'rgba(103,232,249,0.18)',
+  } });
+  map.addLayer({ id: 'hex-line', type: 'line', source: 'hexes', paint: {
+    'line-color': ['case', ['>', ['get', 'op'], 0], 'rgba(186,245,255,0.62)', 'rgba(103,232,249,0.38)'],
+    'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.7, 12, 1.15, 15, 1.65],
+    'line-opacity': 0.78,
+  } });
   map.addLayer({ id: 'sel', type: 'line', source: 'sel', paint: { 'line-color': '#ffffff', 'line-width': 2.2 } });
   for (const [id, col] of [['cmpA', COL_A], ['cmpB', COL_B]]) {
     map.addLayer({ id: `${id}-fill`, type: 'fill', source: id, paint: { 'fill-color': col, 'fill-opacity': 0.08 } });
@@ -141,6 +194,7 @@ function initLayers(firstUrl, corners) {
 // ---------- загрузка акватории ----------
 async function loadAoi(id) {
   S.aoi = S.aois.find((a) => a.id === id);
+  $('#workspace-aoi').textContent = S.aoi.name;
   toast('Загрузка акватории…', 0);
   const [hexes, series] = await Promise.all([api(`/api/aois/${id}/hexes`), api(`/api/aois/${id}/series`)]);
   S.hexes = hexes; S.series = series; S.sel = null; S.accum = null;
@@ -165,6 +219,14 @@ function placeMarkers() {
   S.markers = [];
   const el = document.createElement('div');
   el.className = 'port-marker'; el.textContent = '⚓'; el.title = 'Порт базирования судна';
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', 'Открыть план обследования из порта');
+  const openPort = (event) => { event.stopPropagation(); openTool('route'); };
+  el.addEventListener('click', openPort);
+  el.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') openPort(event);
+  });
   S.markers.push(new maplibregl.Marker({ element: el }).setLngLat(S.aoi.port).addTo(map));
   for (const [name, ll] of Object.entries(S.aoi.rivers || {})) {
     const r = document.createElement('div');
@@ -181,13 +243,13 @@ function buildTimeline() {
     type: 'bar',
     data: { labels: s.dates.map(shortDate), datasets: [{ data: s.scenes.map((x) => x.area_m2), borderRadius: 2, backgroundColor: [] }] },
     options: {
-      responsive: true, maintainAspectRatio: false, animation: false,
+      responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
       plugins: { legend: { display: false }, tooltip: { callbacks: {
         title: (c) => ruDate(s.dates[c[0].dataIndex]),
         label: (c) => { const sc = s.scenes[c.dataIndex]; return [`мусор ≈ ${nf(c.raw, 0)} м²`, `море: ${sc.sea}${sc.wind != null ? `, ветер ${nf(sc.wind)} м/с` : ''}`]; } } } },
       scales: {
         x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } },
-        y: { ticks: { maxTicksLimit: 3, callback: (v) => nf(v, 0) }, grid: { color: '#1b2940' } },
+        y: { ticks: { maxTicksLimit: 3, callback: (v) => nf(v, 0) }, grid: { color: 'rgba(148,163,184,.12)' } },
       },
       onClick: (e, els) => { if (els.length) setDate(els[0].index); },
     },
@@ -204,6 +266,7 @@ function setDate(i) {
   S.di = Math.max(0, Math.min(s.dates.length - 1, i));
   const d = s.dates[S.di], sc = s.scenes[S.di];
   $('#date-label').textContent = ruDate(d);
+  $('#workspace-date').textContent = `${ruDate(d)} · Sentinel-2`;
   const glint = sc.glint > 0.03 ? 'сильный' : sc.glint > 0.01 ? 'умеренный' : 'слабый';
   $('#scene-info').innerHTML = `Пролёт ${localTime(sc.datetime || d, S.aoi.tz)} (UTC+${S.aoi.tz}) · блик: ${glint} · море: <b>${sc.sea}</b>` +
     (sc.wind != null ? `, ветер ${nf(sc.wind)} м/с` : '') + (sc.storm ? `<br><span style="color:#ffb24a">Ненадёжная сцена (${sc.reason}): оставлены только крупные скопления, дата не входит в статистику</span>` : '');
@@ -290,8 +353,9 @@ function onHexHover(e) {
   }
   const tip = $('#tip');
   tip.innerHTML = txt;
-  tip.style.left = `${e.point.x + 360 + 14}px`;
-  tip.style.top = `${e.point.y + 14}px`;
+  const rect = map.getCanvas().getBoundingClientRect();
+  tip.style.left = `${Math.max(8, Math.min(window.innerWidth - 280, rect.left + e.point.x + 14))}px`;
+  tip.style.top = `${Math.max(8, Math.min(window.innerHeight - 100, rect.top + e.point.y + 14))}px`;
   tip.hidden = false;
 }
 
@@ -382,29 +446,29 @@ function renderHexPanel() {
   S.charts.hex = new Chart($('#hex-chart'), {
     type: 'bar',
     data: { labels: s.dates.map(shortDate), datasets: [{ data, backgroundColor: s.dates.map((d, j) => j === S.di ? ACCENT : s.scenes[j].storm ? '#4a5568' : '#ff8a4c'), borderRadius: 2 }] },
-    options: { responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: { legend: { display: false }, title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#8ea2bf', font: { weight: 'normal' } } },
-      scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#1b2940' }, ticks: { maxTicksLimit: 4 } } },
+    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
+      plugins: { legend: { display: false }, title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#94a3b8', font: { weight: 'normal' } } },
+      scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.12)' }, ticks: { maxTicksLimit: 4 } } },
       onClick: (e, els) => { if (els.length) setDate(els[0].index); } },
   });
   $('#hex-drift-info').textContent = '';
 }
 
-async function hexDrift() {
+async function hexDrift(trigger = $('#hex-drift')) {
   const p = S.hexes.features[S.sel].properties;
-  const btn = $('#hex-drift'); btn.disabled = true;
-  try {
-    const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift_point?lon=${p.lon}&lat=${p.lat}&hours=72&n=40`);
-    map.getSource('cone').setData({ type: 'FeatureCollection', features: r.tracks.map((t) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: t } })) });
-    const end = r.center[r.center.length - 1];
-    map.getSource('coneCenter').setData({ type: 'FeatureCollection', features: [
-      { type: 'Feature', geometry: { type: 'LineString', coordinates: r.center } },
-      { type: 'Feature', geometry: { type: 'Point', coordinates: end } }] });
-    const km = haversine(p.lon, p.lat, end[0], end[1]);
-    $('#hex-drift-info').innerHTML = `Через 72 ч центр ансамбля сместится на <b>${nf(km)} км</b>, разброс ±${nf(r.spread_km[72])} км` +
-      ` (24 ч: ±${nf(r.spread_km[24])} км). На берег выброшено ${nf(r.beached_frac * 100, 0)}% частиц.`;
-  } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
-  btn.disabled = false;
+  return withButtonLoading(trigger, 'Рассчитываем прогноз…', async () => {
+    try {
+      const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift_point?lon=${p.lon}&lat=${p.lat}&hours=72&n=40`);
+      map.getSource('cone').setData({ type: 'FeatureCollection', features: r.tracks.map((t) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: t } })) });
+      const end = r.center[r.center.length - 1];
+      map.getSource('coneCenter').setData({ type: 'FeatureCollection', features: [
+        { type: 'Feature', geometry: { type: 'LineString', coordinates: r.center } },
+        { type: 'Feature', geometry: { type: 'Point', coordinates: end } }] });
+      const km = haversine(p.lon, p.lat, end[0], end[1]);
+      $('#hex-drift-info').innerHTML = `Через 72 ч центр ансамбля сместится на <b>${nf(km)} км</b>, разброс ±${nf(r.spread_km[72])} км` +
+        ` (24 ч: ±${nf(r.spread_km[24])} км). На берег выброшено ${nf(r.beached_frac * 100, 0)}% частиц.`;
+    } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
+  });
 }
 function haversine(lon1, lat1, lon2, lat2) {
   const R = 6371, r = Math.PI / 180;
@@ -504,9 +568,9 @@ function renderCompare() {
   if (B) ds.push({ label: 'B', data: B.ser, borderColor: COL_B, backgroundColor: COL_B, spanGaps: true, tension: 0.25, pointRadius: 2 });
   S.charts.cmp = new Chart($('#cmp-chart'), {
     type: 'line', data: { labels: S.series.dates.map(shortDate), datasets: ds },
-    options: { responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: { title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#8ea2bf', font: { weight: 'normal' } }, legend: { labels: { boxWidth: 10 } } },
-      scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#1b2940' } } } },
+    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
+      plugins: { title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#94a3b8', font: { weight: 'normal' } }, legend: { labels: { boxWidth: 10 } } },
+      scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.12)' } } } },
   });
 }
 
@@ -517,12 +581,12 @@ function clearDrift() {
   $('#drift-ctrl').hidden = true;
   $('#drift-play').textContent = '▶';
 }
-async function runDrift() {
-  const btn = $('#drift-run'); btn.disabled = true;
-  toast('Прогноз дрейфа: течения SMOC + ветер ERA5, ансамбль частиц…', 0);
-  try {
-    const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift?hours=72`);
-    if (!r.n) { toast('На эту дату детекций нет — нечего переносить'); btn.disabled = false; return; }
+async function runDrift(trigger = $('#drift-run')) {
+  return withButtonLoading(trigger, 'Рассчитываем прогноз…', async () => {
+    toast('Прогноз дрейфа: течения SMOC + ветер ERA5, ансамбль частиц…', 0);
+    try {
+      const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift?hours=72`);
+      if (!r.n) { toast('На эту дату детекций нет — нечего переносить'); return; }
     S.drift = r;
     const n = r.frames[0].length;
     const tracks = [];
@@ -542,9 +606,9 @@ async function runDrift() {
       [`${nf(beached * 100, 0)}%`, 'выброшено на берег'],
     ].map(([b, t]) => `<div class="kpi"><b>${b}</b><span>${t}</span></div>`).join('');
     $('#toast').hidden = true;
-    playDrift();
-  } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
-  btn.disabled = false;
+      playDrift();
+    } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
+  });
 }
 function showDriftHour(h) {
   const r = S.drift; if (!r) return;
@@ -579,14 +643,14 @@ function clearRoute() {
   ['route', 'routeDrift', 'routeObs'].forEach((id) => map.getSource(id)?.setData(EMPTY));
   $('#route-result').innerHTML = '';
 }
-async function runRoute() {
-  const btn = $('#route-run'); btn.disabled = true;
+async function runRoute(trigger = $('#route-run')) {
   const n = $('#r-n').value, sp = $('#r-speed').value, dl = $('#r-delay').value;
-  try {
-    const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/route?n=${n}&speed=${sp}&delay=${dl}`);
+  return withButtonLoading(trigger, 'Строим маршрут…', async () => {
+    try {
+      const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/route?n=${n}&speed=${sp}&delay=${dl}`);
     clearRoute();
     S.route = r;
-    if (!r.stops.length) { $('#route-result').innerHTML = `<p class="muted">${r.note || 'Нет целей в пределах смены.'}</p>`; btn.disabled = false; return; }
+      if (!r.stops.length) { $('#route-result').innerHTML = `<p class="muted">${r.note || 'Нет целей в пределах смены.'}</p>`; return; }
     map.getSource('route').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: r.line } });
     map.getSource('routeDrift').setData({ type: 'FeatureCollection', features: r.stops.map((s) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: [s.observed, s.predicted] } })) });
     map.getSource('routeObs').setData({ type: 'FeatureCollection', features: r.stops.map((s) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: s.observed } })) });
@@ -613,9 +677,9 @@ async function runRoute() {
     $('#exp-geojson').onclick = exportGeoJSON;
     $('#exp-gpx').onclick = exportGPX;
     const b = r.line.reduce((bb, c) => [[Math.min(bb[0][0], c[0]), Math.min(bb[0][1], c[1])], [Math.max(bb[1][0], c[0]), Math.max(bb[1][1], c[1])]], [[180, 90], [-180, -90]]);
-    map.fitBounds(b, { padding: { top: 80, bottom: 40, left: 40, right: 420 }, maxZoom: 13 });
-  } catch (err) { toast(`Ошибка маршрута: ${err.message}`); }
-  btn.disabled = false;
+      map.fitBounds(b, { padding: { top: 80, bottom: 40, left: 40, right: 420 }, maxZoom: 13 });
+    } catch (err) { toast(`Ошибка маршрута: ${err.message}`); }
+  });
 }
 function exportGeoJSON() {
   const r = S.route;
@@ -633,9 +697,27 @@ function exportGPX() {
   download(`route_${S.aoi.id}_${S.series.dates[S.di]}.gpx`, gpx, 'application/gpx+xml');
 }
 
+function fitAoi() {
+  if (!S.aoi) return;
+  const [x0, y0, x1, y1] = S.aoi.bbox;
+  map.fitBounds([[x0, y0], [x1, y1]], { padding: 42, duration: 650 });
+}
+
+async function toggleFullscreen(trigger = $('#map-fullscreen')) {
+  return withButtonLoading(trigger, '', async () => {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+      requestAnimationFrame(() => map.resize());
+    } catch (err) { toast(`Полноэкранный режим недоступен: ${err.message}`); }
+  });
+}
+
 // ---------- о методе ----------
 let metrics = null;
 async function renderAbout() {
+  const trigger = $('#tools button[data-tool="about"]');
+  const render = async () => {
   if (!metrics) { try { metrics = await api('/api/metrics'); } catch { metrics = null; } }
   const rep = metrics?.report || {};
   const names = { debris: 'Мусор', organic: 'Водоросли/органика', ship: 'Суда', cloud: 'Облака', water: 'Вода', foam: 'Пена/волны' };
@@ -663,6 +745,10 @@ async function renderAbout() {
       <li>Мусор и органику (плавник, водоросли) спектрально разделить полностью нельзя. Для подтверждения нужны судно или дрон, и сервис строит для них маршрут.</li>
       <li>Прогноз течений на 0,08° не разрешает мелкие бухты и порты.</li>
     </ul></div>`;
+  };
+
+  if (!metrics) return withButtonLoading(trigger, 'Загрузка…', render);
+  return render();
 }
 
 // ---------- события ----------
@@ -680,15 +766,20 @@ $('#drift-run').onclick = runDrift;
 $('#drift-play').onclick = playDrift;
 $('#drift-hour').oninput = (e) => { if (S.anim) playDrift(); showDriftHour(+e.target.value); };
 $('#route-run').onclick = runRoute;
+$('#map-fit').onclick = fitAoi;
+$('#map-fullscreen').onclick = toggleFullscreen;
 $('#l-rgb').onchange = (e) => map.setLayoutProperty('rgb', 'visibility', e.target.checked ? 'visible' : 'none');
 $('#l-debris').onchange = (e) => map.setLayoutProperty('debris', 'visibility', e.target.checked ? 'visible' : 'none');
 $('#l-hex').onchange = (e) => ['hex-fill', 'hex-line'].forEach((l) => map.setLayoutProperty(l, 'visibility', e.target.checked ? 'visible' : 'none'));
 $('#l-sat').onchange = (e) => { map.setLayoutProperty('sat', 'visibility', e.target.checked ? 'visible' : 'none'); };
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && S.drawing) stopDrawing();
+  else if (e.key === 'Escape' && !$('#panel').hidden) closePanel();
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.key === 'ArrowLeft') setDate(S.di - 1);
   if (e.key === 'ArrowRight') setDate(S.di + 1);
+  const tool = ['hex', 'compare', 'drift', 'route', 'about'][Number(e.key) - 1];
+  if (tool) openTool(tool);
 });
 
 map.on('load', async () => {

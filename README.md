@@ -1,4 +1,4 @@
-# Дрейф — мониторинг плавающего макропластика
+# Flux — мониторинг океанического пластика
 
 Веб-сервис для выявления и оценки загрязнения акваторий плавающим мусором по снимкам Sentinel-2:
 интерактивная карта концентрации, сравнение участков, динамика во времени, прогноз дрейфа
@@ -36,7 +36,7 @@ Planetary Computer STAC ──► Sentinel-2 L2A, 11 каналов, сетка 
                               │
  Open-Meteo: течения SMOC, ветер ERA5 ──► дрейф (RK2, ансамбль) ──► прогноз, зоны скопления, маршрут
                               │
-                     FastAPI ──► MapLibre + Chart.js
+              FastAPI API ──► React + Tailwind + MapLibre + Chart.js
 ```
 
 Структура:
@@ -50,7 +50,11 @@ Planetary Computer STAC ──► Sentinel-2 L2A, 11 каналов, сетка 
 - `pipeline/drift.py` — течения/ветер, лагранжев дрейф, карта скопления
 - `pipeline/route.py` — маршрут обследования
 - `backend/app.py` — API и раздача фронтенда
-- `frontend/` — интерфейс (без сборки, MapLibre и Chart.js лежат в `vendor/`)
+- `frontend/src/App.tsx` — корневая композиция приложения
+- `frontend/src/components/` — боковая панель, карта, тулбар и рабочая панель
+- `frontend/src/components/panels/` — отдельные сценарии участка, сравнения, дрейфа и маршрута
+- `frontend/src/legacy.ts` — картографическая и аналитическая логика MapLibre + Chart.js
+- `frontend/src/styles.css` — Tailwind и визуальная система приложения
 
 ## Быстрый запуск на готовых данных
 
@@ -63,6 +67,7 @@ git clone <url репозитория> && cd kosmofinal
 python -m pip install uv
 python -m uv venv --python 3.12 .venv
 python -m uv pip install --python .venv/Scripts/python.exe -r requirements.txt   # Linux/macOS: .venv/bin/python
+cd frontend && npm install && npm run build && cd ..
 .venv/Scripts/python -m uvicorn backend.app:app --port 8000                       # Linux/macOS: .venv/bin/python
 # http://localhost:8000
 ```
@@ -80,9 +85,22 @@ python -m uv pip install --python .venv/Scripts/python.exe -r requirements.txt
 # 2. данные для всех акваторий (скачивание ~15 ГБ, детекция ~40 мин)
 .venv/Scripts/python -m pipeline.build run
 
-# 3. сервис
+# 3. интерфейс и сервис
+cd frontend
+npm install
+npm run build
+cd ..
 .venv/Scripts/python -m uvicorn backend.app:app --port 8000
 # http://localhost:8000
+```
+
+Для разработки интерфейса с hot reload запустите API на порту `8000`, а во втором терминале:
+
+```bash
+cd frontend
+npm install
+npm run dev
+# http://localhost:5173 — запросы /api и /data проксируются в FastAPI
 ```
 
 На Windows с кириллицей в консоли: `set PYTHONIOENCODING=utf-8`.
