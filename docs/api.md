@@ -17,7 +17,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 - [Типовые сценарии](#типовые-сценарии)
 - [Служебное](#служебное): `health`, `statuses`
 - [Акватории и снимки](#акватории-и-снимки): `aois`, `aois/{aoi}`, `scenes`, `hexes`, `series`, `grid`
-- [Детекции на снимке](#детекции-на-снимке): `zones`, `points`
+- [Детекции на снимке](#детекции-на-снимке): `zones`, `points`, `/api/zones` (все скопления одним JSON)
 - [Концентрация](#концентрация): `profiles`, `concentration`, `hex/{i}`
 - [Полевые данные](#полевые-данные): `field`, `field/objects`, `field/sources`, `field/{event_id}`
 - [Реестр пар](#реестр-пар): `pairs`
@@ -67,6 +67,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 | GET | [`/api/aois/{aoi}/grid`](#get-apiaoisaoigrid) | привязка растров снимка к карте | JSON |
 | GET | [`/api/aois/{aoi}/{date}/zones`](#get-apiaoisaoidatezones) | зоны детекции на снимке | GeoJSON |
 | GET | [`/api/aois/{aoi}/{date}/points`](#get-apiaoisaoidatepoints) | пиксели с детекцией | JSON |
+| GET | [`/api/zones`](#get-apizones) | скопления мусора по всем акваториям и датам: где, когда, сколько | JSON |
 | GET | [`/api/profiles`](#get-apiprofiles) | профили концентрации и качество моделей | JSON |
 | GET | [`/api/aois/{aoi}/concentration`](#get-apiaoisaoiconcentration) | концентрация по гексам на все даты | JSON |
 | GET | [`/api/aois/{aoi}/{date}/hex/{i}`](#get-apiaoisaoidatehexi) | концентрация в гексе с причинами статуса | JSON |
@@ -97,6 +98,14 @@ curl http://localhost:8000/api/aois/sochi/scenes                     # усло�
 curl http://localhost:8000/api/aois/sochi/hexes                      # сетка гексов (один раз на акваторию)
 curl http://localhost:8000/api/aois/sochi/2026-09-13/zones           # зоны детекции
 curl "http://localhost:8000/api/aois/sochi/concentration?profile=B"  # концентрация: взять строку value[индекс даты]
+```
+
+**Все скопления мусора одним JSON** — дата, координаты, площадь, покрытие, концентрация:
+
+```bash
+curl "http://localhost:8000/api/zones?limit=20"                                   # крупнейшие по покрытию
+curl "http://localhost:8000/api/zones?aoi=batumi&date_from=2024-06-01&date_to=2024-06-30&sort=date"
+curl "http://localhost:8000/api/zones?bbox=41.0,41.5,41.8,42.0&min_cover_m2=50&reliable_only=true"
 ```
 
 **Что в конкретном месте** — клик по гексу: `GET /api/aois/sochi/2026-09-13/hex/5?profile=B` — число,
@@ -432,6 +441,58 @@ curl http://localhost:8000/api/field/S4:DOORS3:T30            # расшифро
 ```
 
 Ошибки: как у `zones`.
+
+### `GET /api/zones`
+
+Скопления мусора — зоны детекции со **всех** обработанных снимков всех акваторий одним плоским JSON, без
+GeoJSON-обёртки: удобно для таблиц, скриптов и сторонних сервисов. Поля зоны — те же, что в
+[`export?layer=zones`](#get-apiexport), плюс `aoi_name` и `scene_reliable`.
+
+| Параметр | Где | Описание |
+|---|---|---|
+| `aoi` | query | акватории через запятую (`batumi,sochi`); по умолчанию все |
+| `date` | query | только снимок этой даты, `YYYY-MM-DD` |
+| `date_from`, `date_to` | query | период снимков, границы включительно |
+| `bbox` | query | центр зоны внутри рамки `lon_min,lat_min,lon_max,lat_max` |
+| `min_cover_m2` | query | покрытие мусором в зоне не меньше, м² (по умолчанию 0) |
+| `reliable_only` | query | `true` — только надёжные сцены: без шторма, льда и сильного блика |
+| `profile` | query | чья концентрация в `conc_*` (по умолчанию `B`) |
+| `sort` | query | `cover` — по убыванию покрытия (по умолчанию), `date` — сначала новые снимки, `p` — по убыванию `p_max` |
+| `limit`, `offset` | query | страница: 1–10000 зон (по умолчанию 100), сколько пропустить |
+| `geometry` | query | `true` — добавить контур зоны в поле `geometry` (GeoJSON) |
+
+Ответ: `total` — сколько зон подходит под фильтры, `count` — сколько в этом ответе, `offset`, `limit`,
+`profile`, `sort` и `items`. Главные поля зоны:
+
+| Поле | Описание |
+|---|---|
+| `zone_id`, `aoi`, `aoi_name` | зона и акватория |
+| `date`, `scene_datetime_utc`, `scene_id` | когда снято и какой сценой |
+| `lat`, `lon`, `h3` | центр зоны и ячейка H3 |
+| `zone_area_km2`, `n_pixels` | размер зоны |
+| `cover_m2`, `cover_m2_km2` | эквивалентная площадь мусора в зоне, м², и она же на км² зоны |
+| `p_mean`, `p_max` | вероятность мусора по детектору |
+| `conc_items_km2`, `conc_lo80`…`conc_hi95`, `conc_status`, `conc_reasons` | модельная концентрация профиля, шт./км², интервалы и статус |
+| `valid_frac_scene`, `wind_ms`, `sea`, `scene_reliable` | условия съёмки |
+| `field_event_id`, `field_distance_km`, `field_date_gap_days`, `field_conc_items_km2` | ближайшее полевое измерение |
+
+```json
+{"total": 103, "count": 1, "offset": 0, "limit": 1, "profile": "B", "sort": "cover",
+ "items": [{"zone_id": "batumi-2024-06-05-102", "aoi": "batumi",
+            "aoi_name": "Батуми — Кобулети (Грузия, полевые данные DOORS 2024)",
+            "date": "2024-06-05", "scene_datetime_utc": "2024-06-05T08:06:09.024000+00:00",
+            "lat": 41.64163, "lon": 41.6016, "h3": "882c21c939fffff",
+            "zone_area_km2": 0.001, "n_pixels": 3, "cover_m2": 35.3, "p_mean": 0.992, "p_max": 0.996,
+            "unit": "шт./км²", "conc_items_km2": 662.6, "conc_lo80": 141.5, "conc_hi80": 2226.1,
+            "conc_status": "research_estimate",
+            "conc_reasons": "log_dist_coast_km = 0.9 вне диапазона обучения [1.7; 5.0]",
+            "wind_ms": 2.7, "sea": "спокойное", "scene_reliable": true,
+            "field_event_id": "S4:DOORS3:T21", "field_distance_km": 6.7, "field_conc_items_km2": 67.34,
+            "geometry": null, "…": "…"}]}
+```
+
+Покрытие и площадь зоны — показатели детектора, в шт./км² они не переводятся. Пустая выборка — `total: 0`, не
+ошибка. Ошибки: `404` — неизвестная акватория в `aoi`; `422` — неверная дата, `bbox`, `sort`, `limit` или профиль.
 
 ---
 

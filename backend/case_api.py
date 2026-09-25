@@ -20,7 +20,7 @@ from fastapi.responses import Response
 from backend.schemas import (DATE_RE, PROFILE_RE, AoiPath, AoiQuery, ConcentrationLayerOut, DatePath, DateQuery,
                              FeatureCollection, FieldEventOut, FieldSourceOut, GeoJSONResponse, HexEstimateOut,
                              MetricsOut, PairsOut, ProfileOut, ProfileQuery, QueryIdPath, QueryIn, RerunOut,
-                             SavedQueryOut, Tag, errors)
+                             SavedQueryOut, Tag, ZonesOut, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
 from pipeline.config import AOIS, DATA, FIELD_SOURCES, MODELS, ROOT
@@ -92,6 +92,17 @@ def _scene_bounds(event_id: str, collection: str) -> dict[str, list[float]]:
         return {}
     items = json.loads(p.read_text(encoding="utf-8"))["items"]
     return {it["id"]: [round(v, 5) for v in shape(it["geometry"]).bounds] for it in items}
+
+
+def _parse_bbox(bbox: str | None) -> list[float] | None:
+    if not bbox:
+        return None
+    try:
+        box = [float(v) for v in bbox.split(",")]
+        assert len(box) == 4 and box[0] < box[2] and box[1] < box[3]
+    except (ValueError, AssertionError):
+        raise HTTPException(422, "bbox: четыре числа lon_min,lat_min,lon_max,lat_max")
+    return box
 
 
 def _profiles() -> dict:
@@ -177,13 +188,7 @@ def field(profile: str | None = Query(None, pattern=PROFILE_RE, description="Т�
     Пустая выборка — пустая коллекция, не ошибка. Расшифровка расчёта — `GET /api/field/{event_id}`.
     """
     fc = _field_events()
-    box = None
-    if bbox:
-        try:
-            box = [float(v) for v in bbox.split(",")]
-            assert len(box) == 4 and box[0] < box[2] and box[1] < box[3]
-        except (ValueError, AssertionError):
-            raise HTTPException(422, "bbox: четыре числа lon_min,lat_min,lon_max,lat_max")
+    box = _parse_bbox(bbox)
     feats = []
     for f in fc["features"]:
         p = f["properties"]
@@ -367,6 +372,98 @@ def zones(aoi: AoiPath, date: DatePath):
     return GeoJSONResponse(_read(WEB / aoi / date / "zones.geojson"))
 
 
+def _zone_files() -> tuple[tuple[str, str, str, float], ...]:
+    """(акватория, дата, путь, mtime) файлов зон всех опубликованных снимков — ключ кеша."""
+    out = []
+    for k in AOIS:
+        s = WEB / k / "series.json"
+        if not s.exists():
+            continue
+        for d in _series_dates(s, s.stat().st_mtime):
+            p = WEB / k / d / "zones.geojson"
+            if p.exists():
+                out.append((k, d, str(p), p.stat().st_mtime))
+    return tuple(out)
+
+
+@lru_cache(maxsize=2)
+def _all_zones(files: tuple) -> list[tuple[dict, dict]]:
+    out = []
+    for _, _, path, _ in files:
+        with open(path, encoding="utf-8") as fh:
+            out += [(f["properties"], f["geometry"]) for f in json.load(fh)["features"]]
+    return out
+
+
+@router.get("/api/zones", tags=[Tag.DETECTION], summary="Скопления мусора по всем акваториям и датам",
+            response_model=ZonesOut, responses=errors(404, 422))
+def zones_all(aoi: str | None = Query(None, description="Акватории через запятую — `id` из `GET /api/aois`; "
+                                                         "по умолчанию все", examples=["batumi,sochi"]),
+              date: str | None = Query(None, pattern=DATE_RE, description="Только снимок этой даты, YYYY-MM-DD"),
+              date_from: str | None = Query(None, pattern=DATE_RE, description="Снимки с даты включительно"),
+              date_to: str | None = Query(None, pattern=DATE_RE, description="Снимки по дату включительно"),
+              bbox: str | None = Query(None, description="Центр зоны внутри рамки `lon_min,lat_min,lon_max,lat_max`",
+                                       examples=["41.0,41.5,41.8,42.0"]),
+              min_cover_m2: float = Query(0, ge=0, description="Покрытие мусором в зоне не меньше, м²"),
+              reliable_only: bool = Query(False, description="Только надёжные сцены: без шторма, льда и сильного "
+                                                             "блика"),
+              profile: ProfileQuery = "B",
+              sort: str = Query("cover", pattern="^(cover|date|p)$",
+                                description="`cover` — по убыванию покрытия, `date` — сначала новые снимки, "
+                                            "`p` — по убыванию максимальной вероятности"),
+              limit: int = Query(100, ge=1, le=10000, description="Сколько зон вернуть (1–10000)"),
+              offset: int = Query(0, ge=0, description="Сколько зон пропустить — для постраничной выборки"),
+              geometry: bool = Query(False, description="Добавить контур зоны (GeoJSON-геометрия) в поле `geometry`")):
+    """Зоны вероятного скопления плавающего мусора со всех обработанных снимков — плоским JSON, без
+    GeoJSON-обёртки: удобно для таблиц, скриптов и сторонних сервисов.
+
+    У каждой зоны: где (`lat`, `lon` — центр зоны, `h3`), когда (`date`, `scene_datetime_utc`), сколько
+    (`zone_area_km2`, `n_pixels`, `cover_m2` — эквивалентная площадь мусора, м²), насколько уверен детектор
+    (`p_mean`, `p_max`), условия съёмки (`valid_frac_scene`, `wind_ms`, `sea`, `scene_reliable`), модельная
+    концентрация профиля в шт./км² с интервалами и статусом и ближайшее полевое измерение. Поля — те же, что
+    в `GET /api/export?layer=zones`, плюс `aoi_name` и `scene_reliable`.
+
+    `total` — сколько зон подходит под фильтры, `items` — страница из них (`limit`, `offset`). Покрытие и
+    площадь — показатели детектора, в шт./км² они не переводятся.
+    """
+    p = _profile(profile)
+    aois = None
+    if aoi:
+        aois = [a.strip() for a in aoi.split(",") if a.strip()]
+        for a in aois:
+            if a not in AOIS or not (WEB / a / "series.json").exists():
+                raise HTTPException(404, f"акватория {a!r} не найдена")
+    box = _parse_bbox(bbox)
+    files = _zone_files()
+    keep = {(k, d) for k, d, _, _ in files
+            if (aois is None or k in aois) and (date is None or d == date)
+            and (date_from is None or d >= date_from) and (date_to is None or d <= date_to)}
+    items = []
+    for z, g in _all_zones(files):
+        if (z["aoi"], z["date"]) not in keep:
+            continue
+        if box and not (box[0] <= z["lon"] <= box[2] and box[1] <= z["lat"] <= box[3]):
+            continue
+        if (z.get("cover_m2") or 0) < min_cover_m2 or (reliable_only and not z.get("scene_reliable", True)):
+            continue
+        items.append((z, g))
+    # Детерминированный порядок: основной ключ сортировки, при равенстве — покрытие и id зоны
+    items.sort(key=lambda zg: (-(zg[0].get("cover_m2") or 0), zg[0]["zone_id"]))
+    if sort == "date":
+        items.sort(key=lambda zg: zg[0]["date"], reverse=True)
+    elif sort == "p":
+        items.sort(key=lambda zg: -(zg[0].get("p_max") or 0))
+    page = []
+    for z, g in items[offset:offset + limit]:
+        row = {"aoi_name": AOIS[z["aoi"]]["name"], **_zone_row(z, profile, p),
+               "scene_reliable": z.get("scene_reliable", True)}
+        if geometry:
+            row["geometry"] = g
+        page.append(row)
+    return {"total": len(items), "count": len(page), "offset": offset, "limit": limit, "profile": profile,
+            "sort": sort, "items": page}
+
+
 @router.get("/api/aois/{aoi}/{date}/hex/{i}", tags=[Tag.CONCENTRATION], summary="Оценка концентрации в гексе",
             response_model=HexEstimateOut, responses=errors(404, 422))
 def hex_estimate(aoi: AoiPath, date: DatePath, profile: ProfileQuery = "B",
@@ -399,19 +496,23 @@ def hex_estimate(aoi: AoiPath, date: DatePath, profile: ProfileQuery = "B",
             "cover_m2_km2": s["cover"][di][i], "valid_frac": s["valid"][di][i]}
 
 
+def _zone_row(z: dict, profile: str, p: dict) -> dict:
+    """Атрибуты зоны в колонках выгрузки: концентрация — выбранного профиля."""
+    row = {k: z.get(k) for k in ZONE_COLUMNS if k in z}
+    row.update(profile=profile, profile_label=p["label"], size_class=p["size_class"], unit="шт./км²",
+               conc_items_km2=z.get(f"conc_{profile}_items_km2"), conc_status=z.get(f"conc_{profile}_status"),
+               conc_status_ru=z.get(f"conc_{profile}_status_ru"), conc_reasons=z.get(f"conc_{profile}_reasons"),
+               model_version=z.get(f"conc_{profile}_model"),
+               **{f"conc_{b}": z.get(f"conc_{profile}_{b}") for b in ("lo80", "hi80", "lo95", "hi95")})
+    return {k: row.get(k) for k in ZONE_COLUMNS}
+
+
 def _zone_rows(aoi: str, date: str, profile: str) -> tuple[list[dict], list[dict]]:
     p = _profile(profile)
     fc = _read(WEB / aoi / date / "zones.geojson")
     rows, feats = [], []
     for f in fc["features"]:
-        z = f["properties"]
-        row = {k: z.get(k) for k in ZONE_COLUMNS if k in z}
-        row.update(profile=profile, profile_label=p["label"], size_class=p["size_class"], unit="шт./км²",
-                   conc_items_km2=z.get(f"conc_{profile}_items_km2"), conc_status=z.get(f"conc_{profile}_status"),
-                   conc_status_ru=z.get(f"conc_{profile}_status_ru"), conc_reasons=z.get(f"conc_{profile}_reasons"),
-                   model_version=z.get(f"conc_{profile}_model"),
-                   **{f"conc_{b}": z.get(f"conc_{profile}_{b}") for b in ("lo80", "hi80", "lo95", "hi95")})
-        rows.append({k: row.get(k) for k in ZONE_COLUMNS})
+        rows.append(_zone_row(f["properties"], profile, p))
         feats.append({"type": "Feature", "geometry": f["geometry"], "properties": rows[-1]})
     return rows, feats
 

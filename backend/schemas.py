@@ -22,6 +22,7 @@ PATTERN_HINTS = {
     "^(json|csv)$": "json или csv",
     "^(geojson|csv)$": "geojson или csv",
     "^(zones|hexes)$": "zones или hexes",
+    "^(cover|date|p)$": "cover, date или p",
 }
 
 
@@ -285,6 +286,61 @@ class AoiRef(BaseModel):
     id: str = Field(description="Акватория — `id` из `GET /api/aois`")
     name: str = Field(description="Название")
     dates: list[str] = Field(description="Даты обработанных снимков")
+
+
+class ZoneItem(BaseModel):
+    zone_id: str = Field(description="id зоны: `<акватория>-<дата>-<номер>`", examples=["batumi-2024-06-05-001"])
+    aoi: str = Field(description="Акватория — `id` из `GET /api/aois`")
+    aoi_name: str = Field(description="Название акватории")
+    date: str = Field(description="Дата снимка, YYYY-MM-DD (UTC)")
+    scene_id: str | None = Field(description="Сцена Sentinel-2 L2A")
+    scene_datetime_utc: str = Field(description="Момент съёмки, ISO 8601 UTC")
+    lat: float = Field(description="Широта центра зоны, WGS 84")
+    lon: float = Field(description="Долгота центра зоны, WGS 84")
+    h3: str = Field(description="Ячейка H3 (разрешение 8), где центр зоны")
+    zone_area_km2: float = Field(description="Площадь зоны, км²")
+    n_pixels: int = Field(description="Пикселей 10 м с детекцией в зоне")
+    cover_m2: float = Field(description="Эквивалентная площадь плавающего мусора в зоне, м²")
+    cover_m2_km2: float = Field(description="Покрытие на км² зоны, м²/км²")
+    p_mean: float = Field(description="Средняя вероятность мусора по пикселям зоны")
+    p_max: float = Field(description="Максимальная вероятность мусора в зоне")
+    detection_status: str = Field(description="Всегда `detected`")
+    detection_status_ru: str = Field(description="Статус детекции по-русски")
+    profile: str = Field(description="Профиль концентрации")
+    profile_label: str = Field(description="Что считает профиль")
+    size_class: str = Field(description="Размерный класс профиля")
+    unit: str = Field(description="Единица концентрации: шт./км²")
+    conc_items_km2: float | None = Field(description="Модельная концентрация в центре зоны, шт./км²; null — недоступна")
+    conc_lo80: float | None = Field(description="80%-интервал, нижняя граница")
+    conc_hi80: float | None = Field(description="80%-интервал, верхняя граница")
+    conc_lo95: float | None = Field(description="95%-интервал, нижняя граница")
+    conc_hi95: float | None = Field(description="95%-интервал, верхняя граница")
+    conc_status: str | None = Field(description="model_estimate, research_estimate или unavailable")
+    conc_status_ru: str | None = Field(description="Статус концентрации по-русски")
+    conc_reasons: str | None = Field(description="Причины статуса через «; »")
+    model_version: str | None = Field(description="Версия модели концентрации")
+    valid_frac_scene: float = Field(description="Доля воды акватории, пригодной для анализа на этом снимке")
+    wind_ms: float | None = Field(description="Ветер ERA5 в момент съёмки, м/с")
+    sea: str = Field(description="Состояние моря: спокойное, волнение, шторм")
+    scene_reliable: bool = Field(description="false — шторм, лёд или сильный блик: зона менее надёжна")
+    field_event_id: str | None = Field(description="Ближайшее полевое измерение — `event_id`")
+    field_profile: str | None = Field(description="Профиль ближайшего измерения")
+    field_date: str | None = Field(description="Дата ближайшего измерения")
+    field_distance_km: float | None = Field(description="Расстояние до него, км")
+    field_date_gap_days: int | None = Field(description="Разница дат со снимком, сут.")
+    field_conc_items_km2: float | None = Field(description="Измеренная там концентрация C = N / A, шт./км²")
+    geometry: dict[str, Any] | None = Field(None, description="Контур зоны (GeoJSON-геометрия) — только при "
+                                                              "`geometry=true`")
+
+
+class ZonesOut(BaseModel):
+    total: int = Field(description="Сколько зон подходит под фильтры")
+    count: int = Field(description="Сколько зон в этом ответе")
+    offset: int = Field(description="Сколько пропущено")
+    limit: int = Field(description="Размер страницы")
+    profile: str = Field(description="Профиль, чья концентрация в `conc_*`")
+    sort: str = Field(description="Порядок: cover, date или p")
+    items: list[ZoneItem] = Field(description="Зоны скопления")
 
 
 class FieldEventOut(BaseModel):

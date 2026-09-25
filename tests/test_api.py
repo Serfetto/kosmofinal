@@ -224,3 +224,41 @@ def test_field_event_scene_links():
     for x in client.get("/api/field/S4:DOORS3:T18").json()["pairs"]:
         if x["aoi"]:
             assert x["aoi_date"] in client.get(f"/api/aois/{x['aoi']}").json()["dates"]
+
+
+def test_zones_flat_json():
+    """Плоский JSON зон согласован с GeoJSON снимка и с выгрузкой CSV; фильтры, порядок и страницы."""
+    d = _date()
+    fc = client.get(f"/api/aois/{AOI}/{d}/zones").json()["features"]
+    r = client.get(f"/api/zones?aoi={AOI}&date={d}&limit=10000&profile=B").json()
+    assert r["total"] == r["count"] == len(fc)
+    geo = {f["properties"]["zone_id"]: f["properties"] for f in fc}
+    exp = client.get(f"/api/export?aoi={AOI}&date={d}&profile=B&layer=zones&format=csv")
+    csv_rows = {row["zone_id"]: row for row in csv.DictReader(io.StringIO(exp.content.decode("utf-8-sig")))}
+    for it in r["items"]:
+        z = geo[it["zone_id"]]
+        assert (it["lat"], it["lon"], it["date"], it["cover_m2"]) == (z["lat"], z["lon"], z["date"], z["cover_m2"])
+        assert it["conc_items_km2"] == z["conc_B_items_km2"] and it["conc_status"] == csv_rows[it["zone_id"]]["conc_status"]
+        assert it["unit"] == "шт./км²" and it.get("geometry") is None
+    covers = [it["cover_m2"] for it in r["items"]]
+    assert covers == sorted(covers, reverse=True)
+
+    full = client.get(f"/api/zones?aoi={AOI}&limit=10").json()["items"]
+    a = client.get(f"/api/zones?aoi={AOI}&limit=5").json()["items"]
+    b = client.get(f"/api/zones?aoi={AOI}&limit=5&offset=5").json()["items"]
+    assert [z["zone_id"] for z in a + b] == [z["zone_id"] for z in full]
+    if fc:
+        g = client.get(f"/api/zones?aoi={AOI}&date={d}&limit=1&geometry=true").json()["items"][0]["geometry"]
+        assert g["type"] in ("Polygon", "MultiPolygon")
+
+    total = sum(sc["n_zones"] for k in [a["id"] for a in client.get("/api/aois").json()]
+                for sc in json.loads((WEB / k / "series.json").read_text(encoding="utf-8"))["scenes"])
+    assert client.get("/api/zones?limit=1").json()["total"] == total
+    dates = [z["date"] for z in client.get("/api/zones?sort=date&limit=200").json()["items"]]
+    assert dates == sorted(dates, reverse=True)
+
+    assert client.get("/api/zones?sort=x").status_code == 422
+    assert client.get("/api/zones?limit=0").status_code == 422
+    assert client.get("/api/zones?bbox=1,2").status_code == 422
+    assert client.get("/api/zones?aoi=nope").status_code == 404
+    assert client.get("/api/zones?aoi=sochi&date=2000-01-01").json()["total"] == 0
