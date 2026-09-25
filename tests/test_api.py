@@ -103,3 +103,43 @@ def test_report_districts_take_densest_window():
     ds = districts(col, row, np.array([5.0, 5, 5, 12, 1]), 100, 60, 2000, 2000, k=2)
     assert [round(d["cover"]) for d in ds] == [15, 12]
     assert sorted(ds[0]["members"].tolist()) == [0, 1, 2]
+
+
+def test_every_endpoint_documented():
+    """Новая ручка без раздела, названия, описания или описаний параметров не пройдёт."""
+    ops = [(m, p, op) for p, item in app.openapi()["paths"].items() for m, op in item.items()]
+    assert len(ops) >= 26
+    for m, p, op in ops:
+        assert op.get("tags") and op.get("summary") and op.get("description"), f"{m.upper()} {p}"
+        for prm in op.get("parameters", []):
+            assert prm.get("description"), f"{m.upper()} {p}: {prm['name']}"
+    assert (WEB.parent.parent / "docs" / "api.md").exists()
+
+
+def test_service_endpoints():
+    h = client.get("/api/health").json()
+    assert h["status"] == "ok" and h["aois"] > 0 and "configs" in h["versions"]
+    st = client.get("/api/statuses").json()
+    assert {s["id"] for s in st["detection"]} == {"detected", "not_detected", "insufficient_data"}
+    assert {s["id"] for s in st["concentration"]} == {"model_estimate", "research_estimate", "unavailable"}
+
+
+def test_aoi_and_scenes():
+    a = client.get(f"/api/aois/{AOI}").json()
+    assert a == next(x for x in client.get("/api/aois").json() if x["id"] == AOI)
+    sc = client.get(f"/api/aois/{AOI}/scenes").json()
+    assert [s["date"] for s in sc] == a["dates"]
+    last = sc[-1]
+    assert len(last["corners"]) == 4
+    for key in ("rgb", "debris", "quality", "zones", "points"):
+        assert client.get(last["layers"][key]).status_code == 200, key
+    assert client.get("/api/aois/nope/scenes").status_code == 404
+
+
+def test_errors_are_readable():
+    r = client.get(f"/api/aois/{AOI}/2026-99-99x/zones")
+    assert r.status_code == 422 and "YYYY-MM-DD" in r.json()["detail"] and r.json()["errors"]
+    r = client.get(f"/api/aois/{AOI}/{_date()}/drift?hours=500")
+    assert r.status_code == 422 and "hours" in r.json()["detail"]
+    r = client.get("/api/aois/nope")
+    assert r.status_code == 404 and isinstance(r.json()["detail"], str)

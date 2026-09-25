@@ -13,6 +13,8 @@
 (`GET /api/report?aoi=&date=&profile=`).
 
 Краткий отчёт с результатами и разбором ошибок — [docs/report.md](docs/report.md).
+Справочник API: все ручки с параметрами, полями ответов и примерами — [docs/api.md](docs/api.md);
+интерактивно — `http://localhost:8000/api/docs` (Swagger) и `/api/redoc`, схема — `/api/openapi.json`.
 План интеграции данных кейса — [plan.md](plan.md). Сводка метрик — [data/eval/summary.md](data/eval/summary.md).
 
 ## Целевая величина

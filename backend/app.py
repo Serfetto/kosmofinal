@@ -1,30 +1,112 @@
 """Веб-сервис: API + статика фронтенда.
 
 uvicorn backend.app:app --port 8000
+Документация API: /api/docs (Swagger), /api/redoc, /api/openapi.json; справочник ручек — docs/api.md.
 """
 from __future__ import annotations
 
 import json
-import re
 from functools import lru_cache
 
 import h3
 import numpy as np
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from backend.case_api import DATE_RE, router
+from backend.case_api import _aoi_date, router, versions
 from backend.report import router as report_router
+from backend.schemas import (PATTERN_HINTS, AccumulationOut, AoiOut, AoiPath, DatePath, DriftOut, DriftPointOut,
+                             FeatureCollection, GeoJSONResponse, HealthOut, HoursQuery, RouteOut, SceneOut, SeriesOut,
+                             StatusesOut, Tag, errors)
+from pipeline import status as ST
 from pipeline.aggregate import WEB
 from pipeline.config import AOIS, H3_RES, ROOT
 from pipeline.drift import accumulation, simulate
 from pipeline.route import plan
 
-app = FastAPI(title="Flux — мониторинг макропластика")
+DESCRIPTION = """
+Сервис для специалиста по экологическому мониторингу: по снимкам Sentinel-2 находит зоны вероятного скопления
+плавающего мусора, показывает полевые измерения и модельную концентрацию в шт./км², прогнозирует дрейф и
+планирует маршрут судна. Полный справочник с примерами — `docs/api.md` в репозитории.
+
+### С чего начать
+1. `GET /api/aois` — акватории и даты снимков.
+2. `GET /api/aois/{aoi}/scenes` — снимки акватории: условия съёмки и ссылки на слои.
+3. `GET /api/aois/{aoi}/{date}/zones` — зоны детекции на дату.
+4. `GET /api/aois/{aoi}/concentration?profile=B` — концентрация по гексам.
+5. `GET /api/export` или `GET /api/report` — выгрузка GeoJSON/CSV или PDF-отчёт.
+
+### Соглашения
+- Координаты — WGS 84, порядок **[долгота, широта]**, как в GeoJSON.
+- Дата снимка — `YYYY-MM-DD` по UTC; моменты времени — ISO 8601 UTC.
+- Гексы — H3 разрешения 8 (~0,74 км²). Индекс гекса `i` — позиция в `hexes.geojson`; массивы `[дата][гекс]`
+  в `series` и `concentration` индексируются так же.
+- Три величины не смешиваются: **полевое измерение** (C = N / A), **модельная концентрация** профиля в шт./км²
+  и **покрытие** по детектору в м² (м²/км²) — последнее в шт./км² не переводится.
+- Статусы и их подписи — `GET /api/statuses`.
+
+### Ошибки
+Тело ошибки — `{"detail": "текст по-русски"}`. `404` — нет акватории, снимка на дату, события, гекса или
+запроса. `422` — неверный параметр; для ошибок формата в ответе ещё `errors` с разбором по полям.
+
+### Растровые слои
+Файлы снимка отдаются статикой: `/data/{aoi}/{date}/rgb.jpg`, `debris.png`, `quality.png`. Углы для привязки —
+`corners` в `GET /api/aois/{aoi}/scenes`.
+"""
+
+TAGS = [
+    {"name": Tag.SERVICE, "description": "Проверка сервиса, версии моделей, словарь статусов."},
+    {"name": Tag.AOIS, "description": "Акватории, даты снимков, условия съёмки, гексы и ряды по датам."},
+    {"name": Tag.DETECTION, "description": "Что детектор нашёл на конкретном снимке: зоны и пиксели. "
+                                           "Площадь и покрытие — в м², не в шт./км²."},
+    {"name": Tag.CONCENTRATION, "description": "Модельная концентрация в шт./км² по профилям: слой по гексам, "
+                                               "оценка в точке с причинами статуса."},
+    {"name": Tag.FIELD, "description": "Полевые измерения кейса (C = N / A), отдельные предметы, расшифровка расчёта."},
+    {"name": Tag.PAIRS, "description": "Сопоставление полевых событий со снимками Sentinel-2 и решения по каждой паре."},
+    {"name": Tag.DRIFT, "description": "Прогноз дрейфа по течениям и ветру (Open-Meteo), зоны скопления, маршрут судна."},
+    {"name": Tag.EXPORT, "description": "Файлы: GeoJSON, CSV и PDF-отчёт."},
+    {"name": Tag.QUERIES, "description": "Сохранение выгрузки и проверка, что она воспроизводится побайтно (sha256)."},
+    {"name": Tag.METRICS, "description": "Результаты проверок детектора, моделей концентрации и прогноза дрейфа."},
+]
+
+app = FastAPI(title="Flux — мониторинг плавающего мусора", version="1.0.0", description=DESCRIPTION,
+              openapi_tags=TAGS, docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/openapi.json")
 app.include_router(router)
 app.include_router(report_router)
 FRONTEND_DIST = ROOT / "frontend" / "dist"
+
+WHERE = {"path": "путь", "query": "параметр запроса", "body": "тело запроса"}
+BOUND = {"greater_than_equal": "≥", "greater_than": ">", "less_than_equal": "≤", "less_than": "<"}
+
+
+def _explain(e: dict) -> str:
+    """Ошибка валидации pydantic → строка по-русски: «date (путь): '2026-99' — ожидается дата в формате YYYY-MM-DD»."""
+    loc, t, ctx = e.get("loc", ()), e.get("type"), e.get("ctx") or {}
+    if t == "json_invalid":
+        return "тело запроса: некорректный JSON"
+    name = ".".join(str(x) for x in loc[1:]) or "тело запроса"
+    where = WHERE.get(loc[0], str(loc[0])) if loc else ""
+    if t == "missing":
+        why = "обязательный параметр не передан"
+    elif t == "string_pattern_mismatch":
+        why = f"{e.get('input')!r} — ожидается {PATTERN_HINTS.get(ctx.get('pattern'), 'шаблон ' + str(ctx.get('pattern')))}"
+    elif t in ("int_parsing", "float_parsing", "int_from_float"):
+        why = f"{e.get('input')!r} — ожидается число"
+    elif t in BOUND:
+        why = f"{e.get('input')!r} — должно быть {BOUND[t]} {next(iter(ctx.values()), '')}"
+    else:
+        why = e.get("msg", "неверное значение")
+    return f"{name} ({where}): {why}"
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, exc: RequestValidationError):
+    errs = exc.errors()
+    return JSONResponse(status_code=422, content={"detail": "; ".join(_explain(e) for e in errs),
+                                                  "errors": jsonable_encoder(errs)})
 
 
 def _json(path):
@@ -33,52 +115,126 @@ def _json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _check(aoi: str, date: str | None = None):
-    if aoi not in AOIS or not (WEB / aoi / "series.json").exists():
-        raise HTTPException(404, f"акватория {aoi!r} не найдена")
-    if date is not None:
-        if not re.match(DATE_RE, date):
-            raise HTTPException(422, "дата должна быть в формате YYYY-MM-DD")
-        if not (WEB / aoi / date / "points.json").exists():
-            raise HTTPException(404, f"нет обработанного снимка {aoi} на {date}")
+# ---------- служебное ----------
+
+DETECTION_MEANING = {
+    ST.DETECTED: "детектор нашёл плавающий мусор хотя бы в одном пикселе",
+    ST.NOT_DETECTED: "мусора не видно, и снимок это позволяет утверждать: видно ≥50% воды, нет блика, море спокойное",
+    ST.INSUFFICIENT: "облака, блик, шторм или лёд — отсутствие мусора подтвердить нельзя",
+}
+CONCENTRATION_MEANING = {
+    ST.MODEL: "модель профиля в области своих обучающих данных",
+    ST.RESEARCH: "перенос модели не подтверждён: дальше 60 км от полевых измерений, другой сезон "
+                 "или признаки вне диапазона обучения",
+    ST.UNAVAILABLE: "профиль к этому месту не применим: другой бассейн или пресные воды",
+}
+VALUE_TYPE_MEANING = {
+    "measurement": "полевое измерение: C = N / A по полосе учёта",
+    "model_estimate": "модельная оценка профиля",
+    "research_estimate": "исследовательская оценка — перенос не подтверждён",
+    "unavailable": "оценки нет",
+}
 
 
-@app.get("/api/aois")
+@app.get("/api/health", tags=[Tag.SERVICE], summary="Сервис жив", response_model=HealthOut)
+def health():
+    """Для мониторинга и проверки развёртывания: сколько акваторий с готовыми данными и какие версии
+    конфигов и моделей сейчас работают."""
+    return {"status": "ok", "aois": sum((WEB / k / "series.json").exists() for k in AOIS), "versions": versions()}
+
+
+@app.get("/api/statuses", tags=[Tag.SERVICE], summary="Словарь статусов и кодов", response_model=StatusesOut)
+def statuses():
+    """Все статусы, которые встречаются в ответах: машинное значение, числовой код в компактных массивах,
+    подпись по-русски и смысл. Плюс коды маски качества снимка (quality.png) с цветами."""
+    return {
+        "detection": [{"id": k, "code": ST.DETECTION_CODE[k], "label": v, "meaning": DETECTION_MEANING[k]}
+                      for k, v in ST.DETECTION.items()],
+        "concentration": [{"id": k, "code": ST.CONCENTRATION_CODE[k], "label": v, "meaning": CONCENTRATION_MEANING[k]}
+                          for k, v in ST.CONCENTRATION.items()],
+        "value_type": [{"id": k, "code": None, "label": v, "meaning": VALUE_TYPE_MEANING[k]}
+                       for k, v in ST.VALUE_TYPE.items()],
+        "quality": [{"code": c, "id": k, "label": label, "rgba": list(rgba)} for c, (k, label, rgba) in ST.QUALITY.items()],
+    }
+
+
+# ---------- акватории ----------
+
+def _aoi_info(k: str) -> dict:
+    a, s = AOIS[k], _json(WEB / k / "series.json")
+    conc = {}
+    for c in sorted((WEB / k).glob("conc_*.json")):
+        j = _json(c)
+        conc[j["profile"]] = {"available": j["available"], "reason": j.get("reason")}
+    return {"id": k, "name": a["name"], "bbox": a["bbox"], "kind": a["kind"], "port": a["port"], "tz": a["tz"],
+            "rivers": a["rivers"], "note": a.get("note"), "dates": s["dates"],
+            "basin": s.get("basin"), "water_type": s.get("water_type"), "concentration": conc,
+            "total_area": [sc["area_m2"] for sc in s["scenes"]]}
+
+
+@app.get("/api/aois", tags=[Tag.AOIS], summary="Список акваторий", response_model=list[AoiOut])
 def aois():
-    out = []
-    for k, a in AOIS.items():
-        p = WEB / k / "series.json"
-        if not p.exists():
-            continue
-        s = _json(p)
-        conc = {}
-        for c in sorted((WEB / k).glob("conc_*.json")):
-            j = _json(c)
-            conc[j["profile"]] = {"available": j["available"], "reason": j.get("reason")}
-        out.append({"id": k, "name": a["name"], "bbox": a["bbox"], "kind": a["kind"], "port": a["port"], "tz": a["tz"],
-                    "rivers": a["rivers"], "note": a.get("note"), "dates": s["dates"],
-                    "basin": s.get("basin"), "water_type": s.get("water_type"), "concentration": conc,
-                    "total_area": [sc["area_m2"] for sc in s["scenes"]]})
-    return out
+    """Все акватории с готовыми данными: границы, порт и устья рек, даты обработанных снимков, доступность
+    концентрации по профилям и суммарное покрытие мусором на каждую дату. Отсюда берутся `aoi` и `date`
+    для остальных ручек."""
+    return [_aoi_info(k) for k in AOIS if (WEB / k / "series.json").exists()]
 
 
-@app.get("/api/aois/{aoi}/hexes")
-def hexes(aoi: str):
-    _check(aoi)
+@app.get("/api/aois/{aoi}", tags=[Tag.AOIS], summary="Одна акватория", response_model=AoiOut,
+         responses=errors(404, 422))
+def aoi_one(aoi: AoiPath):
+    """То же, что элемент списка `GET /api/aois`."""
+    _aoi_date(aoi)
+    return _aoi_info(aoi)
+
+
+def _layers(aoi: str, date: str) -> dict:
+    return {"rgb": f"/data/{aoi}/{date}/rgb.jpg", "debris": f"/data/{aoi}/{date}/debris.png",
+            "quality": f"/data/{aoi}/{date}/quality.png", "zones": f"/api/aois/{aoi}/{date}/zones",
+            "points": f"/api/aois/{aoi}/{date}/points", "report": f"/api/report?aoi={aoi}&date={date}"}
+
+
+@app.get("/api/aois/{aoi}/scenes", tags=[Tag.AOIS], summary="Снимки акватории", response_model=list[SceneOut],
+         responses=errors(404, 422))
+def scenes(aoi: AoiPath):
+    """По каждой дате: сцена Sentinel-2, момент съёмки, видимость воды, ветер и состояние моря, надёжность
+    сцены, число детекций и зон, покрытие, доли маски качества, число гексов по статусам и ссылки на слои —
+    растры, зоны, пиксели и PDF-отчёт."""
+    _aoi_date(aoi)
+    return [{**sc, "layers": _layers(aoi, sc["date"])} for sc in _json(WEB / aoi / "series.json")["scenes"]]
+
+
+@app.get("/api/aois/{aoi}/hexes", tags=[Tag.AOIS], summary="Сетка гексов H3",
+         response_class=GeoJSONResponse, responses={200: {"model": FeatureCollection}, **errors(404, 422)})
+def hexes(aoi: AoiPath):
+    """Гексы H3 (разрешение 8) по воде акватории, полигоны. Атрибуты: `i` — индекс гекса в массивах `series`
+    и `concentration`, `h3`, центр `lon`/`lat`, `water_km2`, `dist_coast_km`, `n_obs` — число надёжных
+    наблюдений, `persistence` — доля наблюдений с мусором, `mean_cover`/`max_cover` — покрытие, м²/км²,
+    `trend_cover` — наклон покрытия, м²/км² в месяц, `hot` — индекс устойчивого скопления
+    (persistence × ln(1 + mean_cover))."""
+    _aoi_date(aoi)
     return FileResponse(WEB / aoi / "hexes.geojson", media_type="application/geo+json")
 
 
-@app.get("/api/aois/{aoi}/series")
-def series(aoi: str):
-    _check(aoi)
+@app.get("/api/aois/{aoi}/series", tags=[Tag.AOIS], summary="Ряды по датам и гексам",
+         responses={200: {"model": SeriesOut}, **errors(404, 422)})
+def series(aoi: AoiPath):
+    """Всё по датам одним файлом: метаданные снимков (`scenes`) и массивы `[дата][гекс]` — покрытие, число
+    пикселей с детекцией, доля пригодной воды и код статуса детекции. Для графиков динамики и анимации."""
+    _aoi_date(aoi)
     return FileResponse(WEB / aoi / "series.json", media_type="application/json")
 
 
-@app.get("/api/aois/{aoi}/{date}/points")
-def points(aoi: str, date: str):
-    _check(aoi, date)
+@app.get("/api/aois/{aoi}/{date}/points", tags=[Tag.DETECTION], summary="Пиксели с детекцией",
+         responses={200: {"model": list[list[float]]}, **errors(404, 422)})
+def points(aoi: AoiPath, date: DatePath):
+    """Каждый пиксель 10 м с детекцией — `[lon, lat, p, frac]`: центр пикселя, вероятность мусора и доля
+    пикселя, занятая мусором (эквивалентная площадь = frac × 100 м²). Затравки для прогноза дрейфа."""
+    _aoi_date(aoi, date)
     return FileResponse(WEB / aoi / date / "points.json", media_type="application/json")
 
+
+# ---------- дрейф и маршрут ----------
 
 @lru_cache(maxsize=64)
 def _drift_all(aoi: str, date: str, hours: int, max_seeds: int = 300, n_ens: int = 4):
@@ -107,17 +263,26 @@ def _drift_all(aoi: str, date: str, hours: int, max_seeds: int = 300, n_ens: int
     }
 
 
-@app.get("/api/aois/{aoi}/{date}/drift")
-def drift_all(aoi: str, date: str, hours: int = Query(72, ge=6, le=90)):
-    """Прогноз распространения всех детекций на дату (ансамбль частиц)."""
-    _check(aoi, date)
+@app.get("/api/aois/{aoi}/{date}/drift", tags=[Tag.DRIFT], summary="Прогноз дрейфа всех детекций",
+         responses={200: {"model": DriftOut}, **errors(404, 422)})
+def drift_all(aoi: AoiPath, date: DatePath, hours: HoursQuery = 72):
+    """Куда унесёт обнаруженный мусор: ансамбль частиц (до 300 самых крупных детекций × 4 члена ансамбля)
+    по течениям и ветру с момента съёмки. Кадры по часам — для анимации, распределение по гексам на 24, 48 ч
+    и на горизонт — в м² мусора. Первый запрос на дату считается несколько секунд и скачивает погоду
+    из Open-Meteo, дальше — из кеша."""
+    _aoi_date(aoi, date)
     return _drift_all(aoi, date, hours)
 
 
-@app.get("/api/aois/{aoi}/{date}/drift_point")
-def drift_point(aoi: str, date: str, lon: float, lat: float, hours: int = Query(72, ge=6, le=90), n: int = 40):
-    """Ансамбль из одной точки — конус неопределённости."""
-    _check(aoi, date)
+@app.get("/api/aois/{aoi}/{date}/drift_point", tags=[Tag.DRIFT], summary="Дрейф из точки (конус неопределённости)",
+         response_model=DriftPointOut, responses=errors(404, 422))
+def drift_point(aoi: AoiPath, date: DatePath,
+                lon: float = Query(ge=-180, le=180, description="Долгота точки старта", examples=[39.72]),
+                lat: float = Query(ge=-90, le=90, description="Широта точки старта", examples=[43.55]),
+                hours: HoursQuery = 72, n: int = Query(40, ge=1, le=200, description="Членов ансамбля")):
+    """Ансамбль траекторий из одной точки с разбросом парусности и турбулентной диффузией: треки, центр
+    ансамбля и его разброс по часам (ширина конуса), доля выброшенных на берег."""
+    _aoi_date(aoi, date)
     res = simulate(aoi, date, [lon], [lat], hours=hours, n_ens=n, seed=2)
     tr = res["track"]
     center = tr.mean(0)
@@ -146,17 +311,26 @@ def _accum(aoi: str, date: str):
     return out
 
 
-@app.get("/api/aois/{aoi}/{date}/accumulation")
-def accum(aoi: str, date: str):
-    """Зоны вероятного скопления: куда собираются частицы, засеянные равномерно, за 72 ч."""
-    _check(aoi, date)
+@app.get("/api/aois/{aoi}/{date}/accumulation", tags=[Tag.DRIFT], summary="Зоны вероятного скопления течениями",
+         response_model=AccumulationOut, responses=errors(404, 422))
+def accum(aoi: AoiPath, date: DatePath):
+    """Куда течения и ветер сгоняют плавающий мусор независимо от детекций: частицы засеваются равномерно
+    по воде (шаг 600 м) и прогоняются 72 ч. `factor` > 1 — в гексе собирается больше частиц, чем в среднем
+    было на старте. Первый расчёт на дату занимает до минуты, результат кешируется."""
+    _aoi_date(aoi, date)
     return _accum(aoi, date)
 
 
-@app.get("/api/aois/{aoi}/{date}/route")
-def route(aoi: str, date: str, n: int = Query(8, ge=1, le=20), speed: float = Query(12, gt=1, le=40),
-          delay: float = Query(6, ge=0, le=48)):
-    _check(aoi, date)
+@app.get("/api/aois/{aoi}/{date}/route", tags=[Tag.DRIFT], summary="Маршрут судна-сборщика",
+         response_model=RouteOut, responses=errors(404, 422))
+def route(aoi: AoiPath, date: DatePath,
+          n: int = Query(8, ge=1, le=20, description="Максимум остановок"),
+          speed: float = Query(12, gt=1, le=40, description="Скорость судна, узлы"),
+          delay: float = Query(6, ge=0, le=48, description="Выход из порта через столько часов после съёмки")):
+    """Жадный маршрут из порта за 12-часовую смену: на каждом шаге — цель с наибольшим покрытием на час пути,
+    с учётом того, куда её снесёт к моменту прибытия. Возвращает остановки с наблюдённой и прогнозной позицией,
+    временем прибытия и длиной переходов, линию маршрута и сводку. Если детекций нет — пустой `stops` и `note`."""
+    _aoi_date(aoi, date)
     return plan(aoi, date, n_stops=n, speed_kn=speed, delay_h=delay)
 
 
