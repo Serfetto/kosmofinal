@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Activity,
   CircleGauge,
-  CalendarDays,
   Check,
   ChevronDown,
   ChevronLeft,
