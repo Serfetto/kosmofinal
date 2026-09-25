@@ -17,7 +17,7 @@ from functools import lru_cache
 import matplotlib
 import numpy as np
 import rasterio
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from matplotlib import patheffects as pe
 from matplotlib.backends.backend_pdf import PdfPages
@@ -28,7 +28,8 @@ from matplotlib.patches import Circle, FancyBboxPatch, Rectangle
 from PIL import Image
 from pyproj import Transformer
 
-from backend.case_api import DATE_RE, PROFILE_RE, _aoi_date, _profile, _read
+from backend.case_api import _aoi_date, _profile, _read
+from backend.schemas import AoiQuery, DateQuery, ProfileQuery, Tag, errors
 from pipeline import status as ST
 from pipeline.aggregate import WEB
 from pipeline.config import AOIS, PROCESSED
@@ -628,7 +629,7 @@ def _footer(p: Page, c: dict, k: int, n: int):
     ax = p.canvas(MARGIN, y - 0.1, CONTENT_W, 0.02)
     ax.plot([0, CONTENT_W], [0, 0], color=LINE, lw=0.6)
     model = f" · модель {c['conc_model']}" if c["conc_model"] else ""
-    p.text(MARGIN, y, f"Flux · Sentinel-2 L2A, детектор P ≥ {nf(c['s']['detector']['p_det'], 2)}{model} · "
+    p.text(MARGIN, y, f"AquaFlow · Sentinel-2 L2A, детектор P ≥ {nf(c['s']['detector']['p_det'], 2)}{model} · "
                       f"{c['aoi']}/{c['date']}", 6, MUTED)
     p.text(PAGE_W - MARGIN, y, f"стр. {k} / {n}", 6, MUTED, ha="right")
 
@@ -645,16 +646,26 @@ def figures(aoi: str, date: str, profile: str) -> list[Figure]:
 def build_report(aoi: str, date: str, profile: str) -> bytes:
     with _lock, matplotlib.rc_context(RC):
         buf = io.BytesIO()
-        with PdfPages(buf, metadata={"Title": f"Flux: {AOIS[aoi]['name']}, {ru_date(date)}", "Creator": "Flux",
+        with PdfPages(buf, metadata={"Title": f"AquaFlow: {AOIS[aoi]['name']}, {ru_date(date)}", "Creator": "AquaFlow",
                                      "CreationDate": None}) as pdf:
             for fig in figures(aoi, date, profile):
                 pdf.savefig(fig, dpi=200)
         return buf.getvalue()
 
 
-@router.get("/api/report")
-def report(aoi: str, date: str = Query(..., pattern=DATE_RE), profile: str = Query("B", pattern=PROFILE_RE)):
-    """PDF-отчёт: обзорная карта скоплений, районы скопления и таблица крупнейших зон."""
+@router.get("/api/report", tags=[Tag.EXPORT], summary="PDF-отчёт по снимку", response_class=Response, responses={
+    200: {"description": "PDF, A4, 1–2 страницы. Имя файла: `report_<aoi>_<date>_<profile>.pdf`",
+          "content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}}},
+    **errors(404, 422)})
+def report(aoi: AoiQuery, date: DateQuery, profile: ProfileQuery = "B"):
+    """Отчёт на выбранную дату для печати и рассылки.
+
+    Страница 1 — шапка снимка и ключевые числа (зоны, покрытие, гексы с мусором, видимость воды, медианная
+    концентрация профиля), вывод «где больше всего мусора», обзорная карта с гексами по классам покрытия,
+    зонами и районами скопления, таблица районов. Страница 2 (если есть зоны) — фрагменты снимка по районам и
+    таблица крупнейших зон: координаты, ориентир (румб и расстояние от порта или устья), расстояние до берега,
+    покрытие, P и концентрация с интервалом. Сборка занимает несколько секунд; повторный запрос берётся из кеша.
+    """
     _aoi_date(aoi, date)
     _profile(profile)
     return Response(build_report(aoi, date, profile), media_type="application/pdf", headers={

@@ -46,7 +46,9 @@ def plan(aoi_id: str, date: str, n_stops: int = 8, speed_kn: float = 12.0, delay
     cands = candidates(aoi_id, date)
     port = AOIS[aoi_id]["port"]
     if not cands:
-        return {"stops": [], "line": [list(port)], "note": "на эту дату детекций нет"}
+        return {"stops": [], "line": [list(port)], "note": "на эту дату детекций нет", "port": list(port),
+                "total_km": 0.0, "duration_h": 0.0, "speed_kn": speed_kn, "delay_h": delay_h,
+                "pass_time": scene_time(aoi_id, date).isoformat(timespec="minutes"), "covered_m2": 0.0, "total_m2": 0.0}
     horizon = int(np.ceil(delay_h + shift_h)) + 1
     sim = simulate(aoi_id, date, [c["lon"] for c in cands], [c["lat"] for c in cands], hours=horizon)
     tr = sim["track"]  # [k, horizon+1, 2]

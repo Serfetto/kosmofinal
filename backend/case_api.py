@@ -15,9 +15,11 @@ from functools import lru_cache
 
 import numpy as np
 from fastapi import APIRouter, HTTPException, Path, Query
-from fastapi.responses import JSONResponse, Response
-from pydantic import BaseModel, Field
+from fastapi.responses import Response
 
+from backend.schemas import (DATE_RE, PROFILE_RE, AoiPath, AoiQuery, ConcentrationLayerOut, DatePath, DateQuery,
+                             FeatureCollection, FieldEventOut, GeoJSONResponse, HexEstimateOut, MetricsOut, PairsOut,
+                             ProfileOut, ProfileQuery, QueryIdPath, QueryIn, RerunOut, SavedQueryOut, Tag, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
 from pipeline.config import AOIS, DATA, MODELS
@@ -28,9 +30,6 @@ FIELD = DATA / "field"
 REG = DATA / "registry"
 EVAL = DATA / "eval"
 QUERIES = DATA / "queries"
-DATE_RE = r"^\d{4}-\d{2}-\d{2}$"
-PROFILE_RE = r"^[A-Z]$"
-DatePath = Path(..., pattern=DATE_RE, description="дата снимка YYYY-MM-DD")
 
 ZONE_COLUMNS = [
     "zone_id", "aoi", "date", "scene_id", "scene_datetime_utc", "lon", "lat", "h3", "zone_area_km2", "n_pixels",
@@ -85,8 +84,16 @@ def versions() -> dict:
 
 # ---------- профили и полевые данные ----------
 
-@router.get("/api/profiles")
+@router.get("/api/profiles", tags=[Tag.CONCENTRATION], summary="Профили концентрации",
+            response_model=list[ProfileOut])
 def profiles():
+    """Что именно считается в шт./км²: профиль задаёт материал, класс размера, метод полевого учёта и бассейны,
+    где модель применима.
+
+    У обученных профилей — версия и тип модели, объём обучения и MAE на отложенной выборке рядом с базовыми
+    моделями (медиана, IDW). Профили — разные совокупности: складывать и сравнивать их значения нельзя.
+    `show_in_ui: false` — профиль есть в реестре, но модели для него нет.
+    """
     out = []
     for pid, p in _profiles().items():
         m = MODELS / f"conc_{pid}.json"
@@ -109,11 +116,24 @@ def _field_events() -> dict:
     return _read(FIELD / "events.geojson")
 
 
-@router.get("/api/field")
-def field(profile: str | None = Query(None, pattern=PROFILE_RE),
-          bbox: str | None = Query(None, description="lon_min,lat_min,lon_max,lat_max"),
-          date_from: str | None = Query(None, pattern=DATE_RE), date_to: str | None = Query(None, pattern=DATE_RE)):
-    """Полевые измерения (value_type = measurement) в GeoJSON."""
+@router.get("/api/field", tags=[Tag.FIELD], summary="Полевые измерения концентрации",
+            response_class=GeoJSONResponse, responses={200: {"model": FeatureCollection}, **errors(422)})
+def field(profile: str | None = Query(None, pattern=PROFILE_RE, description="Только измерения этого профиля",
+                                      examples=["B"]),
+          bbox: str | None = Query(None, description="Только внутри рамки `lon_min,lat_min,lon_max,lat_max`",
+                                   examples=["27.0,40.5,42.0,47.0"]),
+          date_from: str | None = Query(None, pattern=DATE_RE, description="С даты включительно, YYYY-MM-DD"),
+          date_to: str | None = Query(None, pattern=DATE_RE, description="По дату включительно, YYYY-MM-DD")):
+    """Полевые измерения из реестра кейса (`value_type = measurement`), GeoJSON FeatureCollection.
+
+    Геометрия — полоса учёта (`LineString`) или точка, если трек в источнике не опубликован.
+    Главные атрибуты: `event_id`, `profile`, `role` (train — обучение модели, transfer_check — только проверка
+    переноса), `date_utc`, `t_start_utc`/`t_end_utc`, `length_km`, `width_m`, `area_km2` (A), `n_items` (N),
+    `conc_items_km2` (C = N / A), `conc_lo95`/`conc_hi95` (95% ДИ по Гарвуду), `conc_source` (`n_over_a` — посчитано
+    из N и A, иначе опубликованное значение), `source_doi`, `source_license`.
+
+    Пустая выборка — пустая коллекция, не ошибка. Расшифровка расчёта — `GET /api/field/{event_id}`.
+    """
     fc = _field_events()
     box = None
     if bbox:
@@ -132,18 +152,29 @@ def field(profile: str | None = Query(None, pattern=PROFILE_RE),
         if box and not (box[0] <= p["lon"] <= box[2] and box[1] <= p["lat"] <= box[3]):
             continue
         feats.append(f)
-    return JSONResponse({"type": "FeatureCollection", "features": feats}, media_type="application/geo+json")
+    return GeoJSONResponse({"type": "FeatureCollection", "features": feats})
 
 
-@router.get("/api/field/objects")
+@router.get("/api/field/objects", tags=[Tag.FIELD], summary="Отдельные предметы (контекст)",
+            response_class=GeoJSONResponse, responses={200: {"model": FeatureCollection}})
 def field_objects():
-    """Объектные записи — контекст («отдельные предметы»), не метки концентрации."""
-    return JSONResponse(_read(FIELD / "objects.geojson"), media_type="application/geo+json")
+    """Объектные записи реестра: где и какой предмет видели (`item_type`, `category`, `material`), точки.
+
+    Это контекст для карты, а не метки концентрации: по отдельным предметам C = N / A не считается.
+    `value_type = object_context`.
+    """
+    return GeoJSONResponse(_read(FIELD / "objects.geojson"))
 
 
-@router.get("/api/field/{event_id}")
-def field_event(event_id: str):
-    """Расшифровка расчёта по событию: строки реестра, N, A, C, интервал, пары со снимками."""
+@router.get("/api/field/{event_id}", tags=[Tag.FIELD], summary="Расшифровка полевого события",
+            responses={200: {"model": FieldEventOut}, **errors(404, 422)})
+def field_event(event_id: str = Path(description="id события — `event_id` из `GET /api/field`",
+                                     examples=["S3:HE419_MarLitter_transect01"])):
+    """Как получено число по событию: все строки реестра и решение по каждой (взята / отброшена и почему),
+    принятые измерения с формулой `C = N / A` и пары события со снимками Sentinel-2 с решением по каждой.
+
+    Для проверки конкретного расчёта без чтения кода.
+    """
     import pandas as pd
 
     sel = pd.read_csv(FIELD / "selection.csv", keep_default_na=False)
@@ -168,8 +199,19 @@ def field_event(event_id: str):
 
 # ---------- реестр пар ----------
 
-@router.get("/api/pairs")
-def pairs(format: str = Query("json", pattern="^(json|csv)$")):
+@router.get("/api/pairs", tags=[Tag.PAIRS], summary="Реестр пар «событие ↔ снимок»",
+            responses={200: {"model": PairsOut, "content": {"text/csv": {}}}, **errors(404, 422)})
+def pairs(format: str = Query("json", pattern="^(json|csv)$",
+                              description="`json` — сводка и строки с признаками детектора; `csv` — файл pairs.csv")):
+    """Для каждого полевого события — найденные снимки Sentinel-2 и решение: пара принята, контекст или отклонена.
+
+    Главные поля строки: `pair_id`, `event_id`, `profile`, `scene_id`, `dt_min_h`/`dt_max_h` (разница во времени
+    с наблюдением, ч), `sync_tier`, `drift_buffer_km`, `footprint_coverage`, `clear_water_frac`, `glint_b11`,
+    `decision` (accepted / context / rejected), `reason_code` и `reason_text`. У принятых пар — признаки детектора
+    в следе: `det_px`, `det_per_km2`, `n_zones`, `cover_m2_km2`.
+
+    404 — реестр ещё не построен (`python -m pipeline.pairs build`).
+    """
     p = REG / "pairs.csv"
     if not p.exists():
         raise HTTPException(404, "реестр пар не построен: python -m pipeline.pairs build")
@@ -187,22 +229,52 @@ def pairs(format: str = Query("json", pattern="^(json|csv)$")):
 
 # ---------- зоны, концентрация, выгрузка ----------
 
-@router.get("/api/aois/{aoi}/concentration")
-def concentration_layer(aoi: str, profile: str = Query("B", pattern=PROFILE_RE)):
+@router.get("/api/aois/{aoi}/concentration", tags=[Tag.CONCENTRATION], summary="Слой концентрации по всем датам",
+            responses={200: {"model": ConcentrationLayerOut}, **errors(404, 422)})
+def concentration_layer(aoi: AoiPath, profile: ProfileQuery = "B"):
+    """Модельная концентрация профиля в центре каждого гекса на момент каждого снимка, шт./км², с 80%-интервалом
+    и статусом. Компактно: массивы `[дата][гекс]`, индекс гекса — `properties.i` из `GET /api/aois/{aoi}/hexes`,
+    индекс даты — позиция в `dates`.
+
+    Если профиль к акватории не применим (другой бассейн, пресные воды) — `available: false`, `reason` и без
+    массивов: это не ошибка. Концентрация — модель по полевым данным, из площади детекций она не выводится.
+    """
     _aoi_date(aoi)
     _profile(profile)
     return _read(WEB / aoi / f"conc_{profile}.json")
 
 
-@router.get("/api/aois/{aoi}/{date}/zones")
-def zones(aoi: str, date: str = DatePath):
+@router.get("/api/aois/{aoi}/{date}/zones", tags=[Tag.DETECTION], summary="Зоны детекции на снимке",
+            response_class=GeoJSONResponse, responses={200: {"model": FeatureCollection}, **errors(404, 422)})
+def zones(aoi: AoiPath, date: DatePath):
+    """Зоны вероятного скопления плавающего мусора — связные группы пикселей 10 м, где детектор видит мусор.
+    GeoJSON FeatureCollection, полигоны.
+
+    Атрибуты зоны:
+    - `zone_id`, `aoi`, `date`, `scene_id`, `scene_datetime_utc`, `h3` — ячейка, где центр зоны;
+    - `lon`, `lat` — центр зоны; `n_pixels`, `zone_area_km2` — размер зоны;
+    - `cover_m2` — эквивалентная площадь мусора в зоне, м²; `cover_m2_km2` — она же на км² зоны;
+    - `p_mean`, `p_max` — вероятность мусора по пикселям зоны;
+    - `detection_status` — всегда `detected`; `valid_frac_scene`, `wind_ms`, `sea`, `scene_reliable` — условия съёмки;
+    - `field_event_id`, `field_distance_km`, `field_date_gap_days`, `field_conc_items_km2` — ближайшее полевое измерение;
+    - `conc_<профиль>_items_km2`, `_lo80`/`_hi80`, `_lo95`/`_hi95`, `_status`, `_status_ru`, `_reasons`, `_model` —
+      модельная концентрация профиля в точке зоны, шт./км².
+
+    Площадь и покрытие — показатели детектора, в шт./км² они не переводятся.
+    """
     _aoi_date(aoi, date)
-    return JSONResponse(_read(WEB / aoi / date / "zones.geojson"), media_type="application/geo+json")
+    return GeoJSONResponse(_read(WEB / aoi / date / "zones.geojson"))
 
 
-@router.get("/api/aois/{aoi}/{date}/hex/{i}")
-def hex_estimate(aoi: str, i: int, date: str = DatePath, profile: str = Query("B", pattern=PROFILE_RE)):
-    """Оценка концентрации в центре гекса на момент снимка с причинами статуса."""
+@router.get("/api/aois/{aoi}/{date}/hex/{i}", tags=[Tag.CONCENTRATION], summary="Оценка концентрации в гексе",
+            response_model=HexEstimateOut, responses=errors(404, 422))
+def hex_estimate(aoi: AoiPath, date: DatePath, profile: ProfileQuery = "B",
+                 i: int = Path(ge=0, description="Индекс гекса — `properties.i` из `GET /api/aois/{aoi}/hexes`",
+                               examples=[5])):
+    """Концентрация профиля в центре гекса на момент снимка — с 80% и 95% интервалами, статусом и причинами
+    статуса (далеко от полевых данных, другой сезон, признак вне диапазона обучения), признаками модели и
+    статусом детекции того же гекса. Считается на лету той же моделью, что и слой концентрации.
+    """
     from pipeline import concentration
 
     _aoi_date(aoi, date)
@@ -285,9 +357,34 @@ def build_export(aoi: str, date: str, profile: str, layer: str, fmt: str) -> tup
     return json.dumps(doc, ensure_ascii=False, sort_keys=True).encode("utf-8"), "application/geo+json"
 
 
-@router.get("/api/export")
-def export(aoi: str, date: str = Query(..., pattern=DATE_RE), profile: str = Query("B", pattern=PROFILE_RE),
-           layer: str = Query("zones", pattern="^(zones|hexes)$"), format: str = Query("geojson", pattern="^(geojson|csv)$")):
+EXPORT_HEADERS = {
+    "Content-Disposition": {"description": "Имя файла: `<layer>_<aoi>_<date>_<profile>.<geojson|csv>`",
+                            "schema": {"type": "string"}},
+    "X-Result-SHA256": {"description": "sha256 тела ответа — для сверки повторного запроса", "schema": {"type": "string"}},
+}
+
+
+@router.get("/api/export", tags=[Tag.EXPORT], summary="Выгрузка зон или гексов в GeoJSON / CSV",
+            response_class=Response, responses={
+                200: {"description": "Файл выгрузки", "headers": EXPORT_HEADERS, "content": {
+                    "application/geo+json": {"schema": {"$ref": "#/components/schemas/FeatureCollection"}},
+                    "text/csv": {"schema": {"type": "string"}}}},
+                **errors(404, 422)})
+def export(aoi: AoiQuery, date: DateQuery, profile: ProfileQuery = "B",
+           layer: str = Query("zones", pattern="^(zones|hexes)$",
+                              description="`zones` — зоны детекции; `hexes` — все гексы акватории с концентрацией"),
+           format: str = Query("geojson", pattern="^(geojson|csv)$", description="`geojson` или `csv` (UTF-8 с BOM)")):
+    """Файл для ГИС и таблиц на выбранную дату и профиль. Колонки CSV и атрибуты GeoJSON одинаковые:
+
+    - `zones`: `zone_id`, координаты, `h3`, площадь и покрытие зоны, `p_mean`/`p_max`, статус детекции, профиль,
+      `conc_items_km2` с 80% и 95% интервалами, статус и причины статуса концентрации, версия модели, условия
+      съёмки и ближайшее полевое измерение;
+    - `hexes`: `h3`, `hex_index`, центр, площадь воды, доля пригодной воды, статус детекции, пиксели детекции,
+      покрытие, `conc_items_km2` с 80%-интервалом и статус концентрации.
+
+    В GeoJSON дополнительно `meta`: параметры, единица и версии конфигов и моделей. Одинаковый запрос даёт
+    побайтно одинаковый файл — sha256 в заголовке `X-Result-SHA256`.
+    """
     body, media = build_export(aoi, date, profile, layer, format)
     ext = "csv" if format == "csv" else "geojson"
     return Response(body, media_type=media, headers={
@@ -297,20 +394,17 @@ def export(aoi: str, date: str = Query(..., pattern=DATE_RE), profile: str = Que
 
 # ---------- сохранённые запросы ----------
 
-class QueryIn(BaseModel):
-    aoi: str
-    date: str = Field(pattern=DATE_RE)
-    profile: str = Field("B", pattern=PROFILE_RE)
-    layer: str = Field("zones", pattern="^(zones|hexes)$")
-    format: str = Field("geojson", pattern="^(geojson|csv)$")
-
-
 def _query_id(q: QueryIn) -> str:
     return hashlib.sha256(json.dumps(q.model_dump(), sort_keys=True).encode()).hexdigest()[:12]
 
 
-@router.post("/api/queries")
+@router.post("/api/queries", tags=[Tag.QUERIES], summary="Сохранить запрос выгрузки",
+             response_model=SavedQueryOut, responses=errors(404, 422))
 def save_query(q: QueryIn):
+    """Выполняет выгрузку с этими параметрами (как `GET /api/export`) и сохраняет параметры, sha256 результата
+    и версии конфигов и моделей. id — первые 12 символов sha256 от параметров, поэтому тот же запрос получает
+    тот же id; уже сохранённый запрос не перезаписывается — исходный отпечаток остаётся.
+    """
     body, _ = build_export(q.aoi, q.date, q.profile, q.layer, q.format)
     qid = _query_id(q)
     rec = {"id": qid, "params": q.model_dump(), "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -324,13 +418,20 @@ def save_query(q: QueryIn):
     return rec
 
 
-@router.get("/api/queries/{qid}")
-def get_query(qid: str = Path(..., pattern=r"^[0-9a-f]{12}$")):
+@router.get("/api/queries/{qid}", tags=[Tag.QUERIES], summary="Сохранённый запрос",
+            response_model=SavedQueryOut, responses=errors(404, 422))
+def get_query(qid: QueryIdPath):
+    """Параметры, sha256 результата и версии на момент сохранения."""
     return _read(QUERIES / f"{qid}.json")
 
 
-@router.post("/api/queries/{qid}/rerun")
-def rerun_query(qid: str = Path(..., pattern=r"^[0-9a-f]{12}$")):
+@router.post("/api/queries/{qid}/rerun", tags=[Tag.QUERIES], summary="Повторить запрос и сверить результат",
+             response_model=RerunOut, responses=errors(404, 422))
+def rerun_query(qid: QueryIdPath):
+    """Заново строит выгрузку по сохранённым параметрам и сравнивает sha256 с сохранённым: `match: true` —
+    результат воспроизводится побайтно. При расхождении сравните `saved_versions` и `current_versions` —
+    видно, какой конфиг или модель изменились.
+    """
     rec = _read(QUERIES / f"{qid}.json")
     q = QueryIn(**rec["params"])
     body, _ = build_export(q.aoi, q.date, q.profile, q.layer, q.format)
@@ -341,8 +442,14 @@ def rerun_query(qid: str = Path(..., pattern=r"^[0-9a-f]{12}$")):
 
 # ---------- метрики ----------
 
-@router.get("/api/metrics")
+@router.get("/api/metrics", tags=[Tag.METRICS], summary="Метрики детектора, моделей и проверок",
+            responses={200: {"model": MetricsOut}})
 def metrics():
+    """Все результаты проверок одним ответом: детектор на тесте MARIDA и на регионе вне обучения, модели
+    концентрации (групповая CV, отложенная выборка, покрытие интервалов, перенос), реестр пар, связь детекций
+    с полевой концентрацией, проверка прогноза дрейфа, ручная проверка детекций и сводка «что чем подтверждено».
+    Разделы, для которых проверка ещё не запускалась, отсутствуют или равны null.
+    """
     det = EVAL / "detector" / "metrics.json"
     out = {"detector": _read(det) if det.exists() else None, "concentration": {}, "pairs": None}
     for pid in _profiles():
