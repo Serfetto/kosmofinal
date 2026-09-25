@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import rasterio
 import requests
+from global_land_mask import globe
 from rasterio.warp import transform as warp_transform
 from scipy.interpolate import RegularGridInterpolator
 from scipy.ndimage import binary_dilation
@@ -90,7 +91,11 @@ def fetch_met(aoi_id: str, date: str, days: int = 4) -> dict:
 
 
 class LandMask:
-    """Вода/суша по маске акватории; за пределами растра — по наличию течений."""
+    """Вода/суша по маске акватории; за пределами растра — по наличию течений и глобальной маске суши.
+
+    Open-Meteo отдаёт течения и для точек на суше (ближайшая морская клетка), поэтому одного наличия
+    течений мало: без global-land-mask (~1 км) частицы за краем снимка уплывают в горы.
+    """
 
     def __init__(self, aoi_id: str, met: dict):
         with rasterio.open(PROCESSED / aoi_id / "water.tif") as s:
@@ -106,7 +111,7 @@ class LandMask:
         col = ((np.asarray(x) - self.tr.c) / self.tr.a).astype(int)
         row = ((np.asarray(y) - self.tr.f) / self.tr.e).astype(int)
         inside = (row >= 0) & (row < self.h) & (col >= 0) & (col < self.w)
-        out = self.sea(np.c_[lat, lon]) > 0.5
+        out = (self.sea(np.c_[lat, lon]) > 0.5) & globe.is_ocean(lat, lon)
         out[inside] = self.water[row[inside], col[inside]]
         return out
 
@@ -156,7 +161,9 @@ def simulate(aoi_id: str, date: str, lon, lat, hours: int = 72, start_offset_h: 
             nx = x + dt * u2 / k + (rng.normal(0, sigma, n) / k if sigma else 0)
             ny = y + dt * v2 / M_PER_DEG + (rng.normal(0, sigma, n) / M_PER_DEG if sigma else 0)
             move = ~beached
-            hit = move & ~land.is_water(nx, ny)
+            # Проверяем и середину шага: за 30 мин частица проходит до ~1 км и иначе перескакивает косы и молы
+            ok = land.is_water(np.r_[nx, 0.5 * (x + nx)], np.r_[ny, 0.5 * (y + ny)]).reshape(2, n).all(0)
+            hit = move & ~ok
             beached |= hit
             move &= ~hit
             x[move], y[move] = nx[move], ny[move]

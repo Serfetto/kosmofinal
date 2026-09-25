@@ -1,6 +1,6 @@
 // @ts-nocheck — модуль постепенно типизируется без риска для проверенной геологики карты.
 import * as maplibregl from 'maplibre-gl';
-import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import Chart from 'chart.js/auto';
 
 // Vite не может автоматически определить worker URL из ESM-сборки MapLibre 6.

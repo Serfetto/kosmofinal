@@ -7,6 +7,7 @@ xgboost>=2.1  # CUDA-сборка из PyPI: обучение и инферен�
 scikit-learn>=1.5
 joblib>=1.4
 h3>=4.0
+global-land-mask>=1.0
 shapely>=2.0
 pyproj>=3.6
 requests>=2.31
