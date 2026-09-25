@@ -32,7 +32,7 @@ export function Sidebar() {
       <header className="brand">
         <BrandMark />
         <div className="brand-copy">
-          <div className="brand-topline"><span>Flux</span><i aria-hidden="true">.</i></div>
+          <div className="brand-topline"><span>AquaFlow</span><i aria-hidden="true">.</i></div>
           <div className="brand-signature" aria-hidden="true"><span /><span /><span /></div>
         </div>
       </header>
@@ -48,7 +48,7 @@ export function Sidebar() {
       <Section title="Наблюдение">
         <div className="date-control">
           <button className="icon transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide/40" id="prev" title="Предыдущая дата · ←" aria-label="Предыдущая дата"><ChevronLeft size={17} /></button>
-          <strong id="date-label">—</strong>
+          <strong id="date-label">–</strong>
           <button className="icon transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tide/40" id="next" title="Следующая дата · →" aria-label="Следующая дата"><ChevronRight size={17} /></button>
         </div>
         <div className="chart-box"><canvas id="timeline" /></div>
