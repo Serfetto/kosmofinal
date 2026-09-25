@@ -18,11 +18,12 @@ from fastapi import APIRouter, HTTPException, Path, Query
 from fastapi.responses import Response
 
 from backend.schemas import (DATE_RE, PROFILE_RE, AoiPath, AoiQuery, ConcentrationLayerOut, DatePath, DateQuery,
-                             FeatureCollection, FieldEventOut, GeoJSONResponse, HexEstimateOut, MetricsOut, PairsOut,
-                             ProfileOut, ProfileQuery, QueryIdPath, QueryIn, RerunOut, SavedQueryOut, Tag, errors)
+                             FeatureCollection, FieldEventOut, FieldSourceOut, GeoJSONResponse, HexEstimateOut,
+                             MetricsOut, PairsOut, ProfileOut, ProfileQuery, QueryIdPath, QueryIn, RerunOut,
+                             SavedQueryOut, Tag, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
-from pipeline.config import AOIS, DATA, MODELS
+from pipeline.config import AOIS, DATA, FIELD_SOURCES, MODELS, ROOT
 from pipeline.provenance import config_hash, load_yaml
 
 router = APIRouter()
@@ -50,6 +51,47 @@ def _read(path):
     if not path.exists():
         raise HTTPException(404, f"нет данных: {path.relative_to(DATA)}")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+@lru_cache(maxsize=64)
+def _series_dates(path, mtime: float) -> list[str]:
+    return _read(path)["dates"]
+
+
+def _aoi_ref(k: str) -> dict | None:
+    """Акватория с готовыми данными: id, название и даты снимков; None — данных нет."""
+    p = WEB / k / "series.json"
+    if k not in AOIS or not p.exists():
+        return None
+    return {"id": k, "name": AOIS[k]["name"], "dates": _series_dates(p, p.stat().st_mtime)}
+
+
+def _aois_at(lon: float, lat: float) -> list[dict]:
+    """Акватории с готовыми данными, внутри которых точка; сначала районы полевых данных."""
+    keys = sorted((k for k, a in AOIS.items()
+                   if a["bbox"][0] <= lon <= a["bbox"][2] and a["bbox"][1] <= lat <= a["bbox"][3]),
+                  key=lambda k: AOIS[k].get("group") != "field")
+    return [r for r in map(_aoi_ref, keys) if r]
+
+
+# XYZ-тайлы сцены в естественных цветах — те же параметры, что у превью сцены в каталоге Planetary Computer
+PC_TILES = "https://planetarycomputer.microsoft.com/api/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x"
+PC_RENDER = {
+    "sentinel-2-l2a": "assets=visual&asset_bidx=visual%7C1%2C2%2C3&nodata=0&format=png",
+    "landsat-c2-l2": "assets=red&assets=green&assets=blue&nodata=0&format=png"
+                     "&color_formula=gamma+RGB+2.7%2C+saturation+1.5%2C+sigmoidal+RGB+15+0.55",
+}
+
+
+def _scene_bounds(event_id: str, collection: str) -> dict[str, list[float]]:
+    """Границы сцен-кандидатов события из кеша STAC реестра пар."""
+    from shapely.geometry import shape
+
+    p = REG / "cache" / f"stac_{collection}_{event_id.replace(':', '_')}.json"
+    if not p.exists():
+        return {}
+    items = json.loads(p.read_text(encoding="utf-8"))["items"]
+    return {it["id"]: [round(v, 5) for v in shape(it["geometry"]).bounds] for it in items}
 
 
 def _profiles() -> dict:
@@ -166,12 +208,58 @@ def field_objects():
     return GeoJSONResponse(_read(FIELD / "objects.geojson"))
 
 
+@router.get("/api/field/sources", tags=[Tag.FIELD], summary="Источники полевого реестра S1–S4",
+            response_model=list[FieldSourceOut])
+def field_sources():
+    """Состав наблюдений кейса по источникам — как в постановке (S1 Тихий океан, S2 Саргассово море, S3 Северное
+    море, S4 Чёрное море): сколько строк, событий и полевых измерений, период и границы наблюдений, итог реестра
+    пар по событиям и причинам, найденные сцены по коллекциям и акватории сервиса со снимками на даты измерений.
+
+    `imagery` — что есть в архивах снимков: над S1 (открытый океан) сцен нет совсем, S2 снят до запуска
+    Sentinel-2, у S3 Sentinel-2 есть только для рейса 2016 г., у S4 — почти на все даты измерений.
+    """
+    import pandas as pd
+
+    raw = pd.read_csv(ROOT / load_yaml("profiles.yaml")["source_csv"])
+    reg = pd.read_csv(REG / "pairs.csv") if (REG / "pairs.csv").exists() else pd.DataFrame(
+        columns=["source_id", "event_id", "decision", "reason_code", "collection", "scene_id"])
+    events = [f["properties"] for f in _field_events()["features"]]
+    out = []
+    for sid, info in FIELD_SOURCES.items():
+        rows = raw[raw["source_id"] == sid]
+        ev = [e for e in events if e["source_id"] == sid]
+        pr = reg[reg["source_id"] == sid]
+        best = pr.groupby("event_id")["decision"].agg(
+            lambda s: "accepted" if (s == "accepted").any() else "context" if (s == "context").any() else "rejected")
+        profiles: dict[str, int] = {}
+        for e in ev:
+            key = f"{e['profile']}/{e['role']}"
+            profiles[key] = profiles.get(key, 0) + 1
+        out.append({
+            "source_id": sid, **info, "n_rows": len(rows), "n_events": int(rows["event_id"].nunique()),
+            "n_measurements": len(ev), "profiles": profiles,
+            "date_from": rows["date_utc"].min(), "date_to": rows["date_utc"].max(),
+            "bbox": [round(float(v), 4) for v in (rows["longitude"].min(), rows["latitude"].min(),
+                                                  rows["longitude"].max(), rows["latitude"].max())],
+            "pairs": {"events_by_outcome": {k: int(v) for k, v in best.value_counts().items()},
+                      "reasons": {k: int(v) for k, v in pr["reason_code"].value_counts().items()},
+                      "scenes": {k: int(v) for k, v in pr.dropna(subset=["scene_id"]).groupby("collection")[
+                          "scene_id"].nunique().items()}},
+            "aois": [r for r in (_aoi_ref(k) for k, a in AOIS.items() if a.get("source") == sid) if r],
+        })
+    return out
+
+
 @router.get("/api/field/{event_id}", tags=[Tag.FIELD], summary="Расшифровка полевого события",
             responses={200: {"model": FieldEventOut}, **errors(404, 422)})
 def field_event(event_id: str = Path(description="id события — `event_id` из `GET /api/field`",
                                      examples=["S3:HE419_MarLitter_transect01"])):
     """Как получено число по событию: все строки реестра и решение по каждой (взята / отброшена и почему),
-    принятые измерения с формулой `C = N / A` и пары события со снимками Sentinel-2 с решением по каждой.
+    принятые измерения с формулой `C = N / A` и пары события со снимками с решением по каждой.
+
+    У пары со сценой — ссылка на XYZ-тайлы сцены в естественных цветах (`tiles_url`, Planetary Computer): так
+    снимок на дату наблюдения можно посмотреть и там, где сервис его не обрабатывал (Landsat, контекстные пары).
+    `aoi`/`aoi_date` — обработанный снимок сервиса на ту же дату; `aois` — акватории, где лежит событие.
 
     Для проверки конкретного расчёта без чтения кода.
     """
@@ -182,19 +270,32 @@ def field_event(event_id: str = Path(description="id события — `event_i
     if rows.empty:
         raise HTTPException(404, f"событие {event_id} не найдено")
     ev = [f["properties"] for f in _field_events()["features"] if f["properties"]["event_id"] == event_id]
+    refs = _aois_at(ev[0]["lon"], ev[0]["lat"]) if ev else []
     pairs = []
     if (REG / "pairs.csv").exists():
         reg = pd.read_csv(REG / "pairs.csv")
         pr = reg[reg["event_id"] == event_id]
-        cols = ["scene_id", "scene_datetime_utc", "sync_tier", "dt_min_h", "dt_max_h", "drift_buffer_km",
+        cols = ["collection", "scene_id", "scene_datetime_utc", "sync_tier", "dt_min_h", "dt_max_h", "drift_buffer_km",
                 "footprint_coverage", "clear_water_frac", "glint_b11", "decision", "reason_code", "reason_text"]
         pairs = json.loads(pr[[c for c in cols if c in pr]].to_json(orient="records", force_ascii=False))
+    bounds: dict[str, dict] = {}
+    for p in pairs:
+        coll, sid = p.get("collection"), p.get("scene_id")
+        if not sid:
+            continue
+        if coll not in bounds:
+            bounds[coll] = _scene_bounds(event_id, coll)
+        p["tiles_url"] = f"{PC_TILES}?collection={coll}&item={sid}&{PC_RENDER[coll]}" if coll in PC_RENDER else None
+        p["scene_bbox"] = bounds[coll].get(sid)
+        day = (p.get("scene_datetime_utc") or "")[:10]
+        hit = next((r for r in refs if day in r["dates"]), None)
+        p["aoi"], p["aoi_date"] = (hit["id"], day) if hit else (None, None)
     for e in ev:
         if e["conc_source"] == "n_over_a":
             e["formula"] = f"C = N / A = {e['n_items']:g} / {e['area_km2']:g} км² = {e['conc_items_km2']:.2f} шт./км²"
         else:
             e["formula"] = f"C = {e['conc_items_km2']:g} шт./км² — опубликованная оценка (N и A в источнике нет)"
-    return {"event_id": event_id, "rows": rows.to_dict("records"), "measurements": ev, "pairs": pairs}
+    return {"event_id": event_id, "rows": rows.to_dict("records"), "measurements": ev, "pairs": pairs, "aois": refs}
 
 
 # ---------- реестр пар ----------

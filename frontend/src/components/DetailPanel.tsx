@@ -3,6 +3,7 @@ import { AboutPanel } from './panels/AboutPanel';
 import { CardPanel } from './panels/CardPanel';
 import { ComparePanel } from './panels/ComparePanel';
 import { DriftPanel } from './panels/DriftPanel';
+import { FieldPanel } from './panels/FieldPanel';
 import { HexPanel } from './panels/HexPanel';
 import { RoutePanel } from './panels/RoutePanel';
 
@@ -14,6 +15,7 @@ export function DetailPanel() {
         <button className="icon tooltip-left" id="panel-close" data-tooltip="Закрыть · Esc" aria-label="Закрыть"><X size={18} /></button>
       </div>
       <CardPanel />
+      <FieldPanel />
       <HexPanel />
       <ComparePanel />
       <DriftPanel />

@@ -178,3 +178,49 @@ def test_weather_outage_is_503(monkeypatch):
     monkeypatch.setattr(pipeline.drift, "fetch_met", rate_limited)
     r = client.get(f"/api/aois/{AOI}/{_date()}/drift_point?lon=39.72&lat=43.55&hours=24&n=5")
     assert r.status_code == 503 and "Open-Meteo" in r.json()["detail"] and r.headers["Retry-After"]
+
+
+def test_field_sources_cover_s1_to_s4():
+    """Состав наблюдений из постановки: четыре источника, все 935 строк и 318 событий реестра."""
+    r = client.get("/api/field/sources")
+    assert r.status_code == 200
+    src = {s["code"]: s for s in r.json()}
+    assert list(src) == ["S1", "S2", "S3", "S4"]
+    assert sum(s["n_rows"] for s in src.values()) == 935
+    assert sum(s["n_events"] for s in src.values()) == 318
+    assert src["S1"]["pairs"]["scenes"] == {}  # над открытым океаном сцен нет ни в одном архиве
+    for s in src.values():
+        assert s["date_from"] <= s["date_to"] and s["imagery"]
+        for a in s["aois"]:
+            assert client.get(f"/api/aois/{a['id']}").json()["source"] == s["source_id"]
+
+
+def test_field_aois_on_measurement_dates():
+    """Снимки районов полевых данных — только на даты событий внутри акватории ± окно реестра пар."""
+    from datetime import date
+
+    from pipeline.config import AOIS
+    from pipeline.provenance import load_yaml
+
+    win = load_yaml("pairs.yaml")["search_window_days"]
+    ev = [f["properties"] for f in client.get("/api/field").json()["features"]]
+    field = [a for a in client.get("/api/aois").json() if AOIS[a["id"]].get("field_window")]
+    assert field
+    for a in field:
+        x0, y0, x1, y1 = a["bbox"]
+        days = [date.fromisoformat(p["date_utc"]) for p in ev if x0 <= p["lon"] <= x1 and y0 <= p["lat"] <= y1]
+        assert days and a["group"] == "field"
+        for d in a["dates"]:
+            assert min(abs((date.fromisoformat(d) - x).days) for x in days) <= win, (a["id"], d)
+
+
+def test_field_event_scene_links():
+    """Сцену-кандидат можно показать на карте, даже если сервис её не обрабатывал (Landsat над S2)."""
+    r = client.get("/api/field/S2:MSM41_litter-T28").json()
+    p = [x for x in r["pairs"] if x.get("scene_id")]
+    assert p and p[0]["collection"] == "landsat-c2-l2"
+    assert p[0]["tiles_url"].startswith("https://planetarycomputer.microsoft.com/") and "{z}/{x}/{y}" in p[0]["tiles_url"]
+    assert len(p[0]["scene_bbox"]) == 4
+    for x in client.get("/api/field/S4:DOORS3:T18").json()["pairs"]:
+        if x["aoi"]:
+            assert x["aoi_date"] in client.get(f"/api/aois/{x['aoi']}").json()["dates"]

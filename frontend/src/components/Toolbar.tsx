@@ -1,8 +1,9 @@
-import { ArrowLeftRight, CircleHelp, Layers3, Route, Waves, type LucideIcon } from 'lucide-react';
+import { ArrowLeftRight, CircleHelp, FlaskConical, Layers3, Route, Waves, type LucideIcon } from 'lucide-react';
 
 type ToolItem = readonly [id: string, label: string, description: string, icon: LucideIcon];
 
 const tools: readonly ToolItem[] = [
+  ['field', 'Данные кейса', 'Полевые наблюдения S1–S4: где, когда и какие снимки есть', FlaskConical],
   ['hex', 'Участок', 'Нажмите на ячейку карты и изучите её историю', Layers3],
   ['compare', 'Сравнить', 'Обведите две зоны и сравните уровень загрязнения', ArrowLeftRight],
   ['drift', 'Дрейф', 'Спрогнозируйте перенос мусора на 72 часа', Waves],

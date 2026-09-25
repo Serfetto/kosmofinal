@@ -81,18 +81,19 @@ def bbox_grid(bbox, res: float = 10.0) -> Grid:
     return Grid(crs, from_origin(x0, y1, res, res), w, h)
 
 
-def search(aoi_id: str, start: str, end: str, max_cloud: float = 30) -> list[Scene]:
-    """Сцены, почти полностью покрывающие акваторию, по одной на дату.
+def search(aoi_id: str, start: str, end: str, max_cloud: float = 30, min_cover: float = MIN_COVER) -> list[Scene]:
+    """Сцены, покрывающие не меньше min_cover акватории, по одной на дату.
 
     Если акватория целиком в одном тайле, берётся он (как и раньше — с лучшим покрытием).
     Иначе склеиваются тайлы одного пролёта: одинаковые время съёмки и атмосфера.
+    max_cloud ≥ 100 — без фильтра облачности (облака режет маска SCL).
     """
     bbox = AOIS[aoi_id]["bbox"]
     aoi = box(*bbox)
     client = Client.open(STAC_URL, modifier=pc.sign_inplace)
+    query = {"eo:cloud_cover": {"lt": max_cloud}} if max_cloud < 100 else None
     items = client.search(
-        collections=["sentinel-2-l2a"], bbox=bbox, datetime=f"{start}/{end}",
-        query={"eo:cloud_cover": {"lt": max_cloud}},
+        collections=["sentinel-2-l2a"], bbox=bbox, datetime=f"{start}/{end}", query=query,
     ).item_collection()
     passes: dict[tuple, dict] = {}
     for it in items:
@@ -109,7 +110,7 @@ def search(aoi_id: str, start: str, end: str, max_cloud: float = 30) -> list[Sce
         if parts[0][1].area / aoi.area >= MIN_COVER:
             parts = parts[:1]
         cover = unary_union([g for _, g in parts]).area / aoi.area
-        if cover < MIN_COVER:
+        if cover < min_cover:
             continue
         w = np.array([g.area for _, g in parts])
         cloud = float(np.dot(w, [i.properties.get("eo:cloud_cover") or 0 for i, _ in parts]) / w.sum())

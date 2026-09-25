@@ -177,7 +177,8 @@ def _aoi_info(k: str) -> dict:
         j = _json(c)
         conc[j["profile"]] = {"available": j["available"], "reason": j.get("reason")}
     return {"id": k, "name": a["name"], "bbox": a["bbox"], "kind": a["kind"], "port": a["port"], "tz": a["tz"],
-            "rivers": a["rivers"], "note": a.get("note"), "dates": s["dates"],
+            "rivers": a["rivers"], "note": a.get("note"), "group": a.get("group", "monitoring"),
+            "source": a.get("source"), "dates": s["dates"],
             "basin": s.get("basin"), "water_type": s.get("water_type"), "concentration": conc,
             "total_area": [sc["area_m2"] for sc in s["scenes"]]}
 
@@ -186,7 +187,10 @@ def _aoi_info(k: str) -> dict:
 def aois():
     """Все акватории с готовыми данными: границы, порт и устья рек, даты обработанных снимков, доступность
     концентрации по профилям и суммарное покрытие мусором на каждую дату. Отсюда берутся `aoi` и `date`
-    для остальных ручек."""
+    для остальных ручек.
+
+    `group: field` — районы полевых данных кейса: снимки подобраны на даты измерений источника `source`;
+    `group: monitoring` — акватории оперативного мониторинга."""
     return [_aoi_info(k) for k in AOIS if (WEB / k / "series.json").exists()]
 
 

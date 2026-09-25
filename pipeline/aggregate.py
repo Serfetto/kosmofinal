@@ -268,8 +268,11 @@ def run(aoi_id: str) -> None:
 
     src_dir = PROCESSED / aoi_id
     out_dir = WEB / aoi_id
+    ds = [d for d in dates(aoi_id) if (src_dir / d / "det.json").exists()] if src_dir.exists() else []
+    if not ds:
+        print(f"{aoi_id}: нет обработанных снимков", flush=True)
+        return
     out_dir.mkdir(parents=True, exist_ok=True)
-    ds = [d for d in dates(aoi_id) if (src_dir / d / "det.json").exists()]
     water = load_water(aoi_id)
     with rasterio.open(src_dir / "water.tif") as s:
         prof = s.profile
@@ -418,6 +421,12 @@ def run(aoi_id: str) -> None:
                   status={k: int((st == c).sum()) for k, c in ST.DETECTION_CODE.items()})
         print(f"  {aoi_id} {d} det={sc['n_det']} zones={len(zs)} area={sc['area_m2']:.0f} м²", flush=True)
 
+    if not good_dates:
+        # Все снимки закрыты облаками: пустой ряд сервис не показывает
+        (out_dir / "series.json").unlink(missing_ok=True)
+        print(f"{aoi_id}: нет снимков с видимой водой ≥ {DCFG['min_scene_valid']:.0%} — акватория не публикуется",
+              flush=True)
+        return
     cover_t, ndet_t, valid_t = map(np.asarray, (cover_t, ndet_t, valid_t))
     ok = (valid_t > 0.5) & ~np.asarray(storm_t)[:, None]
     n_obs = ok.sum(0)

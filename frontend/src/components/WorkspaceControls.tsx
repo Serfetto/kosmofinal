@@ -33,7 +33,12 @@ import { BrandMark } from './BrandMark';
 export type SheetView = 'overview' | 'layers' | null;
 export type ThemeName = 'light' | 'dark';
 
-type AoiOption = { value: string; label: string };
+type AoiOption = { value: string; label: string; group?: string };
+
+const AOI_GROUPS: Record<string, string> = {
+  field: 'Полевые данные кейса · снимки на даты измерений',
+  monitoring: 'Оперативный мониторинг',
+};
 
 function AoiPicker() {
   const [options, setOptions] = useState<AoiOption[]>([]);
@@ -50,6 +55,7 @@ function AoiPicker() {
       const nextOptions = Array.from(select.options).map((option) => ({
         value: option.value,
         label: option.textContent || option.value,
+        group: option.dataset.group,
       }));
       setOptions(nextOptions);
       setSelected(select.value || nextOptions[0]?.value || '');
@@ -64,6 +70,7 @@ function AoiPicker() {
 
     observer.observe(select, { childList: true, subtree: true, attributes: true });
     select.addEventListener('change', sync);
+    window.addEventListener('aquaflow-aoi-sync', sync);
     document.addEventListener('pointerdown', closeOutside);
     document.addEventListener('keydown', closeOnEscape);
     sync();
@@ -71,6 +78,7 @@ function AoiPicker() {
     return () => {
       observer.disconnect();
       select.removeEventListener('change', sync);
+      window.removeEventListener('aquaflow-aoi-sync', sync);
       document.removeEventListener('pointerdown', closeOutside);
       document.removeEventListener('keydown', closeOnEscape);
     };
@@ -86,6 +94,10 @@ function AoiPicker() {
   };
 
   const currentLabel = options.find((option) => option.value === selected)?.label || 'Загрузка акваторий…';
+  // Районы полевых данных — первыми: там снимки на даты измерений кейса
+  const groups = ['field', 'monitoring']
+    .map((key) => ({ key, items: options.filter((option) => (option.group || 'monitoring') === key) }))
+    .filter((group) => group.items.length);
 
   return (
     <div className={`location-control aoi-picker ${open ? 'is-open' : ''}`} ref={root}>
@@ -119,23 +131,26 @@ function AoiPicker() {
           <span>{options.length} доступно</span>
         </div>
         <div className="aoi-option-list">
-          {options.map((option) => {
-            const isSelected = option.value === selected;
-            return (
-              <button
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                className={isSelected ? 'is-selected' : ''}
-                key={option.value}
-                onClick={() => choose(option.value)}
-              >
-                <span className="aoi-option-mark"><MapPin size={15} /></span>
-                <span>{option.label}</span>
-                <Check className="aoi-option-check" size={16} aria-hidden="true" />
-              </button>
-            );
-          })}
+          {groups.map((group) => [
+            <div className="aoi-group-head" key={`g-${group.key}`} role="presentation">{AOI_GROUPS[group.key] || group.key}</div>,
+            ...group.items.map((option) => {
+              const isSelected = option.value === selected;
+              return (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  className={isSelected ? 'is-selected' : ''}
+                  key={option.value}
+                  onClick={() => choose(option.value)}
+                >
+                  <span className="aoi-option-mark">{group.key === 'field' ? <FlaskConical size={15} /> : <MapPin size={15} />}</span>
+                  <span>{option.label}</span>
+                  <Check className="aoi-option-check" size={16} aria-hidden="true" />
+                </button>
+              );
+            }),
+          ])}
           {!options.length && <div className="aoi-options-empty">Загружаем список акваторий…</div>}
         </div>
       </div>
@@ -453,6 +468,10 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
           <div className="chart-box timeline-chart"><canvas id="timeline" /></div>
           <div id="scene-info" className="scene-info muted small" />
           <div id="aoi-note" className="aoi-note muted small" hidden />
+          <div id="aoi-field" hidden>
+            <div className="subhead">Полевые измерения в акватории</div>
+            <ul id="aoi-field-list" className="hotlist field-list" />
+          </div>
         </section>
 
         <section className="summary-card">

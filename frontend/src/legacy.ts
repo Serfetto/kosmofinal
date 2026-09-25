@@ -30,7 +30,7 @@ const COL_A = '#ffb648', COL_B = '#9b8cff';
 const accentColor = () => document.documentElement.dataset.theme === 'light' ? '#087f75' : '#d8ff45';
 
 const S = {
-  aois: [], aoi: null, hexes: null, series: null, grid: null, conc: null, zones: null, field: null, objects: null,
+  aois: [], aoi: null, hexes: null, series: null, grid: null, conc: null, zones: null, field: null, objects: null, sources: null,
   profiles: [], profile: 'B', di: 0, mode: 'conc', queryId: null,
   filters: { det: new Set(['detected', 'not_detected', 'insufficient_data']), conc: new Set(['model_estimate', 'research_estimate', 'unavailable']) },
   drift: null, accum: null, sel: null, cmp: { A: null, B: null }, drawing: null, draft: [],
@@ -221,7 +221,7 @@ function initLayers(corners) {
   });
   raster('rgb', {}, { 'raster-opacity': 0.92, 'raster-fade-duration': 0 });
   raster('quality', { visibility: 'none' }, { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 });
-  ['hexes', 'sel', 'accumPts', 'draw', 'cmpA', 'cmpB', 'tracks', 'particles', 'cone', 'coneCenter', 'route', 'routeDrift', 'routeObs', 'zones', 'field', 'objects'].forEach(addGeo);
+  ['hexes', 'sel', 'accumPts', 'draw', 'cmpA', 'cmpB', 'tracks', 'particles', 'cone', 'coneCenter', 'route', 'routeDrift', 'routeObs', 'zones', 'field', 'fieldDots', 'objects'].forEach(addGeo);
   raster('debris', {}, { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 });
   map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes', paint: {
     'fill-color': ['get', 'col'],
@@ -251,6 +251,9 @@ function initLayers(corners) {
   map.addLayer({ id: 'field-line', type: 'line', source: 'field', filter: ['!=', '$type', 'Point'], paint: { 'line-color': fieldColor, 'line-width': 4 } });
   map.addLayer({ id: 'field-pt', type: 'circle', source: 'field', filter: ['==', '$type', 'Point'], paint: {
     'circle-radius': 8, 'circle-color': fieldColor, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2.5 } });
+  // Полосы учёта длиной 10–25 км на мелком масштабе не видны — там вместо них кружки в центре полосы
+  map.addLayer({ id: 'field-dot', type: 'circle', source: 'fieldDots', maxzoom: 9, paint: {
+    'circle-radius': 5, 'circle-color': fieldColor, 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
   map.addLayer({ id: 'objects', type: 'circle', source: 'objects', layout: { visibility: 'none' }, paint: {
     'circle-radius': 3, 'circle-color': '#e2e8f0', 'circle-stroke-color': '#0f172a', 'circle-stroke-width': 1 } });
   map.addLayer({ id: 'draw-line', type: 'line', source: 'draw', paint: { 'line-color': '#fff', 'line-width': 1.5, 'line-dasharray': [1, 1] } });
@@ -268,7 +271,7 @@ function initLayers(corners) {
 
   map.on('mousemove', 'hex-fill', onHexHover);
   map.on('mouseleave', 'hex-fill', () => { $('#tip').hidden = true; map.getCanvas().style.cursor = ''; });
-  for (const id of ['zones-fill', 'zones-dot', 'field-line', 'field-pt']) {
+  for (const id of ['zones-fill', 'zones-dot', 'field-line', 'field-pt', 'field-dot']) {
     map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
   }
@@ -276,7 +279,7 @@ function initLayers(corners) {
     $('#tip').hidden = true;
     map.getCanvas().style.cursor = '';
     if (S.drawing) return onDrawClick(e);
-    const hit = map.queryRenderedFeatures(e.point, { layers: ['field-pt', 'field-line', 'zones-dot', 'zones-fill', 'hex-fill'].filter((l) => map.getLayer(l)) });
+    const hit = map.queryRenderedFeatures(e.point, { layers: ['field-pt', 'field-dot', 'field-line', 'zones-dot', 'zones-fill', 'hex-fill'].filter((l) => map.getLayer(l)) });
     if (!hit.length) return;
     const f = hit[0];
     if (f.layer.id.startsWith('field')) openField(f.properties.event_id);
@@ -289,6 +292,8 @@ function initLayers(corners) {
 async function loadAoi(id, preferDate) {
   S.aoi = S.aois.find((a) => a.id === id) || S.aois[0];
   $('#aoi').value = S.aoi.id;
+  window.dispatchEvent(new Event('aquaflow-aoi-sync'));
+  clearExtScene();
   $('#workspace-aoi').textContent = S.aoi.name;
   $('#aoi-note').textContent = S.aoi.note || '';
   $('#aoi-note').hidden = !S.aoi.note;
@@ -457,6 +462,7 @@ async function setDate(i) {
   paintZones();
   paintHexes();
   renderKpis();
+  renderAoiField();
   colorTimeline();
   syncUrl();
   if (S.sel != null && S.tool === 'hex') renderHexPanel();
@@ -525,6 +531,126 @@ function paintZones() {
 function renderField() {
   if (!S.field || !map.getSource('field')) return;
   map.getSource('field').setData(S.field);
+  map.getSource('fieldDots').setData({ type: 'FeatureCollection', features: S.field.features
+    .filter((f) => f.geometry.type !== 'Point')
+    .map((f) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.properties.lon, f.properties.lat] },
+      properties: { event_id: f.properties.event_id, conc_items_km2: f.properties.conc_items_km2 } })) });
+}
+
+// Полевые измерения внутри акватории и сдвиг их даты относительно снимка
+function renderAoiField() {
+  const box = $('#aoi-field');
+  if (!box) return;
+  const ev = S.aoi && S.series ? (S.field?.features || []).map((f) => f.properties).filter((p) =>
+    p.lon >= S.aoi.bbox[0] && p.lon <= S.aoi.bbox[2] && p.lat >= S.aoi.bbox[1] && p.lat <= S.aoi.bbox[3]) : [];
+  box.hidden = !ev.length;
+  if (!ev.length) return;
+  const d = S.series.dates[S.di];
+  const gap = (p) => Math.round((new Date(p.date_utc) - new Date(d)) / 864e5);
+  ev.sort((a, b) => Math.abs(gap(a)) - Math.abs(gap(b)) || a.event_id.localeCompare(b.event_id, 'ru', { numeric: true }));
+  $('#aoi-field-list').innerHTML = ev.map((p) => {
+    const g = gap(p);
+    const when = g === 0 ? 'снимок в тот же день' : g > 0 ? `снимок за ${g} сут. до измерения` : `снимок через ${-g} сут. после`;
+    return `<li data-ev="${esc(p.event_id)}"><span>${esc(p.event_id)}</span><span class="v">${ruDate(p.date_utc)} · ${nf(p.conc_items_km2, 0)} шт./км² · ${when}</span></li>`;
+  }).join('');
+  $$('#aoi-field-list li').forEach((li) => (li.onclick = () => openField(li.dataset.ev, true)));
+}
+
+// ---------- данные кейса: источники S1–S4 и снимки на даты наблюдений ----------
+
+const COLL_NAME = { 'sentinel-2-l2a': 'Sentinel-2 L2A', 'landsat-c2-l2': 'Landsat C2 L2' };
+const OUTCOME_NAME = { accepted: 'пара принята', context: 'только контекст', rejected: 'снимка нет или отклонён' };
+const platformOf = (id) => ({ S2A: 'Sentinel-2A', S2B: 'Sentinel-2B', S2C: 'Sentinel-2C', LC08: 'Landsat-8', LC09: 'Landsat-9', LE07: 'Landsat-7' })[String(id).split('_')[0]] || '';
+
+function geomBounds(g) {
+  const pts = [];
+  const walk = (c) => (typeof c[0] === 'number' ? pts.push(c) : c.forEach(walk));
+  walk(g.coordinates);
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]];
+}
+// Отступы карты с учётом открытой справа панели — чтобы объект не прятался под ней
+function viewPadding() {
+  const panel = $('#panel');
+  const right = panel && !panel.hidden && window.innerWidth > 820 ? panel.getBoundingClientRect().width + 40 : 60;
+  return { top: 120, bottom: 120, left: 60, right };
+}
+function flyToEvent(eventId) {
+  const f = (S.field?.features || []).find((x) => x.properties.event_id === eventId);
+  if (!f) return;
+  const [[x0, y0], [x1, y1]] = geomBounds(f.geometry);
+  if (x1 - x0 < 0.02 && y1 - y0 < 0.02) map.flyTo({ center: [f.properties.lon, f.properties.lat], zoom: 10, padding: viewPadding() });
+  else map.fitBounds([[x0, y0], [x1, y1]], { padding: viewPadding(), maxZoom: 10 });
+}
+
+async function openAoiDate(aoiId, date) {
+  if (S.aoi?.id === aoiId && S.series) {
+    const i = S.series.dates.indexOf(date);
+    fitAoi();
+    if (i >= 0) await setDate(i);
+  } else await loadAoi(aoiId, date);
+}
+
+function clearExtScene() {
+  if (map.getLayer('ext-scene')) map.removeLayer('ext-scene');
+  if (map.getSource('ext-scene')) map.removeSource('ext-scene');
+  const chip = $('#ext-scene');
+  if (chip) chip.hidden = true;
+}
+// Снимок-кандидат из реестра пар поверх карты: тайлы Planetary Computer, в том числе Landsat и сцены,
+// которые сервис не обрабатывал. Кладётся под детекции, гексы и полевые измерения.
+function showExtScene(p, eventId) {
+  clearExtScene();
+  const src = { type: 'raster', tiles: [p.tiles_url], tileSize: 256, maxzoom: 14, attribution: 'Снимок: Microsoft Planetary Computer' };
+  if (p.scene_bbox) src.bounds = p.scene_bbox;
+  map.addSource('ext-scene', src);
+  const before = map.getLayer('debris-0') ? 'debris-0' : map.getLayer('hex-fill') ? 'hex-fill' : undefined;
+  map.addLayer({ id: 'ext-scene', type: 'raster', source: 'ext-scene', paint: { 'raster-opacity': 0.95 } }, before);
+  $('#ext-scene-label').textContent = `${platformOf(p.scene_id) || COLL_NAME[p.collection] || ''} · ${(p.scene_datetime_utc || '').replace('T', ' ').slice(0, 16)} UTC · ${eventId}`;
+  $('#ext-scene').title = p.scene_id;
+  $('#ext-scene').hidden = false;
+  flyToEvent(eventId);
+}
+
+async function renderFieldSources() {
+  const box = $('#field-sources');
+  if (!S.sources) {
+    box.innerHTML = '<p class="muted small">Загрузка источников…</p>';
+    try { S.sources = await api('/api/field/sources'); }
+    catch (err) { box.innerHTML = `<p class="small">Не удалось загрузить источники: ${esc(err.message)}</p>`; return; }
+  }
+  box.innerHTML = S.sources.map((s) => {
+    const ev = (S.field?.features || []).map((f) => f.properties).filter((p) => p.source_id === s.source_id)
+      .sort((a, b) => a.date_utc.localeCompare(b.date_utc) || a.event_id.localeCompare(b.event_id, 'ru', { numeric: true }));
+    const outcomes = Object.entries(s.pairs.events_by_outcome).map(([k, v]) => `${OUTCOME_NAME[k] || k} — ${v}`).join('; ');
+    const scenes = Object.entries(s.pairs.scenes).map(([k, v]) => `${COLL_NAME[k] || k}: ${v}`).join(', ');
+    const profiles = Object.entries(s.profiles).map(([k, v]) => `${k} — ${v}`).join(', ');
+    const aois = s.aois.map((a) => `<button class="src-aoi" data-aoi="${esc(a.id)}" data-date="${esc(a.dates[0])}">${esc(a.name)}<small>${a.dates.map(ruDate).join(', ')}</small></button>`).join('');
+    return `<section class="src-card">
+      <div class="src-head"><span class="src-code">${esc(s.code)}</span><div><h3>${esc(s.region)}</h3><p class="small muted">${esc(s.area)} · ${esc(s.observations)}</p></div></div>
+      <p class="small">${esc(s.features)}</p>
+      ${kv([
+        ['Наблюдения', `${ruDate(s.date_from)} – ${ruDate(s.date_to)}; ${s.n_events} событий, ${s.n_rows} строк реестра`],
+        ['На карте', `${s.n_measurements} измерений C = N / A${profiles ? ` (профиль/роль: ${profiles})` : ''}`],
+        ['Снимки по событиям', `${outcomes || '—'}${scenes ? `<br>найдено сцен — ${scenes}` : '<br>сцен не найдено'}`],
+      ])}
+      <p class="small src-imagery">${esc(s.imagery)}</p>
+      ${aois ? `<div class="src-aois"><span class="small muted">Акватории со снимками на даты измерений:</span>${aois}</div>` : ''}
+      <button class="src-show" data-src="${esc(s.source_id)}">Показать наблюдения ${esc(s.code)} на карте</button>
+      <details><summary>События на карте (${ev.length})</summary><ul class="hotlist field-list">${ev.map((p) =>
+        `<li data-ev="${esc(p.event_id)}"><span>${esc(p.event_id)}</span><span class="v">${ruDate(p.date_utc)} · ${nf(p.conc_items_km2, 0)} шт./км²</span></li>`).join('')}</ul></details>
+    </section>`;
+  }).join('');
+  $$('#field-sources .src-show').forEach((b) => (b.onclick = () => {
+    const s = S.sources.find((x) => x.source_id === b.dataset.src);
+    const [x0, y0, x1, y1] = s.bbox;
+    $('#l-field').checked = true;
+    vis(['field-casing', 'field-line', 'field-pt', 'field-dot'], true);
+    map.fitBounds([[x0, y0], [x1, y1]], { padding: viewPadding(), maxZoom: 9 });
+    toast(`${s.code}, ${s.region}: ${s.n_measurements} измерений на карте`);
+  }));
+  $$('#field-sources .src-aoi').forEach((b) => (b.onclick = () => openAoiDate(b.dataset.aoi, b.dataset.date)));
+  $$('#field-sources li[data-ev]').forEach((li) => (li.onclick = () => openField(li.dataset.ev, true)));
 }
 
 function renderLegend() {
@@ -637,7 +763,7 @@ function renderKpis() {
   $$('#hotlist li[data-z]').forEach((li) => li.onclick = () => openZone(li.dataset.z, true));
 }
 
-const TOOL_TITLE = { card: 'Карточка', hex: 'Участок акватории', compare: 'Сравнение участков', drift: 'Прогноз распространения', route: 'План обследования', about: 'О методе' };
+const TOOL_TITLE = { card: 'Карточка', field: 'Данные кейса: S1–S4', hex: 'Участок акватории', compare: 'Сравнение участков', drift: 'Прогноз распространения', route: 'План обследования', about: 'О методе' };
 function openTool(t, title) {
   if (S.tool === t && !$('#panel').hidden && !title) { closePanel(); return; }
   $('#tip').hidden = true;
@@ -649,6 +775,7 @@ function openTool(t, title) {
   $$('.tool').forEach((el) => el.classList.toggle('on', el.dataset.tool === t));
   $$('#tools button').forEach((b) => b.classList.toggle('on', b.dataset.tool === t));
   if (t === 'about') renderAbout();
+  if (t === 'field') renderFieldSources();
 }
 function closePanel() {
   $('#panel').hidden = true; S.tool = null;
@@ -706,9 +833,16 @@ async function openField(eventId, fly = false) {
   try {
     const r = await api(`/api/field/${encodeURIComponent(eventId)}`);
     const m = r.measurements[0];
-    if (fly && m) map.flyTo({ center: [m.lon, m.lat], zoom: 10 });
     const rows = r.rows.map((x) => `<tr><td>${esc(x.sample_id)}</td><td>${esc(x.target_scope)}</td><td>${x.decision === 'included' ? `профиль ${esc(x.profile)} (${esc(x.role)})` : esc(x.reason_code)}</td></tr>`).join('');
-    const pairs = r.pairs.map((p) => `<tr><td class="small">${esc((p.scene_datetime_utc || '–').replace('T', ' ').slice(0, 16))}</td><td>${esc(p.sync_tier || '')}</td><td>${badge(p.decision === 'accepted' ? 'model_estimate' : 'unavailable', p.reason_code)}</td></tr>`).join('');
+    const pairs = r.pairs.map((p, k) => `<tr><td class="small">${esc((p.scene_datetime_utc || '–').replace('T', ' ').slice(0, 16))}` +
+      `${p.scene_id ? `<br><span class="muted">${esc(platformOf(p.scene_id) || COLL_NAME[p.collection] || '')}</span>` : ''}</td>` +
+      `<td>${esc(p.sync_tier || '–')}</td><td>${badge(p.decision === 'accepted' ? 'model_estimate' : 'unavailable', p.reason_code)}` +
+      `<div class="small muted pair-why">${esc(p.reason_text || '')}</div>` +
+      (p.tiles_url || p.aoi ? `<div class="pair-actions">${p.tiles_url ? `<button data-pair="${k}" data-tooltip="Показать сцену на карте (Planetary Computer)">Снимок</button>` : ''}` +
+        `${p.aoi ? `<button data-aoi="${esc(p.aoi)}" data-date="${esc(p.aoi_date)}" data-tooltip="Обработанный снимок этой даты: детекции, маска качества, концентрация">В акватории</button>` : ''}</div>` : '') +
+      '</td></tr>').join('');
+    const nearestDate = (dates) => m ? dates.reduce((a, b) => (Math.abs(new Date(b) - new Date(m.date_utc)) < Math.abs(new Date(a) - new Date(m.date_utc)) ? b : a)) : dates[0];
+    const aois = (r.aois || []).map((a) => { const d = nearestDate(a.dates); return `<button data-aoi="${esc(a.id)}" data-date="${esc(d)}">${esc(a.name)} · ${ruDate(d)}</button>`; }).join('');
     $('#card-body').innerHTML = m ? `
       <p>${badge('measurement', 'измерение')} ${badge('', `профиль ${m.profile} · ${m.role}`)}</p>
       <div class="big-value">${nf(m.conc_items_km2, 1)}<small>шт./км²</small></div>
@@ -724,9 +858,13 @@ async function openField(eventId, fly = false) {
       ])}
       <p class="small">Концентрация относится ко всей обследованной полосе, а не к точке на карте.</p>
       <h3>Строки реестра события</h3><table class="card-table field-registry-table"><tr><th>ID образца</th><th>Совокупность</th><th>Решение</th></tr>${rows}</table>
-      <h3>Сопоставление со снимками</h3>${pairs ? `<table class="card-table field-pairs-table"><tr><th>Снимок</th><th>Ярус</th><th>Решение</th></tr>${pairs}</table>` : '<p>Нет кандидатов</p>'}`
+      <h3>Сопоставление со снимками</h3>${pairs ? `<table class="card-table field-pairs-table"><tr><th>Снимок, UTC</th><th>Ярус</th><th>Решение</th></tr>${pairs}</table>` : '<p>Нет кандидатов</p>'}
+      ${aois ? `<h3>Акватории сервиса с этим событием</h3><div class="pair-actions">${aois}</div>` : ''}`
       : `<p>Событие не вошло ни в один профиль.</p><table class="card-table field-registry-table">${rows}</table>`;
+    $$('#card-body button[data-pair]').forEach((b) => (b.onclick = () => showExtScene(r.pairs[+b.dataset.pair], eventId)));
+    $$('#card-body button[data-aoi]').forEach((b) => (b.onclick = () => openAoiDate(b.dataset.aoi, b.dataset.date)));
     openTool('card', `Измерение ${eventId}`);
+    if (fly && m) flyToEvent(eventId);
   } catch (err) { toast(`Не удалось открыть событие: ${err.message}`); }
 }
 
@@ -1186,7 +1324,8 @@ $('#l-rgb').onchange = (e) => vis(rasterIds('rgb'), e.target.checked);
 $('#l-quality').onchange = (e) => vis(rasterIds('quality'), e.target.checked);
 $('#l-debris').onchange = (e) => vis(rasterIds('debris'), e.target.checked);
 $('#l-zones').onchange = (e) => vis(['zones-fill', 'zones-line', 'zones-dot'], e.target.checked);
-$('#l-field').onchange = (e) => vis(['field-casing', 'field-line', 'field-pt'], e.target.checked);
+$('#l-field').onchange = (e) => vis(['field-casing', 'field-line', 'field-pt', 'field-dot'], e.target.checked);
+$('#ext-scene-close').onclick = clearExtScene;
 $('#l-objects').onchange = async (e) => {
   if (e.target.checked && !S.objects) {
     try { S.objects = await api('/api/field/objects'); map.getSource('objects').setData(S.objects); }
@@ -1215,7 +1354,7 @@ map.on('load', async () => {
   if (q.get('profile') && S.profiles.some((p) => p.id === q.get('profile'))) S.profile = q.get('profile');
   if (q.get('q')) S.queryId = q.get('q');
   renderProfiles();
-  $('#aoi').innerHTML = S.aois.map((a) => `<option value="${a.id}">${a.name}</option>`).join('');
+  $('#aoi').innerHTML = S.aois.map((a) => `<option value="${a.id}" data-group="${esc(a.group || 'monitoring')}">${esc(a.name)}</option>`).join('');
   if (S.aois.length) {
     const aoi = S.aois.some((a) => a.id === q.get('aoi')) ? q.get('aoi') : S.aois[0].id;
     await loadAoi(aoi, q.get('date'));

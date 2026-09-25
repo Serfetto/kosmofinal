@@ -2744,3 +2744,102 @@ html[data-theme="dark"] .aoi-option-list > button.is-selected { border-color: rg
 @media (max-width: 520px) {
   .profile-menu { width: min(310px, calc(100vw - 68px)); }
 }
+
+/* ---------- данные кейса: группы акваторий, источники S1–S4, снимок-кандидат на карте ---------- */
+.aoi-group-head {
+  padding: 10px 9px 5px;
+  color: var(--theme-muted);
+  font-size: 8.5px;
+  font-weight: 750;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.aoi-group-head:not(:first-child) { margin-top: 6px; border-top: 1px solid var(--theme-border); padding-top: 12px; }
+
+.hotlist.field-list li { flex-wrap: wrap; column-gap: 8px; row-gap: 2px; }
+.hotlist.field-list li::before { content: none; width: 0; }
+.hotlist.field-list .v { margin-left: auto; text-align: right; }
+#aoi-field { margin-top: 12px; }
+#aoi-field .field-list { max-height: 210px; overflow-y: auto; }
+
+#field-sources .src-card {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid var(--theme-border);
+  border-radius: 14px;
+  background: var(--theme-card);
+}
+#field-sources .src-head { display: flex; align-items: flex-start; gap: 11px; }
+#field-sources .src-head h3 { margin: 0 0 2px; }
+#field-sources .src-head p { margin: 0; }
+#field-sources .src-code {
+  display: grid;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--theme-active);
+  color: var(--theme-active-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+#field-sources .src-imagery {
+  padding: 8px 10px;
+  border-left: 2px solid var(--theme-active);
+  border-radius: 0 8px 8px 0;
+  background: var(--theme-accent-soft);
+  color: var(--theme-text-soft);
+}
+#field-sources .src-aois { display: grid; gap: 6px; margin: 10px 0; }
+#field-sources .src-aois button { display: grid; gap: 2px; text-align: left; border-radius: 10px !important; }
+#field-sources .src-aois button small { color: var(--theme-muted); font-size: 9.5px; font-weight: 600; }
+#field-sources .src-show { margin-top: 4px; }
+#field-sources details { margin-top: 10px; }
+#field-sources summary { cursor: pointer; color: var(--theme-muted); font-size: 10.5px; font-weight: 650; }
+#field-sources .field-list { max-height: 240px; margin-top: 6px; overflow-y: auto; font-size: 10.5px; }
+#field-sources .field-list li { border-color: var(--theme-border); color: var(--theme-text-soft); }
+#field-sources .field-list .v { color: var(--theme-muted); font-size: 9.5px; }
+
+#panel .pair-why { margin-top: 5px; font-size: 9.5px; line-height: 1.4; }
+#panel .pair-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+#panel .pair-actions button { padding: 5px 10px; font-size: 10px; }
+
+.ext-scene-chip {
+  position: absolute;
+  z-index: 8;
+  top: 106px;
+  left: 50%;
+  display: flex;
+  max-width: min(560px, calc(100vw - 32px));
+  align-items: center;
+  gap: 8px;
+  transform: translateX(-50%);
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--theme-border-strong);
+  border-radius: 999px;
+  background: var(--theme-surface);
+  box-shadow: 0 12px 34px var(--theme-shadow);
+  color: var(--theme-text);
+  font-size: 11px;
+  font-weight: 650;
+  backdrop-filter: blur(16px);
+}
+.ext-scene-chip[hidden] { display: none; }
+.ext-scene-chip > svg { flex: 0 0 auto; color: var(--theme-active); }
+.ext-scene-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ext-scene-chip button {
+  display: grid;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--theme-border);
+  border-radius: 999px;
+  background: var(--theme-control);
+  color: var(--theme-text-soft);
+}
+.ext-scene-chip button:hover { background: var(--theme-control-hover); color: var(--theme-text); }
+@media (max-width: 820px) {
+  .ext-scene-chip { top: 140px; font-size: 10px; }
+}

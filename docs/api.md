@@ -19,7 +19,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 - [Акватории и снимки](#акватории-и-снимки): `aois`, `aois/{aoi}`, `scenes`, `hexes`, `series`, `grid`
 - [Детекции на снимке](#детекции-на-снимке): `zones`, `points`
 - [Концентрация](#концентрация): `profiles`, `concentration`, `hex/{i}`
-- [Полевые данные](#полевые-данные): `field`, `field/objects`, `field/{event_id}`
+- [Полевые данные](#полевые-данные): `field`, `field/objects`, `field/sources`, `field/{event_id}`
 - [Реестр пар](#реестр-пар): `pairs`
 - [Дрейф и маршрут](#дрейф-и-маршрут): `drift`, `drift_point`, `accumulation`, `route`
 - [Выгрузка и отчёт](#выгрузка-и-отчёт): `export`, `report`
@@ -37,7 +37,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 | Рамка `bbox` | `[lon_min, lat_min, lon_max, lat_max]` |
 | Дата снимка | `YYYY-MM-DD` по UTC — одна из `dates` акватории |
 | Момент времени | ISO 8601 в UTC, например `2026-09-13T08:20:21.024000+00:00` |
-| Акватория `aoi` | строковый id из `GET /api/aois`: `sochi`, `novorossiysk`, `kerch`, `batumi`, `neva`, `vladivostok`, `kuibyshev`, `volgograd` |
+| Акватория `aoi` | строковый id из `GET /api/aois`: мониторинг — `sochi`, `novorossiysk`, `kerch`, `neva`, `vladivostok`, `kuibyshev`, `volgograd`; районы полевых данных кейса — `batumi`, `s4_*` (Чёрное море, DOORS 2024), `s3_*` (Северное море, 2016) |
 | Профиль `profile` | одна заглавная буква из `GET /api/profiles`: `A` или `B` (по умолчанию `B`) |
 | Гексы | H3 разрешения 8, ~0,74 км². У каждого гекса есть индекс `i` — его позиция в `hexes.geojson` |
 | Массивы `[дата][гекс]` | в `series` и `concentration`: первый индекс — позиция даты в `dates`, второй — индекс гекса `i` |
@@ -72,6 +72,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 | GET | [`/api/aois/{aoi}/{date}/hex/{i}`](#get-apiaoisaoidatehexi) | концентрация в гексе с причинами статуса | JSON |
 | GET | [`/api/field`](#get-apifield) | полевые измерения с фильтрами | GeoJSON |
 | GET | [`/api/field/objects`](#get-apifieldobjects) | отдельные предметы (контекст) | GeoJSON |
+| GET | [`/api/field/sources`](#get-apifieldsources) | источники S1–S4: период, снимки, акватории | JSON |
 | GET | [`/api/field/{event_id}`](#get-apifieldevent_id) | расшифровка расчёта по событию | JSON |
 | GET | [`/api/pairs`](#get-apipairs) | реестр пар «событие ↔ снимок» | JSON / CSV |
 | GET | [`/api/aois/{aoi}/{date}/drift`](#get-apiaoisaoidatedrift) | прогноз дрейфа всех детекций | JSON |
@@ -108,6 +109,14 @@ curl -OJ "http://localhost:8000/api/export?aoi=sochi&date=2026-09-13&profile=B&l
 curl -X POST http://localhost:8000/api/queries -H "Content-Type: application/json" \
      -d '{"aoi":"sochi","date":"2026-09-13","profile":"B","layer":"zones","format":"csv"}'   # → id
 curl -X POST http://localhost:8000/api/queries/<id>/rerun                                      # → match: true
+```
+
+**Полевые данные кейса и снимки на даты измерений**
+
+```bash
+curl http://localhost:8000/api/field/sources                  # S1–S4: период, итог пар, акватории со снимками
+curl http://localhost:8000/api/aois/s4_zonguldak/2024-06-17/zones   # снимок в день измерений T30–T32
+curl http://localhost:8000/api/field/S4:DOORS3:T30            # расшифровка C = N / A, пары, tiles_url сцены
 ```
 
 **Выйти на сбор**: `GET /api/aois/sochi/2026-09-13/route?n=8&speed=12&delay=6` — остановки с учётом дрейфа;
@@ -184,6 +193,8 @@ curl -X POST http://localhost:8000/api/queries/<id>/rerun                       
 | `tz` | int | смещение местного времени от UTC, ч |
 | `rivers` | object | устья рек: название → [lon, lat] |
 | `note` | string \| null | пояснение к акватории |
+| `group` | string | `field` — район полевых данных кейса: снимки подобраны на даты измерений ±1 сут. (как в реестре пар); `monitoring` — оперативный мониторинг |
+| `source` | string \| null | источник реестра, для которого подобраны снимки: `S4_BLACK_SEA_DOORS3`, `S3_SE_NORTH_SEA`; null у мониторинга |
 | `dates` | string[] | даты снимков по возрастанию; индекс даты — индекс в `series` и `concentration` |
 | `basin` | string \| null | морской бассейн (`black_sea`…), от него зависит применимость профилей; null для пресных вод |
 | `water_type` | string | `marine` или `inland` |
@@ -195,7 +206,7 @@ curl -X POST http://localhost:8000/api/queries/<id>/rerun                       
   "id": "sochi", "name": "Сочи — Адлер (Чёрное море)",
   "bbox": [39.55, 43.36, 40.02, 43.62], "kind": "sea", "port": [39.7215, 43.579], "tz": 3,
   "rivers": {"Сочи": [39.7196, 43.5806], "Мзымта": [39.9248, 43.4192], "Псоу": [40.0063, 43.3869]},
-  "note": null,
+  "note": null, "group": "monitoring", "source": null,
   "dates": ["2025-04-18", "2025-04-29", "…", "2026-09-13"],
   "basin": "black_sea", "water_type": "marine",
   "concentration": {
@@ -594,6 +605,40 @@ curl "http://localhost:8000/api/field?profile=B&bbox=27,40.5,42,47&date_from=202
 }]}
 ```
 
+### `GET /api/field/sources`
+
+Состав наблюдений кейса по источникам — как в постановке. Параметров нет. Для каждого источника: сколько строк,
+событий и измерений на карте, период и границы наблюдений, итог реестра пар и акватории сервиса со снимками на даты
+измерений.
+
+| Источник | Район | Что есть в архивах снимков |
+|---|---|---|
+| S1 | Тихий океан (мусорное пятно), июль 2015 — октябрь 2016 | ни одной сцены Sentinel-2 и Landsat ни в Planetary Computer, ни в Copernicus Data Space, ни в Earth Search: открытый океан вдали от берега они не снимают; есть только Sentinel-3 OLCI 300 м за октябрь 2016 |
+| S2 | Саргассово море, апрель 2015 | до запуска Sentinel-2A (23.06.2015); две трансекты попадают на сцену Landsat-8 — детектор к ней не применим, снимок открывается по `tiles_url` |
+| S3 | Северное море, апрель 2014 и 2016 | 2016 — Sentinel-2 (`s3_helgoland`, `s3_bight_nw`); 2014 — только Landsat-7/8 |
+| S4 | Чёрное море, 2–18 июня 2024 | Sentinel-2 почти на все даты: `batumi` и `s4_*` |
+
+| Поле | Описание |
+|---|---|
+| `source_id`, `code` | источник реестра и короткий код из постановки (`S1`…`S4`) |
+| `region`, `area`, `observations`, `features` | район, рейс, вид наблюдений и особенности — как в постановке |
+| `imagery` | что есть в архивах снимков для источника |
+| `n_rows`, `n_events` | строк и событий реестра |
+| `n_measurements` | событий с полевым измерением C = N / A на карте (`GET /api/field`) |
+| `profiles` | измерения по профилю и роли: `B/train`, `B/transfer_check`, `C/optional`… |
+| `date_from`, `date_to`, `bbox` | период и границы наблюдений |
+| `pairs` | `events_by_outcome` — события по итогу пар (accepted / context / rejected), `reasons` — строки реестра пар по причинам, `scenes` — найдено сцен по коллекциям |
+| `aois` | акватории сервиса со снимками на даты измерений: `{id, name, dates}` |
+
+```json
+[{"source_id": "S1_GPGP2018", "code": "S1", "region": "Тихий океан", "n_rows": 350, "n_events": 181,
+  "n_measurements": 83, "profiles": {"C/optional": 83}, "date_from": "2015-07-25", "date_to": "2016-10-06",
+  "pairs": {"events_by_outcome": {"rejected": 83}, "reasons": {"NO_SCENE": 83}, "scenes": {}}, "aois": [], "…": "…"},
+ {"source_id": "S4_BLACK_SEA_DOORS3", "code": "S4", "region": "Чёрное море", "n_events": 33,
+  "pairs": {"events_by_outcome": {"context": 21, "accepted": 9, "rejected": 3}, "…": "…"},
+  "aois": [{"id": "s4_zonguldak", "name": "S4 DOORS · к северу от Зонгулдака (T30–T32)", "dates": ["2024-06-17"]}]}]
+```
+
 ### `GET /api/field/{event_id}`
 
 Как получено число по событию — для проверки расчёта без чтения кода.
@@ -606,7 +651,8 @@ curl "http://localhost:8000/api/field?profile=B&bbox=27,40.5,42,47&date_from=202
 |---|---|
 | `rows` | все строки реестра с этим событием и решение по каждой: `decision` included/excluded, `reason_code`, `reason_text` |
 | `measurements` | принятые измерения (поля как в `field`) плюс `formula` — расчёт текстом |
-| `pairs` | снимки, найденные для события, и решение по каждой паре (см. [реестр пар](#реестр-пар)) |
+| `pairs` | снимки, найденные для события, и решение по каждой паре (см. [реестр пар](#реестр-пар)). У пары со сценой ещё `collection`; `tiles_url` — XYZ-тайлы сцены в естественных цветах (Planetary Computer, без ключа; `{z}/{x}/{y}` подставляет карта); `scene_bbox` — границы сцены; `aoi`, `aoi_date` — обработанный снимок сервиса на ту же дату или null |
+| `aois` | акватории сервиса, внутри которых лежит событие: `{id, name, dates}` |
 
 ```json
 {
@@ -620,9 +666,12 @@ curl "http://localhost:8000/api/field?profile=B&bbox=27,40.5,42,47&date_from=202
   ],
   "measurements": [{"event_id": "S3:HE419_MarLitter_transect01", "n_items": 4.0, "area_km2": 0.251,
                     "conc_items_km2": 15.94, "formula": "C = N / A = 4 / 0.251 км² = 15.94 шт./км²", "…": "…"}],
-  "pairs": [{"scene_id": "LE07_L2SP_198022_20140402_02_T1", "decision": "rejected",
+  "pairs": [{"collection": "landsat-c2-l2", "scene_id": "LE07_L2SP_198022_20140402_02_T1", "decision": "rejected",
              "reason_code": "SENSOR_UNSUPPORTED",
-             "reason_text": "есть 2 сцен(ы) landsat-c2-l2, но детектору нужен красный край Sentinel-2"}]
+             "reason_text": "есть 2 сцен(ы) landsat-c2-l2, но детектору нужен красный край Sentinel-2",
+             "tiles_url": "https://planetarycomputer.microsoft.com/api/data/v1/item/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?collection=landsat-c2-l2&item=LE07_L2SP_198022_20140402_02_T1&…",
+             "scene_bbox": [4.63555, 53.50931, 8.32963, 55.50167], "aoi": null, "aoi_date": null}],
+  "aois": []
 }
 ```
 

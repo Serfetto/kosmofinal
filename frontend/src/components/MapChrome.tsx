@@ -1,4 +1,4 @@
-import { LocateFixed, Maximize2, Waves } from 'lucide-react';
+import { LocateFixed, Maximize2, Satellite, Waves, X } from 'lucide-react';
 
 export function MapChrome() {
   return (
@@ -14,6 +14,12 @@ export function MapChrome() {
         <button id="map-fullscreen" data-tooltip="Открыть карту на весь экран" aria-label="Полноэкранный режим">
           <Maximize2 size={18} />
         </button>
+      </div>
+
+      <div id="ext-scene" className="ext-scene-chip" hidden>
+        <Satellite size={15} aria-hidden="true" />
+        <span id="ext-scene-label" />
+        <button id="ext-scene-close" data-tooltip="Убрать снимок с карты" aria-label="Убрать снимок с карты"><X size={14} /></button>
       </div>
     </>
   );

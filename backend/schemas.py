@@ -129,6 +129,10 @@ class AoiOut(BaseModel):
     tz: int = Field(description="Смещение местного времени от UTC, ч")
     rivers: dict[str, LonLat] = Field(description="Устья рек: название → [lon, lat]")
     note: str | None = Field(description="Пояснение к акватории для интерфейса")
+    group: str = Field(description="`field` — район полевых данных кейса (снимки на даты измерений), "
+                                   "`monitoring` — акватория оперативного мониторинга")
+    source: str | None = Field(description="Источник полевого реестра, для которого подобраны снимки "
+                                           "(`source_id`, напр. `S4_BLACK_SEA_DOORS3`); null у акваторий мониторинга")
     dates: list[str] = Field(description="Даты обработанных снимков по возрастанию. Индекс даты — это индекс "
                                          "в массивах `series` и `concentration`")
     basin: str | None = Field(description="Морской бассейн (от него зависит применимость профилей), напр. `black_sea`; "
@@ -277,13 +281,45 @@ class SeriesOut(BaseModel):
     detector: dict[str, Any] = Field(description="Порог детектора `p_det` и хеш его конфига")
 
 
+class AoiRef(BaseModel):
+    id: str = Field(description="Акватория — `id` из `GET /api/aois`")
+    name: str = Field(description="Название")
+    dates: list[str] = Field(description="Даты обработанных снимков")
+
+
 class FieldEventOut(BaseModel):
     event_id: str
     rows: list[dict[str, Any]] = Field(description="Все строки реестра с этим событием и решение по каждой: "
                                                    "`decision` included/excluded, `reason_code`, `reason_text`")
     measurements: list[dict[str, Any]] = Field(description="Принятые измерения (как в `GET /api/field`) плюс `formula` — "
                                                            "расчёт C = N / A текстом")
-    pairs: list[dict[str, Any]] = Field(description="Пары события со снимками из реестра пар и решение по каждой")
+    pairs: list[dict[str, Any]] = Field(description="Пары события со снимками из реестра пар и решение по каждой. "
+                                                    "У пары со сценой ещё: `collection`; `tiles_url` — XYZ-тайлы сцены "
+                                                    "в естественных цветах (Planetary Computer, без ключа); "
+                                                    "`scene_bbox` — границы сцены; `aoi`, `aoi_date` — обработанный "
+                                                    "снимок сервиса на ту же дату, если он есть")
+    aois: list[AoiRef] = Field(description="Акватории сервиса, внутри которых лежит событие")
+
+
+class FieldSourceOut(BaseModel):
+    source_id: str = Field(description="Источник реестра", examples=["S4_BLACK_SEA_DOORS3"])
+    code: str = Field(description="Короткий код из постановки", examples=["S4"])
+    region: str = Field(description="Район", examples=["Чёрное море"])
+    area: str = Field(description="Уточнение района и рейса")
+    observations: str = Field(description="Вид наблюдений (как в постановке)")
+    features: str = Field(description="Особенности (как в постановке)")
+    imagery: str = Field(description="Что есть в архивах снимков для этого источника")
+    n_rows: int = Field(description="Строк реестра")
+    n_events: int = Field(description="Событий реестра")
+    n_measurements: int = Field(description="Событий с полевым измерением концентрации на карте (`GET /api/field`)")
+    profiles: dict[str, int] = Field(description="Измерения по профилю и роли: `B/train`, `B/transfer_check`…")
+    date_from: str = Field(description="Первая дата наблюдений, YYYY-MM-DD")
+    date_to: str = Field(description="Последняя дата наблюдений, YYYY-MM-DD")
+    bbox: list[float] = Field(description="Границы наблюдений [lon_min, lat_min, lon_max, lat_max]")
+    pairs: dict[str, Any] = Field(description="Реестр пар по источнику: `events_by_outcome` (accepted / context / "
+                                              "rejected), `reasons` (коды причин по строкам), `scenes` — число "
+                                              "найденных сцен по коллекциям")
+    aois: list[AoiRef] = Field(description="Акватории сервиса со снимками на даты измерений этого источника")
 
 
 class PairsOut(BaseModel):

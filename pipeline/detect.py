@@ -201,6 +201,9 @@ def detect_scene(aoi_id: str, date: str, water: np.ndarray) -> dict:
 
 
 def run(aoi_id: str, force: bool = False) -> None:
+    if not (PROCESSED / aoi_id).exists() or not dates(aoi_id):
+        print(f"{aoi_id}: нет скачанных снимков", flush=True)
+        return
     water = build_water_mask(aoi_id)
     print(f"{aoi_id}: вода {water.sum() * 100 / 1e6:.1f} км²", flush=True)
     for d in dates(aoi_id):
