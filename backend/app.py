@@ -10,21 +10,23 @@ from functools import lru_cache
 
 import h3
 import numpy as np
+import rasterio
 import requests
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pyproj import Transformer
 
 from backend.case_api import _aoi_date, router, versions
 from backend.report import router as report_router
 from backend.schemas import (PATTERN_HINTS, AccumulationOut, AoiOut, AoiPath, DatePath, DriftOut, DriftPointOut,
-                             FeatureCollection, GeoJSONResponse, HealthOut, HoursQuery, RouteOut, SceneOut, SeriesOut,
-                             StatusesOut, Tag, errors)
+                             FeatureCollection, GeoJSONResponse, HealthOut, HoursQuery, RasterGridOut, RouteOut,
+                             SceneOut, SeriesOut, StatusesOut, Tag, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
-from pipeline.config import AOIS, H3_RES, ROOT
+from pipeline.config import AOIS, H3_RES, PROCESSED, ROOT
 from pipeline.drift import accumulation, simulate
 from pipeline.route import plan
 
@@ -54,8 +56,8 @@ DESCRIPTION = """
 запроса. `422` — неверный параметр; для ошибок формата в ответе ещё `errors` с разбором по полям.
 
 ### Растровые слои
-Файлы снимка отдаются статикой: `/data/{aoi}/{date}/rgb.jpg`, `debris.png`, `quality.png`. Углы для привязки —
-`corners` в `GET /api/aois/{aoi}/scenes`.
+Файлы снимка отдаются статикой: `/data/{aoi}/{date}/rgb.jpg`, `debris.png`, `quality.png`. Растры лежат в сетке
+UTM, привязка — `GET /api/aois/{aoi}/grid`; `corners` в `GET /api/aois/{aoi}/scenes` — только грубая, по углам.
 """
 
 TAGS = [
@@ -231,6 +233,37 @@ def series(aoi: AoiPath):
     пикселей с детекцией, доля пригодной воды и код статуса детекции. Для графиков динамики и анимации."""
     _aoi_date(aoi)
     return FileResponse(WEB / aoi / "series.json", media_type="application/json")
+
+
+GRID_STEP = 256  # пикс.: билинейно между узлами через 2,56 км ошибка — доли метра
+
+
+@lru_cache(maxsize=16)
+def _raster_grid(aoi: str) -> dict:
+    path = PROCESSED / aoi / "water.tif"
+    if not path.exists():
+        raise HTTPException(404, f"нет сетки растров акватории {aoi!r}")
+    with rasterio.open(path) as s:
+        t, crs, w, h = s.transform, s.crs, s.width, s.height
+    # Узлы с запасом за правый и нижний край: rgb и quality — через пиксель и выходят за сетку на полпикселя
+    cols = np.arange(-(-(w + 1) // GRID_STEP) + 1) * GRID_STEP
+    rows = np.arange(-(-(h + 1) // GRID_STEP) + 1) * GRID_STEP
+    x, y = t @ tuple(np.meshgrid(cols, rows))
+    lon, lat = Transformer.from_crs(crs, "EPSG:4326", always_xy=True).transform(x, y)
+    return {"width": w, "height": h, "step": GRID_STEP,
+            "lonlat": np.stack([lon, lat], -1).round(7).tolist()}
+
+
+@app.get("/api/aois/{aoi}/grid", tags=[Tag.AOIS], summary="Привязка растров снимка", response_model=RasterGridOut,
+         responses=errors(404, 422))
+def raster_grid(aoi: AoiPath):
+    """Растры `rgb.jpg`, `debris.png`, `quality.png` лежат в сетке UTM 10 м (rgb и quality — через пиксель).
+    В меркаторе карты эта сетка не прямоугольник и не трапеция: если растянуть растр целиком по четырём
+    `corners`, середина снимка уезжает до 100 м. Здесь узлы сетки через `step` пикселей: растр режется на куски,
+    углы каждого куска берутся билинейно между узлами, куски ложатся на карту с точностью до пары метров.
+    Сетка одна на все даты акватории."""
+    _aoi_date(aoi)
+    return _raster_grid(aoi)
 
 
 @app.get("/api/aois/{aoi}/{date}/points", tags=[Tag.DETECTION], summary="Пиксели с детекцией",

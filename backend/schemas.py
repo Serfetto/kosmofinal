@@ -170,8 +170,18 @@ class SceneOut(BaseModel):
     quality: dict[str, float] = Field(description="Доли воды по кодам маски качества: ok, cloud, glint, ship…")
     status: dict[str, int] = Field(description="Число гексов по статусам детекции")
     corners: list[LonLat] = Field(description="Углы растров rgb/debris/quality: верх-лево, верх-право, низ-право, "
-                                              "низ-лево — прямо в `coordinates` источника image в MapLibre")
+                                              "низ-лево. Растр целиком по четырём углам ложится на карту со сдвигом "
+                                              "внутри до 100 м — для точной привязки `GET /api/aois/{aoi}/grid`")
     layers: SceneLayers = Field(description="Ссылки на слои снимка")
+
+
+class RasterGridOut(BaseModel):
+    width: int = Field(description="Ширина сетки 10 м, пикселей (= ширина debris.png)")
+    height: int = Field(description="Высота сетки 10 м, пикселей")
+    step: int = Field(description="Шаг узлов, пикселей сетки 10 м")
+    lonlat: list[list[LonLat]] = Field(description="Узлы `[строка][столбец]`: [lon, lat] точки "
+                                                   "(столбец × step, строка × step) — угла пикселя; узлы накрывают "
+                                                   "снимок с запасом, между узлами — билинейно")
 
 
 # ---------- профили и концентрация ----------

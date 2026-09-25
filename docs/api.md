@@ -16,7 +16,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 - [Все ручки одной таблицей](#все-ручки-одной-таблицей)
 - [Типовые сценарии](#типовые-сценарии)
 - [Служебное](#служебное): `health`, `statuses`
-- [Акватории и снимки](#акватории-и-снимки): `aois`, `aois/{aoi}`, `scenes`, `hexes`, `series`
+- [Акватории и снимки](#акватории-и-снимки): `aois`, `aois/{aoi}`, `scenes`, `hexes`, `series`, `grid`
 - [Детекции на снимке](#детекции-на-снимке): `zones`, `points`
 - [Концентрация](#концентрация): `profiles`, `concentration`, `hex/{i}`
 - [Полевые данные](#полевые-данные): `field`, `field/objects`, `field/{event_id}`
@@ -64,6 +64,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 | GET | [`/api/aois/{aoi}/scenes`](#get-apiaoisaoiscenes) | снимки: условия съёмки и ссылки на слои | JSON |
 | GET | [`/api/aois/{aoi}/hexes`](#get-apiaoisaoihexes) | сетка гексов с многолетними метриками | GeoJSON |
 | GET | [`/api/aois/{aoi}/series`](#get-apiaoisaoiseries) | ряды по датам и гексам | JSON |
+| GET | [`/api/aois/{aoi}/grid`](#get-apiaoisaoigrid) | привязка растров снимка к карте | JSON |
 | GET | [`/api/aois/{aoi}/{date}/zones`](#get-apiaoisaoidatezones) | зоны детекции на снимке | GeoJSON |
 | GET | [`/api/aois/{aoi}/{date}/points`](#get-apiaoisaoidatepoints) | пиксели с детекцией | JSON |
 | GET | [`/api/profiles`](#get-apiprofiles) | профили концентрации и качество моделей | JSON |
@@ -242,7 +243,7 @@ curl -X POST http://localhost:8000/api/queries/<id>/rerun                       
 | `cover` | number | покрытие на км² пригодной воды, м²/км² |
 | `quality` | object | доли воды по кодам маски качества: `ok`, `cloud`, `shadow`, `cirrus`, `glint`, `ice`, `ship`, `static`, `nodata` |
 | `status` | object | число гексов по статусам детекции |
-| `corners` | [lon, lat][4] | углы растров: верх-лево, верх-право, низ-право, низ-лево — прямо в `coordinates` источника `image` в MapLibre |
+| `corners` | [lon, lat][4] | углы растров: верх-лево, верх-право, низ-право, низ-лево. Растр целиком по ним ложится со сдвигом до 100 м внутри снимка — точная привязка в [`grid`](#get-apiaoisaoigrid) |
 | `layers` | object | ссылки: `rgb`, `debris`, `quality` (растры), `zones`, `points`, `report` |
 
 ```json
@@ -322,6 +323,30 @@ curl -X POST http://localhost:8000/api/queries/<id>/rerun                       
 | `detector` | порог детектора `p_det` и хеш конфига |
 
 Пример чтения: покрытие гекса `i = 2` на дату `2026-09-13` — `cover[dates.index("2026-09-13")][2]`.
+
+### `GET /api/aois/{aoi}/grid`
+
+Привязка растров снимка к карте. Растры лежат в сетке UTM 10 м, а в меркаторе веб-карты эта сетка не
+прямоугольник и не трапеция: если растянуть растр целиком по четырём `corners`, середина снимка уезжает
+до 100 м от зон и гексов. Здесь узлы сетки через `step` пикселей — растр режется на куски, углы каждого куска
+берутся билинейно между узлами (пример — в [растровых слоях](#растровые-слои-статика)). Сетка одна на все даты.
+
+| Параметр | Где | Описание |
+|---|---|---|
+| `aoi` | путь | id акватории |
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `width`, `height` | int | размер сетки 10 м в пикселях — это размер `debris.png` |
+| `step` | int | шаг узлов, пикселей сетки 10 м |
+| `lonlat` | [lon, lat][строка][столбец] | узел `[j][i]` — точка (столбец `i·step`, строка `j·step`), угол пикселя; узлы накрывают снимок с запасом |
+
+```json
+{"width": 3829, "height": 2924, "step": 256,
+ "lonlat": [[[39.5499524, 43.6232829], [39.5816812, 43.6231258], "…"], "…"]}
+```
+
+Ошибки: `404` — акватории нет.
 
 ---
 
@@ -935,7 +960,7 @@ CSV содержит только данные: он совпадает, пок�
 ## Растровые слои (статика)
 
 Растры снимка отдаются как файлы, без обёртки API. Ссылки на них есть в `layers` у
-[`scenes`](#get-apiaoisaoiscenes), углы для привязки — `corners` оттуда же.
+[`scenes`](#get-apiaoisaoiscenes), привязка — [`grid`](#get-apiaoisaoigrid).
 
 | Путь | Что это |
 |---|---|
@@ -943,12 +968,44 @@ CSV содержит только данные: он совпадает, пок�
 | `/data/{aoi}/{date}/debris.png` | вероятность мусора по пикселям, прозрачный PNG |
 | `/data/{aoi}/{date}/quality.png` | маска качества, прозрачный PNG; цвета — `quality` в `GET /api/statuses` |
 
-Пример для MapLibre:
+`debris.png` — сетка 10 м как есть. `rgb.jpg` и `quality.png` — каждый второй пиксель этой сетки
+(`[::2, ::2]`): пиксель `k` — это пиксель `2k` полной сетки, его середина — в `2k + 0,5`.
+
+Источник `image` в MapLibre натягивает картинку на четыре угла проективно, поэтому растр целиком по `corners`
+внутри уезжает до 100 м. Точно — кусками 8 × 8 с углами из `grid` (так делает интерфейс, остаток — 1–3 м):
 
 ```js
+const g = await (await fetch('/api/aois/sochi/grid')).json();
 const scene = (await (await fetch('/api/aois/sochi/scenes')).json()).at(-1);
-map.addSource('rgb', { type: 'image', url: scene.layers.rgb, coordinates: scene.corners });
+// [lon, lat] точки (col, row) сетки 10 м — билинейно между узлами
+function lonLat(col, row) {
+  const n = g.lonlat, u = col / g.step, v = row / g.step;
+  const i = Math.max(0, Math.min(n[0].length - 2, Math.floor(u)));
+  const j = Math.max(0, Math.min(n.length - 2, Math.floor(v)));
+  const a = u - i, b = v - j;
+  return [0, 1].map((k) => (1 - b) * ((1 - a) * n[j][i][k] + a * n[j][i + 1][k])
+                         + b * ((1 - a) * n[j + 1][i][k] + a * n[j + 1][i + 1][k]));
+}
+const img = new Image();
+img.src = scene.layers.debris;
+await img.decode();
+const f = Math.round(g.width / img.naturalWidth), off = (f - 1) / 2; // 1 — debris, 2 — rgb и quality
+const cuts = (n) => Array.from({ length: 9 }, (_, i) => Math.round((i * n) / 8));
+const xs = cuts(img.naturalWidth), ys = cuts(img.naturalHeight);
+const at = (x, y) => lonLat(x * f - off, y * f - off);
+for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+  const [x0, x1, y0, y1] = [xs[c], xs[c + 1], ys[r], ys[r + 1]];
+  const cv = Object.assign(document.createElement('canvas'), { width: x1 - x0, height: y1 - y0 });
+  cv.getContext('2d').drawImage(img, x0, y0, cv.width, cv.height, 0, 0, cv.width, cv.height);
+  const id = `debris-${r * 8 + c}`;
+  map.addSource(id, { type: 'image', coordinates: [at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)] });
+  map.getSource(id).updateImage({ image: cv });
+  map.addLayer({ id, type: 'raster', source: id, paint: { 'raster-resampling': 'nearest' } });
+}
 ```
+
+На сильном увеличении между кусками может мелькать щель: MapLibre округляет углы до сетки тайла, и у соседей
+она бывает разной. Интерфейс заранее ставит углы на общую сетку — `snapQuads` в `frontend/src/legacy.ts`.
 
 ## Ошибки
 

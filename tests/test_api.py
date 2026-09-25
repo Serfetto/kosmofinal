@@ -136,6 +136,26 @@ def test_aoi_and_scenes():
     assert client.get("/api/aois/nope/scenes").status_code == 404
 
 
+def test_raster_grid_matches_corners():
+    """Узлы привязки растров сходятся с углами снимка и накрывают его с запасом на прореженные rgb/quality."""
+    import numpy as np
+
+    g = client.get(f"/api/aois/{AOI}/grid").json()
+    corners = client.get(f"/api/aois/{AOI}/scenes").json()[-1]["corners"]
+    n = np.asarray(g["lonlat"])
+    assert n[0, 0] == pytest.approx(corners[0], abs=1e-6)
+    assert (n.shape[1] - 1) * g["step"] > g["width"] and (n.shape[0] - 1) * g["step"] > g["height"]
+
+    def at(col, row):  # как во фронтенде: билинейно между узлами
+        i, j = int(col // g["step"]), int(row // g["step"])
+        a, b = col / g["step"] - i, row / g["step"] - j
+        return (1 - b) * ((1 - a) * n[j, i] + a * n[j, i + 1]) + b * ((1 - a) * n[j + 1, i] + a * n[j + 1, i + 1])
+
+    for (col, row), c in zip([(g["width"], 0), (g["width"], g["height"]), (0, g["height"])], corners[1:]):
+        assert at(col, row) == pytest.approx(c, abs=1e-6)
+    assert client.get("/api/aois/nope/grid").status_code == 404
+
+
 def test_errors_are_readable():
     r = client.get(f"/api/aois/{AOI}/2026-99-99x/zones")
     assert r.status_code == 422 and "YYYY-MM-DD" in r.json()["detail"] and r.json()["errors"]

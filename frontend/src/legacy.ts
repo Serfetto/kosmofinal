@@ -30,7 +30,7 @@ const COL_A = '#ffb648', COL_B = '#9b8cff';
 const accentColor = () => document.documentElement.dataset.theme === 'light' ? '#087f75' : '#d8ff45';
 
 const S = {
-  aois: [], aoi: null, hexes: null, series: null, conc: null, zones: null, field: null, objects: null,
+  aois: [], aoi: null, hexes: null, series: null, grid: null, conc: null, zones: null, field: null, objects: null,
   profiles: [], profile: 'B', di: 0, mode: 'conc', queryId: null,
   filters: { det: new Set(['detected', 'not_detected', 'insufficient_data']), conc: new Set(['model_estimate', 'research_estimate', 'unavailable']) },
   drift: null, accum: null, sel: null, cmp: { A: null, B: null }, drawing: null, draft: [],
@@ -213,14 +213,16 @@ mapResizeObserver.observe(document.querySelector('#map'));
 const EMPTY = { type: 'FeatureCollection', features: [] };
 function addGeo(id) { map.addSource(id, { type: 'geojson', data: EMPTY }); }
 
-function initLayers(firstUrl, corners) {
-  map.addSource('rgb', { type: 'image', url: firstUrl.rgb, coordinates: corners });
-  map.addLayer({ id: 'rgb', type: 'raster', source: 'rgb', paint: { 'raster-opacity': 0.92, 'raster-fade-duration': 0 } });
-  map.addSource('quality', { type: 'image', url: firstUrl.quality, coordinates: corners });
-  map.addLayer({ id: 'quality', type: 'raster', source: 'quality', layout: { visibility: 'none' }, paint: { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } });
+function initLayers(corners) {
+  // Куски растров получают картинку и углы в showScene; до того источники пустые
+  const raster = (kind, layout, paint) => rasterIds(kind).forEach((id) => {
+    map.addSource(id, { type: 'image', coordinates: corners });
+    map.addLayer({ id, type: 'raster', source: id, layout, paint });
+  });
+  raster('rgb', {}, { 'raster-opacity': 0.92, 'raster-fade-duration': 0 });
+  raster('quality', { visibility: 'none' }, { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 });
   ['hexes', 'sel', 'accumPts', 'draw', 'cmpA', 'cmpB', 'tracks', 'particles', 'cone', 'coneCenter', 'route', 'routeDrift', 'routeObs', 'zones', 'field', 'objects'].forEach(addGeo);
-  map.addSource('debris', { type: 'image', url: firstUrl.debris, coordinates: corners });
-  map.addLayer({ id: 'debris', type: 'raster', source: 'debris', paint: { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } });
+  raster('debris', {}, { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 });
   map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes', paint: {
     'fill-color': ['get', 'col'],
     'fill-opacity': ['get', 'op'],
@@ -291,13 +293,13 @@ async function loadAoi(id, preferDate) {
   $('#aoi-note').textContent = S.aoi.note || '';
   $('#aoi-note').hidden = !S.aoi.note;
   toast('Загрузка акватории…', 0);
-  const [hexes, series] = await Promise.all([api(`/api/aois/${S.aoi.id}/hexes`), api(`/api/aois/${S.aoi.id}/series`)]);
-  S.hexes = hexes; S.series = series; S.sel = null; S.accum = null;
+  const [hexes, series, grid] = await Promise.all([api(`/api/aois/${S.aoi.id}/hexes`), api(`/api/aois/${S.aoi.id}/series`),
+    api(`/api/aois/${S.aoi.id}/grid`)]);
+  S.hexes = hexes; S.series = series; S.grid = grid; S.sel = null; S.accum = null;
   await loadConc();
   clearDrift(); clearRoute(); clearCompare();
   const di = series.dates.length - 1;
-  const urls = sceneUrls(series.dates[di]);
-  if (!map.getSource('rgb')) initLayers(urls, series.scenes[di].corners);
+  if (!map.getSource('hexes')) initLayers(series.scenes[di].corners);
   const [x0, y0, x1, y1] = S.aoi.bbox;
   map.fitBounds([[x0, y0], [x1, y1]], { padding: 30, duration: 0 });
   placeMarkers();
@@ -315,6 +317,66 @@ async function loadConc() {
   renderProfileNote();
 }
 const sceneUrls = (d) => ({ rgb: `/data/${S.aoi.id}/${d}/rgb.jpg`, debris: `/data/${S.aoi.id}/${d}/debris.png`, quality: `/data/${S.aoi.id}/${d}/quality.png` });
+
+// Растры лежат в сетке UTM, а MapLibre натягивает image-источник на четыре угла проективно. В меркаторе
+// сетка UTM не такая: целый снимок уезжал внутри до 100 м от зон и гексов. Поэтому каждый растр режется
+// на SPLIT × SPLIT кусков с углами по узлам /grid — на куске расхождение остаётся в пару метров.
+const RASTERS = ['rgb', 'quality', 'debris'];
+const SPLIT = 8;
+const rasterIds = (kind) => Array.from({ length: SPLIT * SPLIT }, (_, k) => `${kind}-${k}`);
+let sceneSeq = 0;
+
+// [lon, lat] точки (col, row) сетки 10 м — билинейно между узлами /grid
+function gridLonLat(g, col, row) {
+  const n = g.lonlat, u = col / g.step, v = row / g.step;
+  const i = Math.max(0, Math.min(n[0].length - 2, Math.floor(u)));
+  const j = Math.max(0, Math.min(n.length - 2, Math.floor(v)));
+  const a = u - i, b = v - j;
+  return [0, 1].map((k) => (1 - b) * ((1 - a) * n[j][i][k] + a * n[j][i + 1][k]) + b * ((1 - a) * n[j + 1][i][k] + a * n[j + 1][i + 1][k]));
+}
+
+// MapLibre округляет углы image-источника до 1/8192 тайла того зума, в который помещается кусок. У соседних
+// кусков зум может разойтись на единицу — общая граница округлится по-разному, и между ними мелькнёт щель.
+// Углы заранее ставятся на сетку наименьшего из этих зумов: она входит в сетки остальных, округлять нечего.
+function snapQuads(quads) {
+  const merc = quads.map((q) => q.map((ll) => maplibregl.MercatorCoordinate.fromLngLat(ll)));
+  const span = (q, k) => Math.max(...q.map((p) => p[k])) - Math.min(...q.map((p) => p[k]));
+  const z = Math.min(...merc.map((q) => Math.floor(-Math.log2(Math.max(span(q, 'x'), span(q, 'y'))))));
+  const k = 2 ** z * 8192;
+  return merc.map((q) => q.map((p) => new maplibregl.MercatorCoordinate(Math.round(p.x * k) / k, Math.round(p.y * k) / k).toLngLat().toArray()));
+}
+
+function sliceRaster(kind, img, g) {
+  const f = Math.round(g.width / img.naturalWidth); // 1 — полная сетка 10 м, 2 — через пиксель (rgb, quality)
+  const off = (f - 1) / 2; // прореженный пиксель k — это пиксель k·f полной сетки, кладём его центром туда
+  const cuts = (n) => Array.from({ length: SPLIT + 1 }, (_, i) => Math.round((i * n) / SPLIT));
+  const xs = cuts(img.naturalWidth), ys = cuts(img.naturalHeight);
+  const at = (x, y) => gridLonLat(g, x * f - off, y * f - off);
+  const pieces = [], quads = [];
+  for (let r = 0; r < SPLIT; r++) {
+    for (let c = 0; c < SPLIT; c++) {
+      const [x0, x1, y0, y1] = [xs[c], xs[c + 1], ys[r], ys[r + 1]];
+      const cv = document.createElement('canvas');
+      cv.width = x1 - x0; cv.height = y1 - y0;
+      cv.getContext('2d').drawImage(img, x0, y0, cv.width, cv.height, 0, 0, cv.width, cv.height);
+      pieces.push(cv);
+      quads.push([at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)]);
+    }
+  }
+  snapQuads(quads).forEach((q, k) => map.getSource(`${kind}-${k}`).updateImage({ image: pieces[k], coordinates: q }));
+}
+
+async function showScene(urls) {
+  const seq = ++sceneSeq, g = S.grid;
+  const imgs = await Promise.all(RASTERS.map(async (kind) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = urls[kind];
+    await img.decode();
+    return img;
+  }));
+  if (seq === sceneSeq) RASTERS.forEach((kind, j) => sliceRaster(kind, imgs[j], g)); // иначе уже выбрали другую дату
+}
 
 function placeMarkers() {
   S.markers.forEach((m) => m.remove());
@@ -388,10 +450,7 @@ async function setDate(i) {
     `<br>Видно воды: <b>${nf(sc.valid_frac * 100, 0)}%</b> · облака ${nf((q.cloud || 0) * 100, 1)}% · блик: ${glint} · море: <b>${sc.sea}</b>` +
     (sc.wind != null ? `, ветер ${nf(sc.wind)} м/с` : '') + (sc.storm ? `<br><span style="color:#ffb24a">Ненадёжная сцена (${sc.reason}): оставлены только крупные скопления, отсутствие мусора не подтверждается</span>` : '') +
     `<br><span class="small">Сцена: ${esc(sc.scene_id || '')}</span>`;
-  const u = sceneUrls(d);
-  map.getSource('rgb').updateImage({ url: u.rgb, coordinates: sc.corners });
-  map.getSource('debris').updateImage({ url: u.debris, coordinates: sc.corners });
-  map.getSource('quality').updateImage({ url: u.quality, coordinates: sc.corners });
+  showScene(sceneUrls(d)).catch((err) => toast(`Не удалось загрузить снимок: ${err.message}`));
   clearDrift(); clearRoute(); S.accum = null;
   if (S.mode === 'forecast' || S.mode === 'accum') setMode('conc');
   try { S.zones = await api(`/api/aois/${S.aoi.id}/${d}/zones`); } catch { S.zones = EMPTY; }
@@ -1123,9 +1182,9 @@ $('#exp-hexes-csv').onclick = () => exportLayer('hexes', 'csv');
 $('#query-save').onclick = saveQuery;
 $('#query-rerun').onclick = rerunQuery;
 const vis = (ids, on) => ids.forEach((l) => map.getLayer(l) && map.setLayoutProperty(l, 'visibility', on ? 'visible' : 'none'));
-$('#l-rgb').onchange = (e) => vis(['rgb'], e.target.checked);
-$('#l-quality').onchange = (e) => vis(['quality'], e.target.checked);
-$('#l-debris').onchange = (e) => vis(['debris'], e.target.checked);
+$('#l-rgb').onchange = (e) => vis(rasterIds('rgb'), e.target.checked);
+$('#l-quality').onchange = (e) => vis(rasterIds('quality'), e.target.checked);
+$('#l-debris').onchange = (e) => vis(rasterIds('debris'), e.target.checked);
 $('#l-zones').onchange = (e) => vis(['zones-fill', 'zones-line', 'zones-dot'], e.target.checked);
 $('#l-field').onchange = (e) => vis(['field-casing', 'field-line', 'field-pt'], e.target.checked);
 $('#l-objects').onchange = async (e) => {
