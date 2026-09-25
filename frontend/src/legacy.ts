@@ -1,9 +1,16 @@
-import * as maplibregl from './vendor/maplibre-gl.mjs';
+// @ts-nocheck — модуль постепенно типизируется без риска для проверенной геологики карты.
+import * as maplibregl from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import Chart from 'chart.js/auto';
 
-const Chart = window.Chart;
-Chart.defaults.color = '#8ea2bf';
-Chart.defaults.font.family = '"Segoe UI", system-ui, sans-serif';
+// Vite не может автоматически определить worker URL из ESM-сборки MapLibre 6.
+// Без явного URL растры работают, а GeoJSON/H3 остаётся необработанным.
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = 'Montserrat, "Segoe UI", Arial, sans-serif';
 Chart.defaults.font.size = 11;
+Chart.defaults.animation = { duration: 650, easing: 'easeOutQuart' };
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -13,7 +20,7 @@ const shortDate = (d) => { const [y, m, dd] = d.split('-'); return `${dd}.${m}.$
 
 const CLS_COL = ['rgba(0,0,0,0)', '#ffe38a', '#ffb24a', '#ff6a3d', '#d9214f'];
 const CLS_NAME = ['не обнаружено', 'низкий', 'умеренный', 'высокий', 'очень высокий'];
-const COL_A = '#f5b83d', COL_B = '#b58cff', ACCENT = '#3cc6e8';
+const COL_A = '#fbbf24', COL_B = '#a78bfa', ACCENT = '#00f5ff';
 
 const S = {
   aois: [], aoi: null, hexes: null, series: null, di: 0, mode: 'date',
@@ -99,6 +106,14 @@ const map = new maplibregl.Map({
   },
   center: [39.8, 43.5], zoom: 10, attributionControl: { compact: true },
 });
+if (import.meta.env.DEV) {
+  globalThis.__fluxMap = map;
+  globalThis.__fluxMapErrors = [];
+  map.on('error', (event) => globalThis.__fluxMapErrors.push({
+    message: event.error?.message || String(event.error || 'MapLibre error'),
+    sourceId: event.sourceId || null,
+  }));
+}
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
 
@@ -109,10 +124,19 @@ function initLayers(firstUrl, corners) {
   map.addSource('rgb', { type: 'image', url: firstUrl.rgb, coordinates: corners });
   map.addLayer({ id: 'rgb', type: 'raster', source: 'rgb', paint: { 'raster-opacity': 0.92, 'raster-fade-duration': 0 } });
   ['hexes', 'sel', 'accumPts', 'draw', 'cmpA', 'cmpB', 'tracks', 'particles', 'cone', 'coneCenter', 'route', 'routeDrift', 'routeObs'].forEach(addGeo);
-  map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes', paint: { 'fill-color': ['get', 'col'], 'fill-opacity': ['get', 'op'] } });
-  map.addLayer({ id: 'hex-line', type: 'line', source: 'hexes', paint: { 'line-color': 'rgba(120,180,220,0.13)', 'line-width': 0.6 } });
   map.addSource('debris', { type: 'image', url: firstUrl.debris, coordinates: corners });
   map.addLayer({ id: 'debris', type: 'raster', source: 'debris', paint: { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } });
+  // Сетка должна лежать выше обоих растров: иначе тонкие линии теряются на ярком RGB-снимке.
+  map.addLayer({ id: 'hex-fill', type: 'fill', source: 'hexes', paint: {
+    'fill-color': ['get', 'col'],
+    'fill-opacity': ['get', 'op'],
+    'fill-outline-color': 'rgba(103,232,249,0.18)',
+  } });
+  map.addLayer({ id: 'hex-line', type: 'line', source: 'hexes', paint: {
+    'line-color': ['case', ['>', ['get', 'op'], 0], 'rgba(186,245,255,0.62)', 'rgba(103,232,249,0.38)'],
+    'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.7, 12, 1.15, 15, 1.65],
+    'line-opacity': 0.78,
+  } });
   map.addLayer({ id: 'sel', type: 'line', source: 'sel', paint: { 'line-color': '#ffffff', 'line-width': 2.2 } });
   for (const [id, col] of [['cmpA', COL_A], ['cmpB', COL_B]]) {
     map.addLayer({ id: `${id}-fill`, type: 'fill', source: id, paint: { 'fill-color': col, 'fill-opacity': 0.08 } });
@@ -165,6 +189,14 @@ function placeMarkers() {
   S.markers = [];
   const el = document.createElement('div');
   el.className = 'port-marker'; el.textContent = '⚓'; el.title = 'Порт базирования судна';
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', 'Открыть план обследования из порта');
+  const openPort = (event) => { event.stopPropagation(); openTool('route'); };
+  el.addEventListener('click', openPort);
+  el.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') openPort(event);
+  });
   S.markers.push(new maplibregl.Marker({ element: el }).setLngLat(S.aoi.port).addTo(map));
   for (const [name, ll] of Object.entries(S.aoi.rivers || {})) {
     const r = document.createElement('div');
@@ -181,13 +213,13 @@ function buildTimeline() {
     type: 'bar',
     data: { labels: s.dates.map(shortDate), datasets: [{ data: s.scenes.map((x) => x.area_m2), borderRadius: 2, backgroundColor: [] }] },
     options: {
-      responsive: true, maintainAspectRatio: false, animation: false,
+      responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
       plugins: { legend: { display: false }, tooltip: { callbacks: {
         title: (c) => ruDate(s.dates[c[0].dataIndex]),
         label: (c) => { const sc = s.scenes[c.dataIndex]; return [`мусор ≈ ${nf(c.raw, 0)} м²`, `море: ${sc.sea}${sc.wind != null ? `, ветер ${nf(sc.wind)} м/с` : ''}`]; } } } },
       scales: {
         x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } },
-        y: { ticks: { maxTicksLimit: 3, callback: (v) => nf(v, 0) }, grid: { color: '#1b2940' } },
+        y: { ticks: { maxTicksLimit: 3, callback: (v) => nf(v, 0) }, grid: { color: 'rgba(148,163,184,.12)' } },
       },
       onClick: (e, els) => { if (els.length) setDate(els[0].index); },
     },
@@ -290,8 +322,9 @@ function onHexHover(e) {
   }
   const tip = $('#tip');
   tip.innerHTML = txt;
-  tip.style.left = `${e.point.x + 360 + 14}px`;
-  tip.style.top = `${e.point.y + 14}px`;
+  const rect = map.getCanvas().getBoundingClientRect();
+  tip.style.left = `${Math.max(8, Math.min(window.innerWidth - 280, rect.left + e.point.x + 14))}px`;
+  tip.style.top = `${Math.max(8, Math.min(window.innerHeight - 100, rect.top + e.point.y + 14))}px`;
   tip.hidden = false;
 }
 
@@ -382,9 +415,9 @@ function renderHexPanel() {
   S.charts.hex = new Chart($('#hex-chart'), {
     type: 'bar',
     data: { labels: s.dates.map(shortDate), datasets: [{ data, backgroundColor: s.dates.map((d, j) => j === S.di ? ACCENT : s.scenes[j].storm ? '#4a5568' : '#ff8a4c'), borderRadius: 2 }] },
-    options: { responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: { legend: { display: false }, title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#8ea2bf', font: { weight: 'normal' } } },
-      scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#1b2940' }, ticks: { maxTicksLimit: 4 } } },
+    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
+      plugins: { legend: { display: false }, title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#94a3b8', font: { weight: 'normal' } } },
+      scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.12)' }, ticks: { maxTicksLimit: 4 } } },
       onClick: (e, els) => { if (els.length) setDate(els[0].index); } },
   });
   $('#hex-drift-info').textContent = '';
@@ -504,9 +537,9 @@ function renderCompare() {
   if (B) ds.push({ label: 'B', data: B.ser, borderColor: COL_B, backgroundColor: COL_B, spanGaps: true, tension: 0.25, pointRadius: 2 });
   S.charts.cmp = new Chart($('#cmp-chart'), {
     type: 'line', data: { labels: S.series.dates.map(shortDate), datasets: ds },
-    options: { responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: { title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#8ea2bf', font: { weight: 'normal' } }, legend: { labels: { boxWidth: 10 } } },
-      scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#1b2940' } } } },
+    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 650, easing: 'easeOutQuart' },
+      plugins: { title: { display: true, text: 'Концентрация по датам, м²/км²', color: '#94a3b8', font: { weight: 'normal' } }, legend: { labels: { boxWidth: 10 } } },
+      scales: { x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5 }, grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.12)' } } } },
   });
 }
 
@@ -686,9 +719,12 @@ $('#l-hex').onchange = (e) => ['hex-fill', 'hex-line'].forEach((l) => map.setLay
 $('#l-sat').onchange = (e) => { map.setLayoutProperty('sat', 'visibility', e.target.checked ? 'visible' : 'none'); };
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && S.drawing) stopDrawing();
+  else if (e.key === 'Escape' && !$('#panel').hidden) closePanel();
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.key === 'ArrowLeft') setDate(S.di - 1);
   if (e.key === 'ArrowRight') setDate(S.di + 1);
+  const tool = ['hex', 'compare', 'drift', 'route', 'about'][Number(e.key) - 1];
+  if (tool) openTool(tool);
 });
 
 map.on('load', async () => {
