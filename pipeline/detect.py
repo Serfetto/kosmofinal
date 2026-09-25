@@ -22,12 +22,13 @@ from scipy.ndimage import (binary_dilation, binary_erosion, binary_opening, dist
 
 from .config import AOIS, BAND_IDX, GROUPS, MODELS, PROCESSED
 from .features import WATER_REF, features, fdi
+from .provenance import load_yaml
 
 warnings.filterwarnings("ignore")
 
 CLEAR_SCL = {2, 4, 5, 6, 7, 11}
 BAD_SCL = {0, 1, 3, 8, 9, 10, 11}  # нет данных, дефект, тень облака, облака, перистые, снег/лёд
-P_DET = 0.5
+P_DET = load_yaml("detector.yaml")["p_det"]
 REF_FDI = float(fdi(WATER_REF[:, None, None])[0, 0])
 UNMIX_BANDS = [BAND_IDX[b] for b in ("B05", "B06", "B07", "B08", "B8A", "B11", "B12")]
 
@@ -116,24 +117,24 @@ def corners_lonlat(prof) -> list[list[float]]:
     return [[round(a, 6), round(b, 6)] for a, b in zip(lon, lat)]
 
 
-def detect_scene(aoi_id: str, date: str, water: np.ndarray) -> dict:
-    from .s2 import load_saved
+def detect_array(refl: np.ndarray, valid: np.ndarray, gate_all: bool = False) -> dict:
+    """Ядро детектора для массива отражений [11,H,W] и маски пригодных пикселей.
 
-    out = PROCESSED / aoi_id / date
-    refl, scl, prof = load_saved(aoi_id, date)
-    valid = water & np.isfinite(refl[1]) & ~np.isin(scl, list(BAD_SCL))
-
+    Пригодность пикселя (valid) и принадлежность целевому классу (P, flags) считаются раздельно.
+    gate_all — прогнать модель по всем пригодным пикселям (для оценки на MARIDA), а не только по аномальным.
+    """
     F, names = features(refl)
     xn = F[:11]
     d_fdi = F[names.index("FDI")] - REF_FDI
     d8 = xn[BAND_IDX["B08"]] - WATER_REF[BAND_IDX["B08"]]
     d2 = xn[BAND_IDX["B02"]] - WATER_REF[BAND_IDX["B02"]]
     # Модель гоняем только по пикселям с аномалией — остальное заведомо чистая вода
-    gate = valid & ((d_fdi > 0.01) | (d8 > 0.01) | (d2 > 0.03))
+    gate = valid if gate_all else valid & ((d_fdi > 0.01) | (d8 > 0.01) | (d2 > 0.03))
 
     m = model()
-    P = np.zeros(water.shape, np.float32)
-    G = np.full(water.shape, GROUPS.index("water"), np.uint8)
+    shape = valid.shape
+    P = np.zeros(shape, np.float32)
+    G = np.full(shape, GROUPS.index("water"), np.uint8)
     if gate.any():
         pp = m["model"].predict_proba(F[:, gate].T)  # XGBoost на GPU
         P[gate] = pp[:, 0]
@@ -157,6 +158,17 @@ def detect_scene(aoi_id: str, date: str, water: np.ndarray) -> dict:
     noise = np.sqrt(np.maximum(uniform_filter(hp * hp, 51, mode="nearest"), 0))
     snr = d8 / np.maximum(noise, 1e-4)
     flags = ((d8 > d2) * 1 + (nb >= 2) * 2 + (snr >= 5) * 4).astype(np.uint8)
+    return {"P": P, "G": G, "frac": frac, "flags": flags, "noise": noise, "d_fdi": d_fdi, "F": F, "names": names}
+
+
+def detect_scene(aoi_id: str, date: str, water: np.ndarray) -> dict:
+    from .s2 import load_saved
+
+    out = PROCESSED / aoi_id / date
+    refl, scl, prof = load_saved(aoi_id, date)
+    valid = water & np.isfinite(refl[1]) & ~np.isin(scl, list(BAD_SCL))
+    r = detect_array(refl, valid)
+    P, G, frac, flags, noise = r["P"], r["G"], r["frac"], r["flags"], r["noise"]
 
     prof_out = prof.copy()
     prof_out.update(count=5, dtype="uint8", nodata=None)

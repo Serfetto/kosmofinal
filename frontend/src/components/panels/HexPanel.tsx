@@ -6,6 +6,7 @@ export function HexPanel() {
       <p className="muted" id="hex-empty">Выберите гекс на карте, чтобы открыть историю загрязнения.</p>
       <div id="hex-body" hidden>
         <div className="kpis" id="hex-kpis" />
+        <div id="hex-conc" className="conc-box" />
         <div className="chart-box tall"><canvas id="hex-chart" /></div>
         <button className="primary" id="hex-drift"><Navigation size={16} />Прогноз дрейфа из этого гекса</button>
         <p className="muted small" id="hex-drift-info" />

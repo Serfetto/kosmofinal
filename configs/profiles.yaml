@@ -1,0 +1,92 @@
+# Целевые величины (профили концентрации) и правила отбора полевых наблюдений.
+# Читается pipeline/field.py; обоснование — plan.md §3 и docs/report.md.
+
+source_csv: data/field/raw/macroplastic_marine_samples.csv
+# Сегменты прерванных трансект S2 (PANGAEA 931834, Gutow et al. 2021, CC BY 4.0)
+s2_transects_xlsx: data/field/raw/pangaea_931834_transects.xlsx
+s2_transects_url: https://doi.pangaea.de/10.1594/PANGAEA.931834?format=textfile
+
+expected: {rows: 935, columns: 56, events: 318}
+
+# Строки с этими флагами не допускаются ни в один профиль
+exclude_flags_always: [source_total_vs_object_count_conflict]
+
+geometry:
+  # S4: известна только середина полосы — радиус неопределённости следа, км (сценарий)
+  point_radius_km: 3.0
+
+profiles:
+  A:
+    id: plastic_visual_gt2
+    label: "Плавающий макропластик ≳2 см"
+    material: "пластик, включая вспененный (EPS)"
+    size_class: ">2 см (порог обнаружения метода, не размер каждого предмета)"
+    method: "судовой визуальный учёт в полосе 10 м"
+    unit: "шт./км²"
+    primary: true
+    groups:
+      - role: train
+        select:
+          record_type: [transect_density]
+          target_scope: [total_plastic]
+          measurement_profile: [S2_visual_GT2]
+    domain:
+      basins: [nw_atlantic_subtropical]
+  B:
+    id: litter_visual_gt2
+    label: "Весь плавающий макромусор ≳2,5 см (не только пластик)"
+    material: "все материалы, преимущественно пластик"
+    size_class: ">2,5 см (S4); >2 см (S3, только проверка переноса)"
+    method: "судовой визуальный учёт в полосе"
+    unit: "шт./км²"
+    primary: false
+    groups:
+      - role: train
+        select:
+          record_type: [transect_density]
+          target_scope: [all_litter]
+          measurement_profile: [S4_visual_GT2_5]
+      # Другое море и порог 2 см: в обучение не входит, только внешняя проверка переноса
+      - role: transfer_check
+        select:
+          record_type: [transect_density]
+          target_scope: [all_litter]
+          measurement_profile: [S3_visual_GT2]
+    domain:
+      basins: [black_sea]
+  C:
+    id: plastic_trawl_5_50
+    label: "Макропластик 5–50 см в трале (опционально)"
+    material: "пластик"
+    size_class: "5–50 см"
+    method: "трал Manta 6 м"
+    unit: "шт./км²"
+    primary: false
+    show_in_ui: false
+    groups:
+      - role: optional
+        select:
+          record_type: [transect_density]
+          target_scope: [total_plastic]
+          measurement_profile: [S1_trawl_5_to_50]
+    domain:
+      basins: [north_pacific_gyre]
+
+# Причины исключения строк, не попавших ни в один профиль (порядок проверки важен)
+exclusion_rules:
+  - code: object_context_not_label
+    text: "Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+    select: {target_scope: [object_context]}
+  - code: subpopulation_not_target
+    text: "Отдельная категория мусора — подсовокупность, другая целевая величина"
+    select: {target_scope: [plastic_category, fisheries_litter_category]}
+  - code: total_missing_or_conflict
+    text: "Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см"
+    select: {target_scope: [total_plastic], measurement_profile: [S1_aerial_GT50]}
+
+# Бассейны (lon_min, lat_min, lon_max, lat_max) — для области применимости
+basins:
+  black_sea: [27.0, 40.5, 42.0, 46.0]
+  nw_atlantic_subtropical: [-75.0, 20.0, -55.0, 35.0]
+  north_sea: [-4.0, 50.0, 10.0, 60.0]
+  north_pacific_gyre: [-160.0, 20.0, -120.0, 40.0]

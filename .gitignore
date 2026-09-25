@@ -5,13 +5,22 @@ node_modules/
 .env
 .pytest_cache/
 
-# Из data/ в репозиторий попадает только то, что нужно для запуска сервиса (~65 МБ):
-# готовые гексы/ряды, маски воды, метаданные сцен и кэш течений. Снимки и MARIDA — нет.
+# Из data/ в репозиторий попадает то, что нужно для запуска сервиса и проверки результатов:
+# готовые гексы/зоны/ряды, маски воды, метаданные сцен, кэш течений, полевой реестр,
+# реестр пар (с кэшем STAC), разбиения, веса моделей, предсказания и метрики. Снимки и MARIDA — нет.
+artifacts
 data/*
 !data/web/
+!data/field/
+!data/registry/
+!data/splits/
+!data/eval/
+!data/queries/
 !data/models/
 data/models/*
 !data/models/metrics.json
+!data/models/xgb.joblib
+!data/models/conc_*.json
 !data/processed/
 data/processed/*/*
 !data/processed/*/water.tif

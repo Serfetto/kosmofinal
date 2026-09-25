@@ -1,0 +1,39 @@
+{
+ "profile": "B",
+ "n_events": 33,
+ "n_groups": 10,
+ "n_holdout_events": 7,
+ "holdout_groups": [
+  "B-g00",
+  "B-g04",
+  "B-g08"
+ ],
+ "folds": {
+  "0": 8,
+  "1": 7,
+  "2": 4,
+  "3": 4,
+  "4": 3
+ },
+ "used_pairs_registry": true,
+ "meta": {
+  "created_utc": "2026-09-25T14:29:12Z",
+  "git_commit": "9af40a9+dirty",
+  "configs": {
+   "concentration.yaml": "ef045fa29061",
+   "profiles.yaml": "e893e113d2ea"
+  },
+  "python": "3.12.14",
+  "packages": {
+   "numpy": "2.5.3",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "scikit-learn": "1.9.1",
+   "xgboost": "3.4.1",
+   "statsmodels": "0.15.0",
+   "rasterio": "1.5.1",
+   "shapely": "2.1.2",
+   "h3": "4.5.0"
+  }
+ }
+}

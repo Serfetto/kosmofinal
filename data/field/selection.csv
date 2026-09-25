@@ -1,0 +1,936 @@
+sample_id,event_id,source_id,record_type,target_scope,measurement_profile,decision,profile,role,reason_code,reason_text
+MPL-0001,S3:HE419_MarLitter_transect01,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0002,S3:HE419_MarLitter_transect01,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0003,S3:HE419_MarLitter_transect01,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0004,S3:HE419_MarLitter_transect01,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0005,S3:HE419_MarLitter_transect01,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0006,S3:HE419_MarLitter_transect01,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0007,S3:HE419_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0008,S3:HE419_MarLitter_transect02,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0009,S3:HE419_MarLitter_transect02,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0010,S3:HE419_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0011,S3:HE419_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0012,S3:HE419_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0013,S3:HE419_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0014,S3:HE419_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0015,S3:HE419_MarLitter_transect04,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0016,S3:HE419_MarLitter_transect04,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0017,S3:HE419_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0018,S3:HE419_MarLitter_transect03,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0019,S3:HE419_MarLitter_transect03,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0020,S3:HE419_MarLitter_transect04,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0021,S3:HE419_MarLitter_transect04,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0022,S3:HE419_MarLitter_transect04,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0023,S3:HE419_MarLitter_transect04,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0024,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0025,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0026,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0027,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0028,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0029,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0030,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0031,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0032,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0033,S3:HE419_MarLitter_transect05,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0034,S3:HE419_MarLitter_transect06,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0035,S3:HE419_MarLitter_transect06,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0036,S3:HE419_MarLitter_transect06,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0037,S3:HE419_MarLitter_transect06,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0038,S3:HE419_MarLitter_transect06,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0039,S3:HE419_MarLitter_transect08,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0040,S3:HE419_MarLitter_transect08,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0041,S3:HE419_MarLitter_transect08,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0042,S3:HE419_MarLitter_transect07,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0043,S3:HE419_MarLitter_transect07,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0044,S3:HE419_MarLitter_transect07,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0045,S3:HE419_MarLitter_transect07,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0046,S3:HE419_MarLitter_transect14,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0047,S3:HE419_MarLitter_transect14,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0048,S3:HE419_MarLitter_transect13,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0049,S3:HE419_MarLitter_transect13,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0050,S3:HE419_MarLitter_transect13,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0051,S3:HE419_MarLitter_transect13,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0052,S3:HE419_MarLitter_transect13,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0053,S3:HE419_MarLitter_transect13,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0054,S3:HE419_MarLitter_transect09,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0055,S3:HE419_MarLitter_transect13,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0056,S3:HE419_MarLitter_transect14,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0057,S3:HE419_MarLitter_transect14,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0058,S3:HE419_MarLitter_transect14,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0059,S3:HE419_MarLitter_transect14,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0060,S3:HE419_MarLitter_transect09,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0061,S3:HE419_MarLitter_transect09,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0062,S3:HE419_MarLitter_transect14,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0063,S3:HE419_MarLitter_transect09,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0064,S3:HE419_MarLitter_transect14,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0065,S3:HE419_MarLitter_transect09,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0066,S3:HE419_MarLitter_transect09,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0067,S3:HE419_MarLitter_transect12,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0068,S3:HE419_MarLitter_transect12,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0069,S3:HE419_MarLitter_transect12,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0070,S3:HE419_MarLitter_transect12,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0071,S3:HE419_MarLitter_transect10,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0072,S3:HE419_MarLitter_transect10,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0073,S3:HE419_MarLitter_transect10,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0074,S3:HE419_MarLitter_transect10,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0075,S3:HE419_MarLitter_transect11,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0076,S3:HE419_MarLitter_transect11,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0077,S3:HE419_MarLitter_transect11,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0078,S3:HE419_MarLitter_transect11,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0079,S3:HE419_MarLitter_transect11,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0080,S3:HE419_MarLitter_transect11,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0081,S3:HE419_MarLitter_transect10,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0082,S3:HE419_MarLitter_transect18,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0083,S3:HE419_MarLitter_transect18,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0084,S3:HE419_MarLitter_transect15,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0085,S3:HE419_MarLitter_transect18,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0086,S3:HE419_MarLitter_transect18,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0087,S3:HE419_MarLitter_transect15,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0088,S3:HE419_MarLitter_transect15,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0089,S3:HE419_MarLitter_transect18,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0090,S3:HE419_MarLitter_transect18,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0091,S3:HE419_MarLitter_transect16,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0092,S3:HE419_MarLitter_transect16,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0093,S3:HE419_MarLitter_transect16,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0094,S3:HE419_MarLitter_transect17,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0095,S3:HE419_MarLitter_transect17,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0096,S3:HE419_MarLitter_transect20,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0097,S3:HE419_MarLitter_transect20,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0098,S3:HE419_MarLitter_transect20,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0099,S3:HE419_MarLitter_transect20,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0100,S3:HE419_MarLitter_transect20,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0101,S3:HE419_MarLitter_transect19,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0102,S3:HE419_MarLitter_transect19,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0103,S3:HE419_MarLitter_transect19,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0104,S3:HE419_MarLitter_transect21,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0105,S3:HE419_MarLitter_transect21,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0106,S3:HE419_MarLitter_transect21,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0107,S3:HE419_MarLitter_transect21,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0108,S3:HE419_MarLitter_transect21,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0109,S3:HE419_MarLitter_transect22,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0110,S3:HE419_MarLitter_transect22,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0111,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0112,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0113,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0114,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0115,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0116,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0117,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0118,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0119,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0120,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0121,S3:HE419_MarLitter_transect23,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0122,S3:HE419_MarLitter_transect24,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0123,S3:HE419_MarLitter_transect24,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0124,S3:HE419_MarLitter_transect24,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0125,S3:HE419_MarLitter_transect24,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0126,S3:HE419_MarLitter_transect24,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0127,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0128,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0129,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0130,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0131,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0132,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0133,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0134,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0135,S3:HE419_MarLitter_transect25,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0136,S3:HE419_MarLitter_transect26,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0137,S3:HE419_MarLitter_transect26,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0138,S3:HE419_MarLitter_transect26,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0139,S3:HE419_MarLitter_transect26,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0140,S3:HE419_MarLitter_transect27,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0141,S3:HE419_MarLitter_transect27,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0142,S3:HE419_MarLitter_transect27,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0143,S3:HE419_MarLitter_transect32,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0144,S3:HE419_MarLitter_transect32,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0145,S3:HE419_MarLitter_transect32,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0146,S3:HE419_MarLitter_transect32,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0147,S3:HE419_MarLitter_transect32,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0148,S3:HE419_MarLitter_transect31,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0149,S3:HE419_MarLitter_transect31,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0150,S3:HE419_MarLitter_transect32,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0151,S3:HE419_MarLitter_transect32,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0152,S3:HE419_MarLitter_transect31,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0153,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0154,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0155,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0156,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0157,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0158,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0159,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0160,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0161,S3:HE419_MarLitter_transect30,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0162,S3:HE419_MarLitter_transect29,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0163,S3:HE419_MarLitter_transect29,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0164,S3:HE419_MarLitter_transect29,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0165,S3:HE419_MarLitter_transect29,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0166,S3:HE419_MarLitter_transect29,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0167,S3:HE419_MarLitter_transect29,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0168,S3:HE419_MarLitter_transect28,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0169,S3:HE419_MarLitter_transect28,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0170,S3:HE419_MarLitter_transect28,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0171,S3:HE419_MarLitter_transect28,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0172,S3:HE419_MarLitter_transect28,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0173,S3:HE419_MarLitter_transect28,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0174,S3:HE419_MarLitter_transect28,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0175,S3:HE419_MarLitter_transect38,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0176,S3:HE419_MarLitter_transect38,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0177,S3:HE419_MarLitter_transect38,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0178,S3:HE419_MarLitter_transect38,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0179,S3:HE419_MarLitter_transect37,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0180,S3:HE419_MarLitter_transect37,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0181,S3:HE419_MarLitter_transect37,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0182,S3:HE419_MarLitter_transect35,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0183,S3:HE419_MarLitter_transect34,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0184,S3:HE419_MarLitter_transect34,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0185,S3:HE419_MarLitter_transect35,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0186,S3:HE419_MarLitter_transect35,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0187,S3:HE419_MarLitter_transect34,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0188,S3:HE419_MarLitter_transect36,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0189,S3:HE419_MarLitter_transect36,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0190,S3:HE419_MarLitter_transect36,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0191,S3:HE419_MarLitter_transect33,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0192,S3:HE419_MarLitter_transect33,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0193,S3:HE419_MarLitter_transect33,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0194,S3:HE419_MarLitter_transect33,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0195,S3:HE419_MarLitter_transect35,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0196,S2:MSM41_litter-T1,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0197,S2:MSM41_litter-T1,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0198,S2:MSM41_litter-T1,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0199,S2:MSM41_litter-T1,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0200,S2:MSM41_litter-T5,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0201,S2:MSM41_litter-T5,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0202,S2:MSM41_litter-T5,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0203,S2:MSM41_litter-T4,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0204,S2:MSM41_litter-T4,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0205,S2:MSM41_litter-T4,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0206,S2:MSM41_litter-T4,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0207,S2:MSM41_litter-T4,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0208,S2:MSM41_litter-T3,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0209,S2:MSM41_litter-T3,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0210,S2:MSM41_litter-T3,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0211,S2:MSM41_litter-T2,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0212,S2:MSM41_litter-T2,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0213,S2:MSM41_litter-T2,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0214,S2:MSM41_litter-T2,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0215,S2:MSM41_litter-T2,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0216,S2:MSM41_litter-T8,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0217,S2:MSM41_litter-T8,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0218,S2:MSM41_litter-T8,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0219,S2:MSM41_litter-T7,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0220,S2:MSM41_litter-T7,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0221,S2:MSM41_litter-T7,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0222,S2:MSM41_litter-T7,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0223,S2:MSM41_litter-T6,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0224,S2:MSM41_litter-T6,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0225,S2:MSM41_litter-T6,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0226,S2:MSM41_litter-T6,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0227,S2:MSM41_litter-T6,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0228,S2:MSM41_litter-T10,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0229,S2:MSM41_litter-T10,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0230,S2:MSM41_litter-T10,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0231,S2:MSM41_litter-T10,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0232,S2:MSM41_litter-T12,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0233,S2:MSM41_litter-T12,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0234,S2:MSM41_litter-T12,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0235,S2:MSM41_litter-T11,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0236,S2:MSM41_litter-T11,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0237,S2:MSM41_litter-T16,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0238,S2:MSM41_litter-T16,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0239,S2:MSM41_litter-T16,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0240,S2:MSM41_litter-T15,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0241,S2:MSM41_litter-T15,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0242,S2:MSM41_litter-T15,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0243,S2:MSM41_litter-T14,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0244,S2:MSM41_litter-T14,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0245,S2:MSM41_litter-T14,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0246,S2:MSM41_litter-T14,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0247,S2:MSM41_litter-T14,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0248,S2:MSM41_litter-T14,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0249,S2:MSM41_litter-T13,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0250,S2:MSM41_litter-T13,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0251,S2:MSM41_litter-T13,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0252,S2:MSM41_litter-T13,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0253,S2:MSM41_litter-T17,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0254,S2:MSM41_litter-T17,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0255,S2:MSM41_litter-T17,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0256,S2:MSM41_litter-T17,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0257,S2:MSM41_litter-T18,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0258,S2:MSM41_litter-T18,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0259,S2:MSM41_litter-T18,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0260,S2:MSM41_litter-T18,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0261,S2:MSM41_litter-T18,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0262,S2:MSM41_litter-T18,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0263,S2:MSM41_litter-T19,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0264,S2:MSM41_litter-T19,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0265,S2:MSM41_litter-T19,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0266,S2:MSM41_litter-T20,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0267,S2:MSM41_litter-T20,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0268,S2:MSM41_litter-T20,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0269,S2:MSM41_litter-T20,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0270,S2:MSM41_litter-T21,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0271,S2:MSM41_litter-T21,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0272,S2:MSM41_litter-T21,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0273,S2:MSM41_litter-T21,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0274,S2:MSM41_litter-T21,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0275,S2:MSM41_litter-T22,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0276,S2:MSM41_litter-T22,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0277,S2:MSM41_litter-T22,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0278,S2:MSM41_litter-T22,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0279,S2:MSM41_litter-T22,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0280,S2:MSM41_litter-T23,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0281,S2:MSM41_litter-T23,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0282,S2:MSM41_litter-T23,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0283,S2:MSM41_litter-T23,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0284,S2:MSM41_litter-T23,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0285,S2:MSM41_litter-T23,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0286,S2:MSM41_litter-T23,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0287,S2:MSM41_litter-T24,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0288,S2:MSM41_litter-T24,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0289,S2:MSM41_litter-T24,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0290,S2:MSM41_litter-T24,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0291,S2:MSM41_litter-T24,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0292,S2:MSM41_litter-T24,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0293,S2:MSM41_litter-T24,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0294,S2:MSM41_litter-T24,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0295,S2:MSM41_litter-T25,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0296,S2:MSM41_litter-T25,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0297,S2:MSM41_litter-T25,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0298,S2:MSM41_litter-T25,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0299,S2:MSM41_litter-T25,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0300,S2:MSM41_litter-T25,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0301,S2:MSM41_litter-T25,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0302,S2:MSM41_litter-T26,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0303,S2:MSM41_litter-T26,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0304,S2:MSM41_litter-T26,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0305,S2:MSM41_litter-T27,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0306,S2:MSM41_litter-T27,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0307,S2:MSM41_litter-T29,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0308,S2:MSM41_litter-T29,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0309,S2:MSM41_litter-T27,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0310,S2:MSM41_litter-T27,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0311,S2:MSM41_litter-T29,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0312,S2:MSM41_litter-T29,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0313,S2:MSM41_litter-T29,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0314,S2:MSM41_litter-T29,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0315,S2:MSM41_litter-T27,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0316,S2:MSM41_litter-T29,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0317,S2:MSM41_litter-T28,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0318,S2:MSM41_litter-T27,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0319,S2:MSM41_litter-T28,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0320,S2:MSM41_litter-T28,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0321,S2:MSM41_litter-T28,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0322,S2:MSM41_litter-T28,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0323,S2:MSM41_litter-T28,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0324,S2:MSM41_litter-T28,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0325,S2:MSM41_litter-T27,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0326,S2:MSM41_litter-T32,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0327,S2:MSM41_litter-T32,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0328,S2:MSM41_litter-T32,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0329,S2:MSM41_litter-T32,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0330,S2:MSM41_litter-T32,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0331,S2:MSM41_litter-T32,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0332,S2:MSM41_litter-T32,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0333,S2:MSM41_litter-T32,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0334,S2:MSM41_litter-T31,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0335,S2:MSM41_litter-T31,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0336,S2:MSM41_litter-T31,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0337,S2:MSM41_litter-T31,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0338,S2:MSM41_litter-T31,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0339,S2:MSM41_litter-T31,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0340,S2:MSM41_litter-T31,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0341,S2:MSM41_litter-T30,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0342,S2:MSM41_litter-T30,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0343,S2:MSM41_litter-T30,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0344,S2:MSM41_litter-T30,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0345,S2:MSM41_litter-T34,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0346,S2:MSM41_litter-T34,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0347,S2:MSM41_litter-T34,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0348,S2:MSM41_litter-T34,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0349,S2:MSM41_litter-T34,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0350,S2:MSM41_litter-T33,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0351,S2:MSM41_litter-T33,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0352,S2:MSM41_litter-T33,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0353,S2:MSM41_litter-T33,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0354,S2:MSM41_litter-T37,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0355,S2:MSM41_litter-T37,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0356,S2:MSM41_litter-T35,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0357,S2:MSM41_litter-T35,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0358,S2:MSM41_litter-T35,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0359,S2:MSM41_litter-T35,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0360,S2:MSM41_litter-T35,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0361,S2:MSM41_litter-T38,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0362,S2:MSM41_litter-T38,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0363,S2:MSM41_litter-T38,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0364,S2:MSM41_litter-T40,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0365,S2:MSM41_litter-T40,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0366,S2:MSM41_litter-T40,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0367,S2:MSM41_litter-T39,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0368,S2:MSM41_litter-T39,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0369,S2:MSM41_litter-T41,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0370,S2:MSM41_litter-T41,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0371,S2:MSM41_litter-T41,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0372,S2:MSM41_litter-T41,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0373,S2:MSM41_litter-T41,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0374,S2:MSM41_litter-T42,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0375,S2:MSM41_litter-T42,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0376,S2:MSM41_litter-T42,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0377,S2:MSM41_litter-T43,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0378,S2:MSM41_litter-T43,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0379,S2:MSM41_litter-T43,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0380,S2:MSM41_litter-T43,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0381,S2:MSM41_litter-T44,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0382,S2:MSM41_litter-T44,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0383,S2:MSM41_litter-T44,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0384,S2:MSM41_litter-T45,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0385,S2:MSM41_litter-T45,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0386,S2:MSM41_litter-T45,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0387,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0388,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0389,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0390,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0391,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0392,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0393,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0394,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0395,S2:MSM41_litter-T46,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0396,S2:MSM41_litter-T47,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0397,S2:MSM41_litter-T47,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0398,S2:MSM41_litter-T47,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0399,S2:MSM41_litter-T48,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0400,S2:MSM41_litter-T48,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0401,S2:MSM41_litter-T48,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0402,S2:MSM41_litter-T48,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0403,S2:MSM41_litter-T48,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0404,S2:MSM41_litter-T48,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0405,S2:MSM41_litter-T48,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0406,S2:MSM41_litter-T49,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0407,S2:MSM41_litter-T49,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0408,S2:MSM41_litter-T49,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0409,S2:MSM41_litter-T49,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0410,S2:MSM41_litter-T49,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0411,S2:MSM41_litter-T49,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0412,S2:MSM41_litter-T49,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0413,S2:MSM41_litter-T50,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0414,S2:MSM41_litter-T50,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0415,S2:MSM41_litter-T50,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0416,S2:MSM41_litter-T50,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0417,S2:MSM41_litter-T50,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0418,S2:MSM41_litter-T50,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0419,S2:MSM41_litter-T50,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0420,S2:MSM41_litter-T50,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0421,S2:MSM41_litter-T51,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0422,S2:MSM41_litter-T51,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0423,S2:MSM41_litter-T51,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0424,S2:MSM41_litter-T52,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0425,S2:MSM41_litter-T52,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0426,S2:MSM41_litter-T52,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0427,S2:MSM41_litter-T52,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0428,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0429,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0430,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0431,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0432,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0433,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0434,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0435,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0436,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0437,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0438,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0439,S2:MSM41_litter-T53,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0440,S2:MSM41_litter-T54,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0441,S2:MSM41_litter-T54,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0442,S2:MSM41_litter-T54,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0443,S2:MSM41_litter-T54,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0444,S2:MSM41_litter-T54,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0445,S2:MSM41_litter-T54,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0446,S2:MSM41_litter-T54,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0447,S2:MSM41_litter-T54,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0448,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0449,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0450,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0451,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0452,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0453,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0454,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0455,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0456,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0457,S2:MSM41_litter-T55,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0458,S2:MSM41_litter-T56,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0459,S2:MSM41_litter-T56,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0460,S2:MSM41_litter-T56,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0461,S2:MSM41_litter-T56,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0462,S2:MSM41_litter-T56,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0463,S2:MSM41_litter-T56,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0464,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0465,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0466,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0467,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0468,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0469,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0470,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0471,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0472,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0473,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0474,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0475,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0476,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0477,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0478,S2:MSM41_litter-T58,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0479,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0480,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0481,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0482,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0483,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0484,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0485,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0486,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0487,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0488,S2:MSM41_litter-T57,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0489,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0490,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0491,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0492,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0493,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0494,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0495,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0496,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0497,S2:MSM41_litter-T60,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0498,S2:MSM41_litter-T59,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0499,S2:MSM41_litter-T59,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0500,S2:MSM41_litter-T59,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0501,S2:MSM41_litter-T59,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0502,S2:MSM41_litter-T59,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0503,S2:MSM41_litter-T62,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0504,S2:MSM41_litter-T62,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0505,S2:MSM41_litter-T62,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0506,S2:MSM41_litter-T61,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0507,S2:MSM41_litter-T61,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0508,S2:MSM41_litter-T61,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0509,S2:MSM41_litter-T61,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0510,S2:MSM41_litter-T61,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0511,S2:MSM41_litter-T61,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0512,S2:MSM41_litter-T61,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0513,S2:MSM41_litter-T65,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0514,S2:MSM41_litter-T65,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0515,S2:MSM41_litter-T65,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0516,S2:MSM41_litter-T65,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0517,S2:MSM41_litter-T64,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0518,S2:MSM41_litter-T64,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0519,S2:MSM41_litter-T64,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0520,S2:MSM41_litter-T64,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0521,S2:MSM41_litter-T64,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0522,S2:MSM41_litter-T63,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0523,S2:MSM41_litter-T63,S2_SARGASSO_MSM41,transect_density,total_plastic,S2_visual_GT2,included,A,train,,
+MPL-0524,S2:MSM41_litter-T63,S2_SARGASSO_MSM41,transect_density,plastic_category,S2_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0525,S2:MSM41_litter-T63,S2_SARGASSO_MSM41,item_observation,object_context,S2_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0526,S1:0.1,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0527,S1:0.1,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0528,S1:2.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0529,S1:2.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0530,S1:2.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0531,S1:1.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0532,S1:1.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0533,S1:1.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0534,S1:1.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0535,S1:4.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0536,S1:4.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0537,S1:6.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0538,S1:6.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0539,S1:4.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0540,S1:6.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0541,S1:5.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0542,S1:5.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0543,S1:3.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0544,S1:6.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0545,S1:6.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0546,S1:5.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0547,S1:3.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0548,S1:3.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0549,S1:9.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0550,S1:9.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0551,S1:9.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0552,S1:10.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0553,S1:10.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0554,S1:10.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0555,S1:8.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0556,S1:8.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0557,S1:8.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0558,S1:11.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0559,S1:7.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0560,S1:7.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0561,S1:11.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0562,S1:7.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0563,S1:11.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0564,S1:12.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0565,S1:12.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0566,S1:12.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0567,S1:14.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0568,S1:14.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0569,S1:13.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0570,S1:14.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0571,S1:13.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0572,S1:13.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0573,S1:17.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0574,S1:17.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0575,S1:17.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0576,S1:17.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0577,S1:15.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0578,S1:15.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0579,S1:15.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0580,S1:15.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0581,S1:16.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0582,S1:16.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0583,S1:16.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0584,S1:20.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0585,S1:20.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0586,S1:18.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0587,S1:18.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_F,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0588,S1:20.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0589,S1:18.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0590,S1:19.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0591,S1:19.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0592,S1:19.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0593,S1:18.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0594,S1:24.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0595,S1:24.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0596,S1:24.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0597,S1:21.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0598,S1:21.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0599,S1:22.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0600,S1:22.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0601,S1:22.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0602,S1:21.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0603,S1:27.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0604,S1:28.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0605,S1:28.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0606,S1:26.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0607,S1:25.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0608,S1:26.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0609,S1:26.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0610,S1:28.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0611,S1:27.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0612,S1:25.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0613,S1:27.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0614,S1:27.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_F,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0615,S1:25.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0616,S1:25.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0617,S1:29.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0618,S1:31.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0619,S1:31.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0620,S1:29.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0621,S1:30.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0622,S1:29.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0623,S1:30.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0624,S1:30.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0625,S1:30.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0626,S1:30.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0627,S1:32.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0628,S1:32.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0629,S1:32.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0630,S1:33.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0631,S1:34.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0632,S1:34.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0633,S1:34.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0634,S1:33.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0635,S1:33.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0636,S1:33.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0637,S1:35.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0638,S1:35.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0639,S1:35.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0640,S1:39.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0641,S1:39.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0642,S1:38.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0643,S1:39.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0644,S1:36.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0645,S1:36.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0646,S1:38.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0647,S1:36.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0648,S1:37.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0649,S1:37.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0650,S1:37.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0651,S1:37.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_F,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0652,S1:38.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0653,S1:38.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0654,S1:41.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0655,S1:41.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0656,S1:42.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0657,S1:41.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0658,S1:42.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0659,S1:42.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0660,S1:43.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0661,S1:42.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0662,S1:43.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0663,S1:43.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0664,S1:45.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0665,S1:45.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0666,S1:45.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0667,S1:45.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0668,S1:44.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0669,S1:47.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0670,S1:47.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0671,S1:46.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0672,S1:44.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0673,S1:46.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0674,S1:44.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0675,S1:47.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0676,S1:46.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0677,S1:48.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0678,S1:48.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0679,S1:48.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0680,S1:51.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0681,S1:49.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0682,S1:49.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_F,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0683,S1:51.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0684,S1:49.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0685,S1:49.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0686,S1:51.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0687,S1:50.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0688,S1:50.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0689,S1:50.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0690,S1:50.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0691,S1:52.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0692,S1:53.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0693,S1:52.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0694,S1:53.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0695,S1:52.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0696,S1:53.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0697,S1:53.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_F,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0698,S1:54.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0699,S1:54.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0700,S1:54.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0701,S1:54.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0702,S1:58.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0703,S1:58.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0704,S1:58.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0705,S1:57.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0706,S1:57.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0707,S1:56.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0708,S1:55.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0709,S1:57.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0710,S1:58.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0711,S1:56.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0712,S1:55.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0713,S1:55.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0714,S1:56.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0715,S1:55.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0716,S1:61.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0717,S1:62.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0718,S1:61.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0719,S1:60.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0720,S1:60.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0721,S1:60.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0722,S1:62.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0723,S1:61.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0724,S1:62.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0725,S1:66.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0726,S1:65.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0727,S1:66.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0728,S1:63.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0729,S1:66.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0730,S1:64.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0731,S1:65.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0732,S1:66.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0733,S1:65.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0734,S1:65.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0735,S1:64.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0736,S1:64.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0737,S1:63.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0738,S1:63.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0739,S1:69.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0740,S1:68.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0741,S1:68.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0742,S1:68.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0743,S1:69.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0744,S1:70.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0745,S1:69.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0746,S1:70.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0747,S1:70.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0748,S1:67.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0749,S1:67.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0750,S1:67.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0751,S1:67.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0752,S1:71.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0753,S1:71.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0754,S1:71.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0755,S1:72.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0756,S1:73.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0757,S1:72.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0758,S1:72.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0759,S1:73.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0760,S1:73.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0761,S1:73.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0762,S1:74.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0763,S1:75.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0764,S1:74.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0765,S1:75.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0766,S1:75.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0767,S1:74.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0768,S1:77.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0769,S1:78.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0770,S1:78.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0771,S1:78.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0772,S1:77.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0773,S1:77.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_H,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0774,S1:77.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_F,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0775,S1:79.4,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0776,S1:79.3,S1_GPGP2018,transect_density,plastic_category,S1_trawl_GT5_N,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0777,S1:79.4,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0778,S1:79.3,S1_GPGP2018,transect_density,total_plastic,S1_trawl_5_to_50,included,C,optional,,
+MPL-0779,S3:HE460_MarLitter_transect01,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0780,S3:HE460_MarLitter_transect01,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0781,S3:HE460_MarLitter_transect01,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0782,S3:HE460_MarLitter_transect01,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0783,S3:HE460_MarLitter_transect01,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0784,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0785,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0786,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0787,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0788,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0789,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0790,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0791,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0792,S3:HE460_MarLitter_transect02,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0793,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0794,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0795,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0796,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0797,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0798,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,transect_density,all_litter,S3_visual_GT2,included,B,transfer_check,,
+MPL-0799,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,transect_density,fisheries_litter_category,S3_visual_GT2,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0800,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0801,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0802,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0803,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0804,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0805,S3:HE460_MarLitter_transect03,S3_SE_NORTH_SEA,item_observation,object_context,S3_visual_GT2,excluded,,,object_context_not_label,"Объектная запись (положение наблюдателя, неполная выборка) — не самостоятельная метка; только контекстный слой"
+MPL-0806,S1:458,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0807,S1:458,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0808,S1:458,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0809,S1:461,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0810,S1:461,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0811,S1:461,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0812,S1:457,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0813,S1:457,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0814,S1:457,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0815,S1:459,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0816,S1:462,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0817,S1:462,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0818,S1:455,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0819,S1:455,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0820,S1:455,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0821,S1:453,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0822,S1:453,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0823,S1:453,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0824,S1:460,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0825,S1:451,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0826,S1:451,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0827,S1:451,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0828,S1:450,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0829,S1:450,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0830,S1:450,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0831,S1:450,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0832,S1:452,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0833,S1:452,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0834,S1:452,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0835,S1:452,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0836,S1:449,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0837,S1:449,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0838,S1:449,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0839,S1:447,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0840,S1:447,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0841,S1:448,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0842,S1:448,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0843,S1:448,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0844,S1:448,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0845,S1:456,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0846,S1:456,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0847,S1:456,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0848,S1:454,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0849,S1:454,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0850,S1:454,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0851,S1:454,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0852,S1:463,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0853,S1:463,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0854,S1:463,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0855,S1:463,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0856,S1:464,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0857,S1:464,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0858,S1:464,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0859,S1:465,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0860,S1:465,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0861,S1:465,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0862,S1:466,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0863,S1:466,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0864,S1:466,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0865,S1:467,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0866,S1:467,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0867,S1:467,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0868,S1:467,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0869,S1:468,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0870,S1:468,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0871,S1:468,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0872,S1:468,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0873,S1:468,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0874,S1:469,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0875,S1:469,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0876,S1:469,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0877,S1:470,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0878,S1:470,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0879,S1:470,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0880,S1:471,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0881,S1:471,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0882,S1:471,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0883,S1:472,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0884,S1:472,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0885,S1:472,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0886,S1:472,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0887,S1:473,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0888,S1:473,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0889,S1:473,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0890,S1:474,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0891,S1:474,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0892,S1:474,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0893,S1:475,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0894,S1:475,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0895,S1:475,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0896,S1:476,S1_GPGP2018,transect_density,total_plastic,S1_aerial_GT50,excluded,,,total_missing_or_conflict,Суммарная оценка аэросъёмки не подтверждена объектами (флаг конфликта) или отсутствует; класс >50 см
+MPL-0897,S1:476,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0898,S1:476,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0899,S1:476,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0900,S1:476,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0901,S1:477,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0902,S1:477,S1_GPGP2018,transect_density,plastic_category,S1_aerial_GT50,excluded,,,subpopulation_not_target,"Отдельная категория мусора — подсовокупность, другая целевая величина"
+MPL-0903,S4:DOORS3:T2,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0904,S4:DOORS3:T1,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0905,S4:DOORS3:T10,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0906,S4:DOORS3:T9,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0907,S4:DOORS3:T8,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0908,S4:DOORS3:T7,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0909,S4:DOORS3:T6,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0910,S4:DOORS3:T5,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0911,S4:DOORS3:T4,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0912,S4:DOORS3:T3,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0913,S4:DOORS3:T17,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0914,S4:DOORS3:T16,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0915,S4:DOORS3:T15,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0916,S4:DOORS3:T14,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0917,S4:DOORS3:T13,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0918,S4:DOORS3:T12,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0919,S4:DOORS3:T11,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0920,S4:DOORS3:T19,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0921,S4:DOORS3:T18,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0922,S4:DOORS3:T21,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0923,S4:DOORS3:T20,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0924,S4:DOORS3:T22,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0925,S4:DOORS3:T24,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0926,S4:DOORS3:T23,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0927,S4:DOORS3:T25,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0928,S4:DOORS3:T26,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0929,S4:DOORS3:T27,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0930,S4:DOORS3:T28,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0931,S4:DOORS3:T29,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0932,S4:DOORS3:T32,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0933,S4:DOORS3:T31,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0934,S4:DOORS3:T30,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,
+MPL-0935,S4:DOORS3:T33,S4_BLACK_SEA_DOORS3,transect_density,all_litter,S4_visual_GT2_5,included,B,train,,

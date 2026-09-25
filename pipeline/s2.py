@@ -65,7 +65,12 @@ class Scene:
 
 
 def aoi_grid(aoi_id: str, res: float = 10.0) -> Grid:
-    lon0, lat0, lon1, lat1 = AOIS[aoi_id]["bbox"]
+    return bbox_grid(AOIS[aoi_id]["bbox"], res)
+
+
+def bbox_grid(bbox, res: float = 10.0) -> Grid:
+    """Сетка res м в зоне UTM центра bbox = (lon_min, lat_min, lon_max, lat_max)."""
+    lon0, lat0, lon1, lat1 = bbox
     zone = int(((lon0 + lon1) / 2 + 180) // 6) + 1
     epsg = (32600 if (lat0 + lat1) / 2 >= 0 else 32700) + zone
     crs = CRS.from_epsg(epsg)
