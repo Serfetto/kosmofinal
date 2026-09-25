@@ -356,9 +356,11 @@ def metrics():
         import pandas as pd
 
         out["pair_features"] = json.loads(pd.read_csv(feats).to_json(orient="records"))
-    tr = EVAL / "transfer.json"
-    if tr.exists():
-        out["transfer"] = _read(tr)
+    for key, path in (("transfer", EVAL / "transfer.json"), ("drift_check", EVAL / "drift_check.json"),
+                      ("detector_lro", EVAL / "detector" / "leave_region_out.json"),
+                      ("review", EVAL / "review" / "score.json")):
+        if path.exists():
+            out[key] = _read(path)
     out["validated_where"] = [
         {"claim": "Детектор находит скопления плавающего мусора",
          "field": "—", "satellite_labels": "MARIDA test: P/R/F1/IoU", "pairs": "качественно (фрагменты пар S4)"},

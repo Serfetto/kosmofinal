@@ -52,9 +52,10 @@ cd frontend && npm install && npm run build && cd ..
 # http://localhost:8000
 ```
 
-Пример сохранённого запроса:
-`http://localhost:8000/?aoi=batumi&date=2024-06-05&profile=B&mode=conc` → кнопка «Сохранить запрос», затем
-«Повторить». То же через API: `POST /api/queries`, затем `POST /api/queries/{id}/rerun` (поле `match`).
+Пример сохранённого запроса лежит в `data/queries/0a0b3aaaf8f9.json`: зоны «Батуми — Кобулети» на 05.06.2024,
+профиль B, GeoJSON. Повтор: `curl -X POST http://localhost:8000/api/queries/0a0b3aaaf8f9/rerun` — поле `match`
+сравнивает sha256 результата с сохранённым. В интерфейсе:
+`http://localhost:8000/?aoi=batumi&date=2024-06-05&profile=B&mode=conc&q=0a0b3aaaf8f9` → кнопка «Повторить».
 
 На Windows с кириллицей в консоли: `set PYTHONIOENCODING=utf-8`.
 
@@ -74,6 +75,10 @@ cd frontend && npm install && npm run build && cd ..
 .venv/Scripts/python -m pipeline.splits build         # группы и отложенная выборка → data/splits/
 .venv/Scripts/python -m pipeline.concentration evaluate   # CV, отложенная выборка, перенос → data/eval/concentration/
 .venv/Scripts/python -m pipeline.eval_detector        # MARIDA test: базовые и основной → data/eval/detector/
+.venv/Scripts/python -m pipeline.eval_detector_lro    # детектор на регионе, исключённом из обучения (~10 мин, GPU)
+.venv/Scripts/python -m pipeline.pairs transfer       # перенос «детекции в следе ↔ полевая концентрация»
+.venv/Scripts/python -m pipeline.drift_check          # прогноз дрейфа на парах соседних снимков
+.venv/Scripts/python -m pipeline.review sample        # набор фрагментов для ручной разметки детекций; review score — итог
 .venv/Scripts/python -m pytest -q                     # контрольные примеры, утечки, API
 
 # Проверка конкретного расчёта без изменения кода
@@ -115,7 +120,9 @@ cd frontend && npm install && npm run build && cd ..
 | `data/registry/cache/` | ответы STAC и измерения качества — для пересборки реестра без сети |
 | `data/splits/<P>.csv` | состав обучения, фолдов CV и отложенной выборки с `event_id`, группами и эталонами |
 | `data/eval/concentration/` | метрики и предсказания (эталон, основная и базовые модели, интервалы) |
-| `data/eval/detector/` | метрики, сохранённые предсказания на MARIDA test, разбор ошибок, галерея FP/FN |
+| `data/eval/detector/` | метрики, сохранённые предсказания на MARIDA test, разбор ошибок, галерея FP/FN, проверка на исключённом регионе |
+| `data/eval/transfer.json`, `drift_check.json` | эксперимент переноса на снимки; проверка прогноза дрейфа |
+| `data/eval/review/` | фрагменты детекций и контрольных точек для ручной разметки (`review.csv`, `sheet_*.png`) |
 | `data/models/` | `xgb.joblib` (детектор), `conc_A.json`, `conc_B.json` (модели концентрации) |
 | `data/web/<aoi>/` | карты для сервиса: гексы, ряды, зоны, маска качества, оценки концентрации |
 

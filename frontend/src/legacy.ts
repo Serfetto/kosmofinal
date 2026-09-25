@@ -174,17 +174,7 @@ mapResizeObserver.observe(document.querySelector('#map'));
 const EMPTY = { type: 'FeatureCollection', features: [] };
 function addGeo(id) { map.addSource(id, { type: 'geojson', data: EMPTY }); }
 
-// Штриховка исследовательской оценки: модельные оценки и измерения должны отличаться с первого взгляда
-function hatchImage() {
-  const n = 8, data = new Uint8Array(n * n * 4);
-  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
-    if ((x + y) % n < 2) { const k = (y * n + x) * 4; data.set([251, 191, 36, 210], k); }
-  }
-  return { width: n, height: n, data };
-}
-
 function initLayers(firstUrl, corners) {
-  map.addImage('hatch', hatchImage());
   map.addSource('rgb', { type: 'image', url: firstUrl.rgb, coordinates: corners });
   map.addLayer({ id: 'rgb', type: 'raster', source: 'rgb', paint: { 'raster-opacity': 0.92, 'raster-fade-duration': 0 } });
   map.addSource('quality', { type: 'image', url: firstUrl.quality, coordinates: corners });
@@ -198,12 +188,15 @@ function initLayers(firstUrl, corners) {
     'fill-opacity': ['get', 'op'],
     'fill-outline-color': 'rgba(103,232,249,0.18)',
   } });
-  map.addLayer({ id: 'hex-hatch', type: 'fill', source: 'hexes', filter: ['==', ['get', 'hatch'], 1], paint: { 'fill-pattern': 'hatch', 'fill-opacity': 0.55 } });
   map.addLayer({ id: 'hex-line', type: 'line', source: 'hexes', paint: {
     'line-color': ['case', ['>', ['get', 'op'], 0], 'rgba(186,245,255,0.62)', 'rgba(103,232,249,0.38)'],
     'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.7, 12, 1.15, 15, 1.65],
     'line-opacity': 0.78,
   } });
+  // Исследовательская оценка — жёлтый пунктир по границе гекса: модельные оценки и измерения должны отличаться
+  // с первого взгляда (заливка-штриховка fill-pattern в MapLibre 6 ломает отрисовку всего источника)
+  map.addLayer({ id: 'hex-research', type: 'line', source: 'hexes', filter: ['==', ['get', 'hatch'], 1], paint: {
+    'line-color': '#fbbf24', 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.8, 13, 1.6], 'line-dasharray': [1.2, 1.4], 'line-opacity': 0.9 } });
   map.addLayer({ id: 'sel', type: 'line', source: 'sel', paint: { 'line-color': '#ffffff', 'line-width': 2.2 } });
   // Зоны детекции — результат детектора (площадь зоны), не измерение концентрации
   map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', filter: ['==', ['get', 'show'], 1], paint: { 'fill-color': '#ff3b3b', 'fill-opacity': 0.35 } });
@@ -399,7 +392,7 @@ function paintHexes() {
     let col = 'rgba(0,0,0,0)', op = 0, hatch = 0;
     if (m === 'conc') {
       const c = concAt(di, i);
-      if (c.value != null) { col = lerpColor(CONC_STOPS, concT(c.value)); op = 0.55; hatch = c.status === 'research_estimate' ? 1 : 0; }
+      if (c.value != null) { col = lerpColor(CONC_STOPS, concT(c.value)); op = 0.38; hatch = c.status === 'research_estimate' ? 1 : 0; }
     } else if (m === 'status') {
       const st = detStatus(di, i); col = DET_COL[st]; op = st === 'detected' ? 0.8 : st === 'insufficient_data' ? 0.45 : 0.12;
     } else if (m === 'quality') {
@@ -453,7 +446,7 @@ function renderLegend() {
   const L = {
     conc: na
       ? `<p class="small" style="color:#fbbf24">Концентрация недоступна для профиля ${S.profile} в этой акватории: вне области применения модели.</p>${fieldRow}`
-      : `${concGrad}<div class="leg-row"><span class="sw hatch-sw"></span>исследовательская оценка (перенос не подтверждён)</div>${fieldRow}
+      : `${concGrad}<div class="leg-row"><span class="sw hatch-sw"></span>жёлтый пунктир — исследовательская оценка (перенос не подтверждён)</div>${fieldRow}
       <div class="leg-row"><span class="sw" style="background:#ff3b3b"></span>зона детекции (площадь, не концентрация)</div>
       <p class="muted small">Модельная оценка по полевым данным профиля в центре гекса на момент снимка. Интервал и причины статуса — в карточке гекса.</p>`,
     status: `${statusRows}<p class="muted small">«Не обнаружено» ставится только при ≥50% видимой воды и спокойном море; иначе — «недостаточно данных».</p>`,
@@ -1026,12 +1019,19 @@ async function renderAbout() {
     <h3>Детектор: MARIDA test (${det?.n_test_scenes ?? '—'} сцен, ${det?.n_test_patches ?? '—'} патчей)</h3>
     <table><tr><th>Метод</th><th>P</th><th>R</th><th>F1 (95% ДИ)</th><th>IoU</th></tr>${detRows}</table>
     <p class="small muted">Положительный класс: ${esc(det?.positive_class || '')}. Игнорируются: ${esc(det?.ignored || '')}. Порог основного P ≥ ${nf(det?.thresholds?.xgb, 2)} задан до проверки; пороги базовых подобраны на val.</p>
+    ${metrics?.detector_lro ? `<h3>Перенос детектора на новый регион (обучение без региона)</h3>
+    <table><tr><th>Регион</th><th>Патчей</th><th>P</th><th>R</th><th>F1</th><th>IoU</th></tr>${Object.entries(metrics.detector_lro.regions).map(([k, v]) =>
+      `<tr><td>${esc(k)}</td><td>${v.n_patches}</td><td>${nf(v.xgb_filters.precision, 2)}</td><td>${nf(v.xgb_filters.recall, 2)}</td><td>${nf(v.xgb_filters.f1, 2)}</td><td>${nf(v.xgb_filters.iou, 2)}</td></tr>`).join('')}</table>
+    <p class="small muted">Средний F1 ${nf(metrics.detector_lro.mean_f1_filters, 2)}, минимальный ${nf(metrics.detector_lro.min_f1_filters, 2)}: на новом районе качество ниже, чем на официальном test.</p>` : ''}
     <h3>Ложные срабатывания основного алгоритма на сложном фоне</h3>
     <table><tr><th>Класс фона</th><th>FP, пикс.</th><th>Всего</th><th>Доля</th></tr>${fpRows}</table>
     <h3>Концентрация, шт./км²</h3>${concBlocks}
     <h3>Совместные пары «событие ↔ снимок»</h3>
     <p class="small">${pairs ? `Событий ${pairs.events}, кандидатов-сцен ${pairs.candidates}. Итог по событиям: ${Object.entries(pairs.events_by_outcome).map(([k, v]) => `${k} ${v}`).join(', ')}. Причины: ${Object.entries(pairs.rows_by_reason).map(([k, v]) => `${k} ${v}`).join(', ')}.` : 'реестр не построен'}</p>
     ${pf.length ? `<table><tr><th>Событие</th><th>Видно, пикс.</th><th>Детекций</th><th>Зон</th></tr>${pf.map((r) => `<tr><td>${esc(r.event_id)}</td><td>${nf(r.valid_px, 0)}</td><td>${nf(r.det_px, 0)}</td><td>${nf(r.n_zones, 0)}</td></tr>`).join('')}</table>` : ''}
+    ${metrics?.transfer ? `<p class="small">${esc(metrics.transfer.conclusion)} Детекций в следах: ${metrics.transfer.detections_total} пикс. на ${nf(metrics.transfer.valid_area_km2_total, 0)} км² видимой воды (${metrics.transfer.pairs_with_detections} из ${metrics.transfer.n_pairs} пар).</p>` : ''}
+    ${metrics?.drift_check?.summary?.n_pairs ? `<h3>Проверка прогноза дрейфа (доп. функция)</h3>
+    <p class="small">${metrics.drift_check.summary.n_pairs} пар соседних снимков: медианное расстояние от новых детекций до частиц прогноза ${nf(metrics.drift_check.summary.median_km_forecast, 1)} км, до исходного положения («пятно на месте») ${nf(metrics.drift_check.summary.median_km_persistence, 1)} км; прогноз лучше в ${metrics.drift_check.summary.pairs_forecast_better} парах. Прогноз справочный, пока не откалиброван.</p>` : ''}
     <h3>Что где проверено</h3>
     <table><tr><th>Вывод</th><th>Полевые</th><th>MARIDA</th><th>Пары</th></tr>${(metrics?.validated_where || []).map((r) => `<tr><td>${esc(r.claim)}</td><td>${esc(r.field)}</td><td>${esc(r.satellite_labels)}</td><td>${esc(r.pairs)}</td></tr>`).join('')}</table>
     <h3>Ограничения</h3>
@@ -1094,7 +1094,7 @@ $('#l-objects').onchange = async (e) => {
   }
   vis(['objects'], e.target.checked);
 };
-$('#l-hex').onchange = (e) => vis(['hex-fill', 'hex-hatch', 'hex-line'], e.target.checked);
+$('#l-hex').onchange = (e) => vis(['hex-fill', 'hex-research', 'hex-line'], e.target.checked);
 $('#l-sat').onchange = (e) => vis(['sat'], e.target.checked);
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && S.drawing) stopDrawing();

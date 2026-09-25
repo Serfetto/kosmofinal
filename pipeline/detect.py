@@ -92,7 +92,9 @@ def build_water_mask(aoi_id: str) -> np.ndarray:
             clear_n = np.zeros(scl.shape, np.uint16)
         water_n += scl == 6
         clear_n += clear
-    water = (clear_n >= 3) & (water_n >= 0.5 * clear_n)
+    # Для коротких рядов (акватория-проверка на несколько дат) хватает одного безоблачного наблюдения
+    min_clear = 3 if len(dates(aoi_id)) > 5 else 1
+    water = (clear_n >= min_clear) & (water_n >= 0.5 * clear_n)
     water = binary_opening(water, iterations=2)  # убрать одиночные «водные» пиксели на суше
     water = binary_erosion(water, iterations=3)
     if AOIS[aoi_id].get("sea_only"):

@@ -5,6 +5,32 @@
 
 ---
 
+## Статус выполнения (25.09.2026)
+
+| # | Задача из §8 | Статус | Где |
+|---|---|---|---|
+| 1 | Профили A и B, `configs/profiles.yaml` | ✅ | [configs/profiles.yaml](configs/profiles.yaml) |
+| 2 | `field.py`, реестр включений и исключений, формулы | ✅ | [pipeline/field.py](pipeline/field.py), [pipeline/measure.py](pipeline/measure.py), `data/field/` |
+| 3 | `splits.py` + тест утечек | ✅ | [pipeline/splits.py](pipeline/splits.py), [tests/test_leakage.py](tests/test_leakage.py) |
+| 4 | `covariates.py`, `concentration.py` | ✅ | [pipeline/concentration.py](pipeline/concentration.py), `data/eval/concentration/` |
+| 5 | `eval_detector.py` | ✅ + проверка с исключением региона | [pipeline/eval_detector.py](pipeline/eval_detector.py), [pipeline/eval_detector_lro.py](pipeline/eval_detector_lro.py) |
+| 6 | `pairs.py` | ✅ | [pipeline/pairs.py](pipeline/pairs.py), `data/registry/` |
+| 7 | Маска качества, зоны, статусы, покрытие вместо «концентрации» | ✅ + сцены с сильным бликом, буфер у облаков | [pipeline/aggregate.py](pipeline/aggregate.py) |
+| 8 | Backend | ✅ | [backend/case_api.py](backend/case_api.py) |
+| 9 | Frontend | ✅ (исследовательская оценка — жёлтый пунктир: заливка-штриховка ломает MapLibre 6) | [frontend/src/legacy.ts](frontend/src/legacy.ts) |
+| 10 | README, `.gitignore`, версии, `reproduce` | ✅ | [README.md](README.md), [pipeline/reproduce.py](pipeline/reproduce.py) |
+| 11 | Мини-акватории вокруг пар, эксперимент переноса | ✅ фрагменты по 9 парам + акватория «Батуми — Кобулети» | `pairs detect / transfer`, `data/eval/transfer.json` |
+| 12 | Ручная проверка ~200 точек | ⏳ набор для разметки готов, разметку делает команда | `python -m pipeline.review sample / score` |
+| 13 | Сегменты прерванных трансект S2 | ✅ | `data/field/raw/pangaea_931834_transects.xlsx` |
+| 14 | Панель «Метод» | ✅ | |
+| 15 | Проверка дрейфа, маршрут по неопределённости | ✅ / ❌ проверка сделана; маршрут пока по площади | [pipeline/drift_check.py](pipeline/drift_check.py) |
+| 16 | S3 «только пластик» (PANGAEA 890781) | ❌ не делали (P2) | |
+| 17 | Профиль C | ⏸ отбор есть, модель не строили | |
+| 18 | Сценарный пересчёт площади в шт. | ❌ сознательно не делали — см. отчёт | |
+| 19 | Краткий отчёт | ✅, презентация не готова | [docs/report.md](docs/report.md) |
+
+---
+
 ## 0. Главное
 
 1. **Главный разрыв — единица концентрации.** Сейчас мы считаем «концентрацию» как эквивалентную площадь покрытия в м²/км² ([aggregate.py:183](pipeline/aggregate.py#L183)). Кейс требует шт./км² для заявленного размерного класса. В критерии Т3 прямо сказано: «индекс или площадь маски не заменяют концентрацию». Количественную часть придётся построить заново, а м²/км² оставить только как вспомогательный показатель.

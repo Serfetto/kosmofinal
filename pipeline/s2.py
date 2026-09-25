@@ -30,6 +30,7 @@ GDAL_ENV = dict(
     CPL_VSIL_CURL_ALLOWED_EXTENSIONS=".tif",
     GDAL_HTTP_MAX_RETRY="4",
     GDAL_HTTP_RETRY_DELAY="1",
+    GDAL_HTTP_TIMEOUT="60",  # без таймаута зависшее соединение блокирует загрузку навсегда
     VSI_CACHE="TRUE",
 )
 MIN_COVER = 0.97
@@ -132,11 +133,11 @@ def _read(href: str, grid: Grid, resampling: Resampling) -> np.ndarray:
             return vrt.read(1)
 
 
-def _load_item(item, grid: Grid) -> tuple[np.ndarray, np.ndarray]:
+def _load_item(item, grid: Grid, workers: int = 6) -> tuple[np.ndarray, np.ndarray]:
     off = _offset(item)
     jobs = [(item.assets[b].href, Resampling.bilinear) for b in BANDS]
     jobs.append((item.assets["SCL"].href, Resampling.nearest))
-    with ThreadPoolExecutor(max_workers=6) as ex:
+    with ThreadPoolExecutor(max_workers=workers) as ex:
         arrs = list(ex.map(lambda j: _read(j[0], grid, j[1]), jobs))
     dn = np.stack(arrs[:-1]).astype(np.float32)
     nodata = dn[1] == 0
@@ -145,14 +146,14 @@ def _load_item(item, grid: Grid) -> tuple[np.ndarray, np.ndarray]:
     return refl, arrs[-1].astype(np.uint8)
 
 
-def load_scene(scene: Scene, grid: Grid) -> tuple[np.ndarray, np.ndarray]:
+def load_scene(scene: Scene, grid: Grid, workers: int = 6) -> tuple[np.ndarray, np.ndarray]:
     """Возвращает (reflectance float32 [11,H,W], SCL uint8 [H,W]); пробелы основного тайла — из соседних."""
-    refl, scl = _load_item(scene.items[0], grid)
+    refl, scl = _load_item(scene.items[0], grid, workers)
     for item in scene.items[1:]:
         gap = np.isnan(refl[1])
         if not gap.any():
             break
-        r, s = _load_item(item, grid)
+        r, s = _load_item(item, grid, workers)
         gap &= np.isfinite(r[1])
         refl[:, gap] = r[:, gap]
         scl[gap] = s[gap]

@@ -2,6 +2,7 @@
 
 python -m pipeline.pairs build [--offline]   # кандидаты, сдвиги, дрейфовый буфер, качество, решения
 python -m pipeline.pairs detect              # признаки детектора по следу принятых пар (скачивает фрагменты)
+python -m pipeline.pairs transfer            # эксперимент переноса: детекции в следе ↔ полевая концентрация
 
 Выход: data/registry/pairs.csv (все кандидаты с решениями и причинами), pairs.geojson (следы событий),
 summary.json. Ответы STAC и измерения качества кешируются в data/registry/cache — с --offline реестр
@@ -313,8 +314,10 @@ def detect_pairs() -> pd.DataFrame:
         k = np.cos(np.radians(cy))
         bbox = (min(lon0, cx - half / k), min(lat0, cy - half), max(lon1, cx + half / k), max(lat1, cy + half))
         grid = bbox_grid(bbox)
+        print(f"  загрузка {p['event_id']}: {grid.width}×{grid.height} пикс.", flush=True)
         item = _signed_item(p["collection"], p["scene_id"])
-        refl, scl = load_scene(Scene([item], 1.0, 0.0), grid)
+        # Последовательное чтение: параллельные запросы GDAL к COG в этом процессе иногда зависают навсегда
+        refl, scl = load_scene(Scene([item], 1.0, 0.0), grid, workers=1)
         # Маска воды по одной сцене: SCL = вода и глобальная маска океана
         rows_, cols_ = np.mgrid[0:grid.height, 0:grid.width]
         xs = grid.transform.c + (cols_ + 0.5) * grid.transform.a
@@ -323,6 +326,11 @@ def detect_pairs() -> pd.DataFrame:
         water = (scl == 6) & globe.is_ocean(lat, lon)
         valid = water & np.isfinite(refl[1]) & ~np.isin(scl, list(BAD_SCL))
         r = detect_array(refl, valid)
+        # Края облаков — как в aggregate.py: буфер вокруг облаков и теней
+        from scipy.ndimage import binary_dilation
+
+        cloud = np.isin(scl, [3, 8, 9, 10])
+        valid &= ~binary_dilation(cloud, iterations=load_yaml("detector.yaml")["cloud_buffer_px"]) if cloud.any() else True
         g = transform_geom("EPSG:4326", grid.crs.to_wkt(), mapping(fp))
         inside = ~geometry_mask([g], out_shape=valid.shape, transform=grid.transform)
         v = valid & inside
@@ -349,6 +357,28 @@ def detect_pairs() -> pd.DataFrame:
     return feats
 
 
+def transfer() -> dict:
+    """Эксперимент переноса: связана ли доля детекций в следе события с полевой концентрацией."""
+    from scipy.stats import spearmanr
+
+    feats = pd.read_csv(REG / "pair_features.csv")
+    ev = load_events()[["event_id", "profile", "role", "conc_items_km2", "target_scope", "measurement_profile"]]
+    d = feats.merge(ev, on="event_id", how="left")
+    rows = json.loads(d.to_json(orient="records", force_ascii=False))
+    out = {"n_pairs": len(d), "pairs": rows,
+           "detections_total": int(d["det_px"].sum()), "pairs_with_detections": int((d["det_px"] > 0).sum()),
+           "valid_area_km2_total": round(float(d["valid_px"].sum() * 1e-4), 1)}
+    if len(d) >= 5 and d["det_per_km2"].nunique() > 1:
+        r = spearmanr(d["det_per_km2"], d["conc_items_km2"])
+        out["spearman_det_vs_field"] = {"rho": float(r.statistic), "p_value": float(r.pvalue)}
+    out["conclusion"] = (
+        "Перенос численной оценки на снимки не подтверждён: в следах принятых пар детектор почти ничего не находит "
+        "(рассеянный мусор 50–1000 шт./км² при 10 м не виден), время наблюдения S4 неизвестно, а метка — "
+        "плотность всего мусора по полосе. Концентрация в сервисе берётся из модели по полевым данным.")
+    write_json(DATA / "eval" / "transfer.json", {**out, "meta": run_meta(CONFIG)})
+    return out
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "build"
     if cmd == "build":
@@ -357,5 +387,8 @@ if __name__ == "__main__":
                           if k != "meta"}, ensure_ascii=False, indent=1))
     elif cmd == "detect":
         print(detect_pairs().to_string())
+    elif cmd == "transfer":
+        r = transfer()
+        print(json.dumps({k: v for k, v in r.items() if k != "pairs"}, ensure_ascii=False, indent=1))
     else:
         raise SystemExit(f"неизвестная команда {cmd}")

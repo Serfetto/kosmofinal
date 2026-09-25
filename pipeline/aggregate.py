@@ -145,6 +145,14 @@ def ui_profiles() -> dict:
     return {k: v for k, v in load_yaml("profiles.yaml")["profiles"].items() if v.get("show_in_ui", True)}
 
 
+def cloud_zone(src_dir, d: str) -> np.ndarray:
+    """Облака, тени и перистые с буфером: края облаков SCL не маскирует, а они дают ложные «скопления»."""
+    with rasterio.open(src_dir / d / "scl.tif") as s:
+        scl = s.read(1)
+    cloud = np.isin(scl, [3, 8, 9, 10])
+    return binary_dilation(cloud, iterations=DCFG["cloud_buffer_px"]) if cloud.any() else cloud
+
+
 def quality_codes(src_dir, d: str, water: np.ndarray, ice: np.ndarray, static: np.ndarray,
                   near_ship: np.ndarray) -> np.ndarray:
     """Код пригодности пикселя (pipeline/status.py QUALITY). Решение «мусор / не мусор» — отдельно."""
@@ -315,23 +323,30 @@ def run(aoi_id: str) -> None:
         ships = (G == SHIP) & valid & ~static
         near_ship = binary_dilation(ships, iterations=40) if ships.any() else ships
         ice_zone = binary_dilation(ice, iterations=30)
-        det = ((P >= P_DET) & valid & (flags == ALL_FLAGS) & ~static & ~near_ship & ~ice_zone)
+        det = ((P >= P_DET) & valid & (flags == ALL_FLAGS) & ~static & ~near_ship & ~ice_zone
+               & ~cloud_zone(src_dir, d))
         sc = scenes[d]
         wind = sc.get("wind_max") or sc.get("wind") or 0.0
         storm = wind >= STORM_WIND
         iced = ice_frac > ICE_FRAC
-        if storm or iced:
+        # Сильный блик: CFAR поднимает порог, мелкие детекции ненадёжны, а отсутствие мусора не подтверждается
+        q = quality_codes(src_dir, d, water, ice_zone, static, near_ship)
+        glint_px = (q == 6) & water
+        glinty = float(glint_px.sum() / max(water.sum(), 1)) > DCFG["glint_scene_frac"]
+        if storm or iced or glinty:
             det = drop_small(det, 4)
-        storm = storm or iced  # дальше «ненадёжная сцена»: исключается из статистики по времени
+        unreliable = storm or iced or glinty  # дальше «ненадёжная сцена»: исключается из статистики по времени
         vpx = np.bincount(flat, weights=valid[water], minlength=n_hex)
         nd = np.bincount(flat, weights=det[water], minlength=n_hex)
         area = np.bincount(flat, weights=(frac * 100 * det)[water], minlength=n_hex)
         cover = np.where(vpx > 0, area / np.maximum(vpx * 1e-4, 1e-9), 0)  # м²/км²
         vfrac = vpx / np.maximum(water_px, 1)
-        # Статус детекции гекса: отсутствие подтверждаем только при достаточной видимости и спокойном море
+        hex_glint = np.bincount(flat, weights=glint_px[water], minlength=n_hex) / np.maximum(water_px, 1)
+        # Статус детекции гекса: отсутствие подтверждаем только при достаточной видимости, без блика и в спокойное море
         st = np.where(nd > 0, ST.DETECTION_CODE[ST.DETECTED],
-                      np.where((vfrac < DCFG["min_hex_valid"]) | storm, ST.DETECTION_CODE[ST.INSUFFICIENT],
-                               ST.DETECTION_CODE[ST.NOT_DETECTED]))
+                      np.where((vfrac < DCFG["min_hex_valid"]) | (hex_glint > 0.5) | unreliable,
+                               ST.DETECTION_CODE[ST.INSUFFICIENT], ST.DETECTION_CODE[ST.NOT_DETECTED]))
+        storm = unreliable
         good_dates.append(d)
         cover_t.append(cover)
         ndet_t.append(nd)
@@ -343,7 +358,6 @@ def run(aoi_id: str) -> None:
         dd.mkdir(exist_ok=True)
         heat_png(P, det, dd / "debris.png")
         shutil.copy(src_dir / d / "rgb.jpg", dd / "rgb.jpg")
-        q = quality_codes(src_dir, d, water, ice_zone, static, near_ship)
         quality_png(q, dd / "quality.png")
         qw = q[water]
         qstat = {ST.QUALITY[c][0]: round(float((qw == c).mean()), 4) for c in ST.QUALITY if c != 1}
@@ -379,7 +393,8 @@ def run(aoi_id: str) -> None:
                          "cover_m2_km2": round(z["cover_m2"] / max(z["zone_area_km2"], 1e-9), 1),
                          "h3": h3.latlng_to_cell(z["lat"], z["lon"], H3_RES),
                          "valid_frac_scene": round(sc["valid_frac"], 3), "wind_ms": wind,
-                         "sea": "шторм" if storm else "волнение" if wind >= ROUGH_WIND else "спокойное",
+                         "sea": "шторм" if wind >= STORM_WIND else "волнение" if wind >= ROUGH_WIND else "спокойное",
+                         "scene_reliable": not unreliable,
                          **near[k]}
                 for pid, e in zest.items():
                     stt = e["status"][k]
@@ -395,8 +410,9 @@ def run(aoi_id: str) -> None:
                                                      ensure_ascii=False), encoding="utf-8")
 
         sc.update(storm=bool(storm), ice_frac=round(ice_frac, 4), wind=wind,
-                  reason=("лёд на акватории" if iced else "шторм" if storm else None),
-                  sea=("лёд" if iced else "шторм" if storm else "волнение" if wind >= ROUGH_WIND else "спокойное"),
+                  reason=("лёд на акватории" if iced else "шторм" if wind >= STORM_WIND else "сильный блик" if glinty else None),
+                  sea=("лёд" if iced else "шторм" if wind >= STORM_WIND else "волнение" if wind >= ROUGH_WIND else "спокойное"),
+                  glinty=bool(glinty),
                   n_det=int(det.sum()), n_zones=len(zs), area_m2=round(float(area.sum()), 1),
                   cover=round(float(area.sum() / max(vpx.sum() * 1e-4, 1e-9)), 3), quality=qstat,
                   status={k: int((st == c).sum()) for k, c in ST.DETECTION_CODE.items()})

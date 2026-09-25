@@ -955,5 +955,5 @@ button[data-loading="true"] {
 .kv td:first-child { width: 48%; text-align: left; }
 .reasons { margin: 6px 0 0; padding-left: 16px; color: #fde68a; font-size: 11px; line-height: 1.5; }
 .conc-box { margin-top: 12px; }
-.hatch-sw { background: repeating-linear-gradient(45deg, rgba(251,191,36,.9) 0 2px, transparent 2px 5px); }
+.hatch-sw { border: 2px dashed #fbbf24 !important; background: transparent; }
 .field-sw { height: 4px; border: 0; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px #111; }

@@ -69,3 +69,16 @@ def test_saved_query_rerun_matches():
 def test_profile_unavailable_is_explicit():
     c = client.get(f"/api/aois/{AOI}/concentration?profile=A").json()
     assert c["available"] is False and c["reason"]
+
+
+def test_zones_consistent_with_series():
+    s = json.loads((WEB / AOI / "series.json").read_text(encoding="utf-8"))
+    for d, sc in list(zip(s["dates"], s["scenes"]))[-3:]:
+        zones = client.get(f"/api/aois/{AOI}/{d}/zones").json()["features"]
+        assert len(zones) == sc["n_zones"]
+        assert sum(z["properties"]["n_pixels"] for z in zones) == sc["n_det"]
+        for z in zones:
+            p = z["properties"]
+            assert p["zone_area_km2"] > 0 and p["detection_status"] == "detected"
+            assert p["conc_B_status"] in ("model_estimate", "research_estimate", "unavailable")
+            assert p["conc_A_status"] == "unavailable"  # профиль A вне бассейна Чёрного моря
