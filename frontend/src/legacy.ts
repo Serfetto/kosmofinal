@@ -840,6 +840,12 @@ function renderSeparation() {
   if (!box) return;
   const s = S.sep;
   if (!s) { box.innerHTML = '<p class="muted small">Разбор снимка недоступен.</p>'; return; }
+  if (s.detail_available === false) {
+    box.innerHTML = `<p class="muted small">Для этой сцены сохранена только сводка: ${nf(s.candidates, 0)} кандидатов ` +
+      `до фильтров, ${nf(s.kept, 0)} итоговых детекций. Разбивку по классам и причинам восстановить без исходного ` +
+      'растра детектора нельзя.</p>';
+    return;
+  }
   const rej = SEP_ORDER.filter((k) => s.rejected[k] > 0).map((k) => [k, s.rejected[k]]);
   const max = Math.max(1, s.kept, ...rej.map(([, v]) => v));
   const bar = (label, v, cls, title) => `<div class="sep-row ${cls}" title="${esc(title)}"><span>${esc(label)}</span>` +

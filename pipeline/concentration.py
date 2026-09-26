@@ -323,12 +323,6 @@ def predict(profile: str, lon, lat, t_ref, features: dict | None = None) -> dict
     basins = load_yaml("profiles.yaml")["basins"]
     lon = np.atleast_1d(np.asarray(lon, float))
     lat = np.atleast_1d(np.asarray(lat, float))
-    f = features or covariates.build(lon, lat, t_ref)
-    d = pd.DataFrame({k: np.broadcast_to(v, lon.shape) for k, v in f.items()})
-    m = from_json(j["serve"])
-    val = m.predict(d)
-    lo80, hi80 = apply_interval(val, j["interval_log_quantiles"]["0.8"])
-    lo95, hi95 = apply_interval(val, j["interval_log_quantiles"]["0.95"])
     ap = j["applicability"]
     in_basin = np.zeros(len(lon), bool)
     for b in ap["basins"]:
@@ -337,6 +331,24 @@ def predict(profile: str, lon, lat, t_ref, features: dict | None = None) -> dict
     tp = np.asarray(ap["train_points"], float)
     dmin = haversine_km(lon[:, None], lat[:, None], tp[None, :, 0], tp[None, :, 1]).min(1)
     months = np.array([_month(t) for t in np.broadcast_to(np.asarray(t_ref, dtype=object), lon.shape)])
+
+    # Вне бассейна профиль заведомо неприменим. Не запрашиваем для таких точек
+    # сетевые ковариаты (ERA5/Open-Meteo): ответ должен быть 404, а не 503 из-за сети.
+    if not in_basin.any():
+        nan = np.full(len(lon), np.nan)
+        return {"value": nan.copy(), "lo80": nan.copy(), "hi80": nan.copy(),
+                "lo95": nan.copy(), "hi95": nan.copy(),
+                "status": ["unavailable"] * len(lon),
+                "reasons": [["вне бассейна профиля: " + ", ".join(ap["basins"])] for _ in lon],
+                "nearest_field_km": dmin, "model_version": j["version"],
+                "model_type": j["serve"]["type"], "features": {}}
+
+    f = features or covariates.build(lon, lat, t_ref)
+    d = pd.DataFrame({k: np.broadcast_to(v, lon.shape) for k, v in f.items()})
+    m = from_json(j["serve"])
+    val = m.predict(d)
+    lo80, hi80 = apply_interval(val, j["interval_log_quantiles"]["0.8"])
+    lo95, hi95 = apply_interval(val, j["interval_log_quantiles"]["0.95"])
     status, reasons = [], []
     for i in range(len(lon)):
         why = []

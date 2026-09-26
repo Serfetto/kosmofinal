@@ -552,12 +552,32 @@ def separation(aoi: AoiPath, date: DatePath):
     лёд, край облака, тест на пену, одиночный пиксель, CFAR против блика и ряби, шторм). `kept` — итоговые
     детекции, столько же, сколько `n_det` снимка."""
     _aoi_date(aoi, date)
-    doc = _read(WEB / aoi / "separation.json")
-    st = doc["by_date"].get(date)
-    if st is None:
-        raise HTTPException(404, f"нет разбора снимка {aoi} на {date}")
-    return {"aoi": aoi, "date": date, "unit": doc["unit"], **st, "model_classes_ru": doc["model_classes"],
-            "reasons_ru": doc["reasons"]}
+    path = WEB / aoi / "separation.json"
+    if path.exists():
+        doc = _read(path)
+        st = doc["by_date"].get(date)
+        if st is not None:
+            return {"aoi": aoi, "date": date, "unit": doc["unit"], **st,
+                    "model_classes_ru": doc["model_classes"], "reasons_ru": doc["reasons"]}
+
+    # Для старых опубликованных акваторий исходные det.tif могли не войти в поставку.
+    # Возвращаем честную сводку из series.json вместо 404: общий поток кандидатов
+    # известен, но расклад по классам и отдельным фильтрам восстановить нельзя.
+    from pipeline.detect import load_water
+
+    series = _read(WEB / aoi / "series.json")
+    scene = series["scenes"][series["dates"].index(date)]
+    water_px = int(load_water(aoi).sum())
+    candidates = int(scene.get("n_raw") or scene.get("n_det") or 0)
+    kept = int(scene.get("n_det") or 0)
+    not_detailed = max(candidates - kept, 0)
+    return {"aoi": aoi, "date": date, "unit": "пиксели 10 м", "detail_available": False,
+            "valid_px": round(water_px * float(scene.get("valid_frac") or 0)), "water_px": water_px,
+            "glint_frac": float(scene.get("quality", {}).get("glint") or 0), "model_classes": {},
+            "model_classes_ru": {}, "candidates": candidates,
+            "rejected": {"details_unavailable": not_detailed},
+            "reasons_ru": {"details_unavailable": "детальный разбор фильтров не сохранён для этой сцены"},
+            "kept": kept}
 
 
 @router.get("/api/datasets", tags=[Tag.SERVICE], summary="Реестр данных: наборы, поля, лицензии",

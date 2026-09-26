@@ -545,6 +545,7 @@ class SeparationOut(BaseModel):
     aoi: str
     date: str
     unit: str = Field(description="пиксели 10 м")
+    detail_available: bool = Field(True, description="Есть полный разбор по классам модели и причинам отбраковки")
     valid_px: int = Field(description="Пригодных пикселей воды")
     water_px: int = Field(description="Пикселей в маске воды")
     glint_frac: float = Field(description="Доля воды под сильным бликом")

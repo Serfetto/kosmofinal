@@ -32,6 +32,13 @@ function App() {
     window.dispatchEvent(new CustomEvent('aquaflow-theme-change', { detail: { theme } }));
   }, [theme]);
 
+  const closeSheet = (): void => {
+    const side = document.getElementById('side');
+    const focused = document.activeElement;
+    if (focused instanceof HTMLElement && side?.contains(focused)) focused.blur();
+    setSheet(null);
+  };
+
   const toggleSheet = (next: Exclude<SheetView, null>): void => {
     const panel = document.getElementById('panel');
     if (panel && !panel.hidden) document.getElementById('panel-close')?.click();
@@ -45,14 +52,14 @@ function App() {
       <CommandBar activeSheet={sheet} onOpenSheet={toggleSheet} theme={theme} onThemeChange={setTheme} />
       <ModePicker />
       <MapLegend />
-      <Toolbar onSelect={() => setSheet(null)} />
+      <Toolbar onSelect={closeSheet} />
       <button
         className={`surface-scrim ${sheet ? 'is-visible' : ''}`}
-        onClick={() => setSheet(null)}
+        onClick={closeSheet}
         aria-label="Закрыть центр данных"
         tabIndex={sheet ? 0 : -1}
       />
-      <WorkspaceSheet view={sheet} onClose={() => setSheet(null)} onChangeView={setSheet} />
+      <WorkspaceSheet view={sheet} onClose={closeSheet} onChangeView={setSheet} />
       <DetailPanel />
       <div id="tip" hidden />
       <div id="toast" hidden />
