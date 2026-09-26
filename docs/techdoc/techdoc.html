@@ -108,6 +108,8 @@ figcaption { font-size: 8.2pt; color: var(--muted); margin-top: 3pt; }
 .side.wide { grid-template-columns: 1fr 86mm; }
 .cards { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 8pt; align-items: start; break-inside: avoid; }
 table.keep { break-inside: avoid; }
+.panels { display: grid; grid-template-columns: 1fr 50mm 50mm; gap: 9pt; align-items: start; break-inside: avoid; }
+.panels img { max-height: 215mm; width: auto; max-width: 100%; }
 .cards img { max-height: 205mm; width: auto; max-width: 100%; margin: 0 auto; }
 .chain { display: flex; flex-wrap: wrap; gap: 4pt; align-items: center; margin: 4pt 0 9pt; font-size: 8.3pt; }
 .chain span { background: #e8f5f1; border: 1px solid #b5ddd2; border-radius: 4pt; padding: 2pt 5pt; }
@@ -1051,9 +1053,25 @@ curl -i "http://localhost:8000/api/export?aoi=sochi&amp;date=13.09.2026"</pre>
     <figure><img src="img/ui_layers.jpg" alt="Слои"><figcaption>Рис. 10. «Слои»: каждый источник включается независимо.</figcaption></figure>
   </div>
 
+  <div class="panels">
+    <div>
+      <h3 style="margin-top:0">Панели «Данные кейса» и «Методика»</h3>
+      <p><b>«Данные кейса»</b> (рис. 11) — источники S1–S4 из постановки. По каждому: период наблюдений, число событий и строк реестра, сколько измерений показано на карте и в каком профиле, какие снимки нашлись на даты измерений и почему их нет (открытый океан, до запуска Sentinel-2A, только Landsat), ссылки на акватории со снимками в дни измерений.</p>
+      <p><b>«Методика»</b> (рис. 12) — три вкладки:</p>
+      <ul>
+        <li><b>Методика</b>: целевая величина профилей и все формулы с коэффициентами моделей, которые сейчас работают в сервисе (C = N/A и ДИ Гарвуда, нормализация фона, индексы, детектор, покрытие, модели A и B, интервалы, сведение, дрейф);</li>
+        <li><b>Проверка</b>: метрики детектора и концентрации против базовых, что чем подтверждено;</li>
+        <li><b>Данные</b>: реестр наборов данных с версиями, лицензиями и полями.</li>
+      </ul>
+      <p>Панель строится из того же ответа <code>GET /api/methodology</code>, что и раздел методики в PDF-отчёте; тест <code>test_methodology_in_ui_uses_served_models</code> сверяет коэффициенты с файлами моделей.</p>
+    </div>
+    <figure style="margin:0"><img src="img/ui_field_sources.jpg" alt="Данные кейса"><figcaption>Рис. 11. «Данные кейса».</figcaption></figure>
+    <figure style="margin:0"><img src="img/ui_about.jpg" alt="Методика"><figcaption>Рис. 12. «Методика» (начало).</figcaption></figure>
+  </div>
+
   <h2>7.3. API</h2>
   <p>37 ручек; интерфейс пользуется теми же ручками. Интерактивная документация — <code>/api/docs</code> (Swagger) и <code>/api/redoc</code>, схема OpenAPI 3.1 — <code>/api/openapi.json</code>, справочник с примерами — <code>docs/api.md</code>. Авторизации нет; данные меняет только <code>POST /api/queries</code>.</p>
-  <table>
+  <table class="keep">
     <thead><tr><th style="width:22%">Группа</th><th>Ручки</th></tr></thead>
     <tbody>
       <tr><td>Служебное</td><td><code>/api/health</code>, <code>/api/statuses</code>, <code>/api/datasets</code>, <code>/api/methodology</code>, <code>/api/metrics</code></td></tr>
@@ -1065,7 +1083,7 @@ curl -i "http://localhost:8000/api/export?aoi=sochi&amp;date=13.09.2026"</pre>
       <tr><td>Выгрузка и запросы</td><td><code>/api/export</code>, <code>/api/report</code>, <code>POST /api/queries</code>, <code>/api/queries/{qid}</code>, <code>POST /api/queries/{qid}/rerun</code></td></tr>
     </tbody>
   </table>
-  <figure><img src="img/ui_swagger.jpg" alt="Swagger" style="max-height:88mm; object-fit:cover; object-position:top"><figcaption>Рис. 11. <code>/api/docs</code>: у каждой ручки — назначение, параметры с примерами, схема ответа и коды ошибок (тест <code>test_every_endpoint_documented</code>).</figcaption></figure>
+  <figure><img src="img/ui_swagger.jpg" alt="Swagger" style="max-height:88mm; object-fit:cover; object-position:top"><figcaption>Рис. 13. <code>/api/docs</code>: у каждой ручки — назначение, параметры с примерами, схема ответа и коды ошибок (тест <code>test_every_endpoint_documented</code>).</figcaption></figure>
 
   <h2>7.4. Выгрузка, отчёт и сохранённые запросы</h2>
   <ul>
@@ -1075,7 +1093,7 @@ curl -i "http://localhost:8000/api/export?aoi=sochi&amp;date=13.09.2026"</pre>
     <li><b>PDF-отчёт</b> <code>GET /api/report</code>: обзорная карта с районами скопления, фрагменты снимка и таблица крупнейших зон с координатами и ориентирами, графики динамики, распределение концентрации, отбраковка похожих объектов, прогноз дрейфа, методика с коэффициентами моделей.</li>
   </ul>
   <div class="side">
-    <figure><img src="img/report_p1.jpg" alt="PDF-отчёт"><figcaption>Рис. 12. Первая страница PDF-отчёта (Сочи, 11.09.2026).</figcaption></figure>
+    <figure><img src="img/report_p1.jpg" alt="PDF-отчёт"><figcaption>Рис. 14. Первая страница PDF-отчёта (Сочи, 11.09.2026).</figcaption></figure>
     <div>
       <h3 style="margin-top:0">7.5. Согласованность и ошибки</h3>
       <p>Интерфейс, выгрузка и отчёт читают одни и те же файлы <code>data/web/</code>, поэтому числа, единицы, геометрия и статусы в них совпадают. Это проверяют тесты:</p>
@@ -1105,7 +1123,7 @@ curl -i "http://localhost:8000/api/export?aoi=sochi&amp;date=13.09.2026"</pre>
   <p>Все прогнозы на карте подписаны «Прогноз, не наблюдение» и рисуются отдельным цветом (пурпурные частицы, пунктир маршрута), чтобы их нельзя было спутать с детекциями и измерениями.</p>
   <h2>8.1. Прогноз дрейфа на 72 ч</h2>
   <p><b>Потребность:</b> судно выходит через несколько часов после пролёта — нужно знать, куда сместится найденное скопление. <b>Метод</b> (<code>pipeline/drift.py</code>): лагранжев ансамбль, скорость частицы = течение + windage × ветер + случайное блуждание. Течения — Meteo-France SMOC через Open-Meteo Marine (суммарные поверхностные с приливом и стоксовым дрейфом, 1/12°, ежечасно); ветер — ERA5, а за последние 6 суток — прогноз Open-Meteo. Windage 2% для моря (3% для водохранилищ, где течений нет — там дрейф только ветровой), в ансамбле — от 1% до 3%; 4 частицы на пиксель детекции; частицы, дошедшие до берега, выбрасываются. Поля кешируются в <code>data/processed/&lt;aoi&gt;/&lt;date&gt;/met.npz</code>.</p>
-  <figure><img src="img/ui_drift.jpg" alt="Дрейф"><figcaption>Рис. 13. Прогноз дрейфа (Сочи, 11.09.2026): траектории частиц, положение через 72 ч, выброс на берег; медианное смещение 29,9 км, 58% частиц выброшено на берег. Ползунок проигрывает прогноз по часам.</figcaption></figure>
+  <figure><img src="img/ui_drift.jpg" alt="Дрейф"><figcaption>Рис. 15. Прогноз дрейфа (Сочи, 11.09.2026): траектории частиц, положение через 72 ч, выброс на берег; медианное смещение 29,9 км, 58% частиц выброшено на берег. Ползунок проигрывает прогноз по часам.</figcaption></figure>
   <div class="box amber"><p><b>Проверка без будущих данных</b> (<code>python -m pipeline.drift_check</code>, <code>data/eval/drift_check.json</code>). Частицы засеваются детекциями дня d и сравниваются с детекциями дня d+1…d+2, которые в прогнозе не участвуют. 7 пар (Сочи, Амурский залив, Новороссийск; горизонт 24–48 ч): медианное расстояние от новых детекций до частиц прогноза — 3,0 км, до исходного положения детекций — 1,4 км; прогноз ближе в 2 парах из 7. Вывод: у берега на 1–2 суток прогноз по течениям не лучше предположения «пятно на месте» — повторяющиеся детекции привязаны к месту (устья рек, береговые скопления). До калибровки парусности прогноз справочный.</p></div>
 
   <h2>8.2. Дрейф без снимка</h2>
@@ -1113,7 +1131,7 @@ curl -i "http://localhost:8000/api/export?aoi=sochi&amp;date=13.09.2026"</pre>
 
   <h2>8.3. Маршрут обследования</h2>
   <p><b>Потребность:</b> куда отправить судно для подтверждения. <b>Метод</b> (<code>pipeline/route.py</code>): цели — скопления детекций по гексам; судно выходит из порта через заданное время, поэтому точки берутся из прогноза дрейфа на момент прибытия; следующая точка выбирается жадно по «ценность / время» (задача ориентирования). Параметры: число точек, скорость в узлах, задержка выхода.</p>
-  <figure><img src="img/ui_route.jpg" alt="Маршрут"><figcaption>Рис. 14. План обследования (Сочи, 11.09.2026): 8 точек, 61,6 км, 4,8 ч в море, 79% покрытия всех скоплений; у каждой точки — смещение пятна к прибытию и время.</figcaption></figure>
+  <figure><img src="img/ui_route.jpg" alt="Маршрут"><figcaption>Рис. 16. План обследования (Сочи, 11.09.2026): 8 точек, 61,6 км, 4,8 ч в море, 79% покрытия всех скоплений; у каждой точки — смещение пятна к прибытию и время.</figcaption></figure>
 
   <h2>8.4. Остальное</h2>
   <table>
