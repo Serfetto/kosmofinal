@@ -1,4 +1,5 @@
 """Общие настройки: пути, акватории, каналы."""
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -6,6 +7,15 @@ DATA = ROOT / "data"
 RAW = DATA / "raw"
 PROCESSED = DATA / "processed"
 MODELS = DATA / "models"
+# Что сервис докачивает и досчитывает во время работы (течения и ветер, зоны скопления, сохранённые запросы).
+# По умолчанию пишется рядом с данными репозитория; в Docker — в отдельный том, чтобы не пропадало при пересоздании
+CACHE = Path(os.environ.get("AQUAFLOW_CACHE") or DATA)
+
+
+def cached(path: Path) -> Path:
+    """Файл из data/, если он есть (лежит в репозитории или образе), иначе тот же путь внутри CACHE."""
+    return path if path.exists() else CACHE / path.relative_to(DATA)
+
 
 # Порядок каналов как в MARIDA (B09/B10 не используются)
 BANDS = ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B8A", "B11", "B12"]

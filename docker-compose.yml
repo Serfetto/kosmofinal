@@ -4,4 +4,10 @@ services:
     image: aquaflow
     ports:
       - "8000:8000"
+    volumes:
+      # Течения и ветер Open-Meteo, зоны скопления, сохранённые запросы — не скачиваются заново после пересборки
+      - aquaflow-cache:/app/cache
     restart: unless-stopped
+
+volumes:
+  aquaflow-cache:

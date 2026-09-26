@@ -23,7 +23,7 @@ from backend.schemas import (DATE_RE, PROFILE_RE, AoiPath, AoiQuery, Concentrati
                              SavedQueryOut, Tag, ZonesOut, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
-from pipeline.config import AOIS, DATA, FIELD_SOURCES, MODELS, ROOT
+from pipeline.config import AOIS, CACHE, DATA, FIELD_SOURCES, MODELS, ROOT, cached
 from pipeline.provenance import config_hash, load_yaml
 
 router = APIRouter()
@@ -49,7 +49,7 @@ HEX_COLUMNS = [
 
 def _read(path):
     if not path.exists():
-        raise HTTPException(404, f"нет данных: {path.relative_to(DATA)}")
+        raise HTTPException(404, f"нет данных: {path.relative_to(DATA if path.is_relative_to(DATA) else CACHE)}")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -611,8 +611,8 @@ def save_query(q: QueryIn):
     qid = _query_id(q)
     rec = {"id": qid, "params": q.model_dump(), "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "result_sha256": hashlib.sha256(body).hexdigest(), "result_bytes": len(body), "versions": versions()}
-    QUERIES.mkdir(parents=True, exist_ok=True)
-    path = QUERIES / f"{qid}.json"
+    path = cached(QUERIES / f"{qid}.json")
+    path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():  # тот же запрос уже сохранён — не перезаписываем исходный отпечаток
         rec = json.loads(path.read_text(encoding="utf-8"))
     else:
@@ -624,7 +624,7 @@ def save_query(q: QueryIn):
             response_model=SavedQueryOut, responses=errors(404, 422))
 def get_query(qid: QueryIdPath):
     """Параметры, sha256 результата и версии на момент сохранения."""
-    return _read(QUERIES / f"{qid}.json")
+    return _read(cached(QUERIES / f"{qid}.json"))
 
 
 @router.post("/api/queries/{qid}/rerun", tags=[Tag.QUERIES], summary="Повторить запрос и сверить результат",
@@ -634,7 +634,7 @@ def rerun_query(qid: QueryIdPath):
     результат воспроизводится побайтно. При расхождении сравните `saved_versions` и `current_versions` —
     видно, какой конфиг или модель изменились.
     """
-    rec = _read(QUERIES / f"{qid}.json")
+    rec = _read(cached(QUERIES / f"{qid}.json"))
     q = QueryIn(**rec["params"])
     body, _ = build_export(q.aoi, q.date, q.profile, q.layer, q.format)
     sha = hashlib.sha256(body).hexdigest()

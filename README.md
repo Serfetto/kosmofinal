@@ -90,7 +90,8 @@ cd frontend && npm install && npm run build && cd ..
 
 На сервере: `.venv/bin/python -m uvicorn backend.app:app --host 0.0.0.0 --port 8000` — без `--host 0.0.0.0`
 сервис слушает только localhost и снаружи не открывается. Каталог `data/` должен быть доступен на запись (кеш
-течений и зон скопления, сохранённые запросы), нужен выход в интернет к Open-Meteo.
+течений и зон скопления, сохранённые запросы) — либо задайте для них отдельный каталог в переменной
+`AQUAFLOW_CACHE`. Нужен выход в интернет к Open-Meteo.
 
 Пример сохранённого запроса лежит в `data/queries/0a0b3aaaf8f9.json`: зоны «Батуми — Кобулети» на 05.06.2024,
 профиль B, GeoJSON. Повтор: `curl -X POST http://localhost:8000/api/queries/0a0b3aaaf8f9/rerun` — поле `match`
@@ -102,14 +103,17 @@ cd frontend && npm install && npm run build && cd ..
 ### Docker
 
 ```bash
-docker compose up -d --build        # или: docker build -t aquaflow . && docker run -d -p 8000:8000 aquaflow
+docker compose up -d --build
+# или: docker build -t aquaflow . && docker run -d -p 8000:8000 -v aquaflow-cache:/app/cache aquaflow
 # http://localhost:8000, проверка: curl http://localhost:8000/api/health
 ```
 
 В образ попадают фронтенд (собирается внутри) и те же данные, что лежат в репозитории, поэтому скачивать и
 обучать ничего не нужно. Локальные снимки и MARIDA в образ не попадают: это задаёт `.dockerignore`. Контейнеру
-нужен выход в интернет к Open-Meteo. Кеш течений и сохранённые запросы пишутся в `data/` внутри контейнера и
-пропадают при пересоздании контейнера.
+нужен выход в интернет к Open-Meteo. Течения и ветер для дат, которых нет в репозитории, зоны скопления и
+сохранённые запросы пишутся в том `aquaflow-cache` (`/app/cache`), поэтому переживают пересоздание контейнера и
+пересборку образа и заново не скачиваются. Сбросить кеш (например, после изменений в модели дрейфа):
+`docker compose down -v`.
 
 ## Воспроизведение результатов
 

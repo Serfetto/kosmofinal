@@ -26,7 +26,7 @@ from backend.schemas import (PATTERN_HINTS, AccumulationOut, AoiOut, AoiPath, Da
                              SceneOut, SeriesOut, StatusesOut, Tag, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
-from pipeline.config import AOIS, H3_RES, PROCESSED, ROOT
+from pipeline.config import AOIS, H3_RES, PROCESSED, ROOT, cached
 from pipeline.drift import accumulation, simulate
 from pipeline.route import plan
 
@@ -338,7 +338,7 @@ def drift_point(aoi: AoiPath, date: DatePath,
 
 @lru_cache(maxsize=32)
 def _accum(aoi: str, date: str):
-    cache = WEB / aoi / date / "accumulation.json"
+    cache = cached(WEB / aoi / date / "accumulation.json")
     if cache.exists():
         return _json(cache)
     a = accumulation(aoi, date)
@@ -352,6 +352,7 @@ def _accum(aoi: str, date: str):
     mean_start = np.mean(list(start.values()))
     factor = {c: round(n / mean_start, 3) for c, n in end.items()}
     out = {"factor": factor, "beached_frac": round(float(a["beached"].mean()), 3), "n": len(a["start"])}
+    cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(out), encoding="utf-8")
     return out
 

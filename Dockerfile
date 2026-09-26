@@ -1,6 +1,6 @@
 # AquaFlow: сервис на готовых данных из репозитория (без скачивания снимков и обучения).
 #   docker build -t aquaflow .
-#   docker run -d -p 8000:8000 --name aquaflow aquaflow   →  http://localhost:8000
+#   docker run -d -p 8000:8000 -v aquaflow-cache:/app/cache --name aquaflow aquaflow   →  http://localhost:8000
 
 # ---------- фронтенд ----------
 FROM node:20-alpine AS frontend
@@ -17,7 +17,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=utf-8 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    AQUAFLOW_CACHE=/app/cache
 
 # libgomp — OpenMP для xgboost/lightgbm; libexpat — колесо rasterio ждёт её от системы, а в slim-образе её нет.
 # Остальное (GDAL, PROJ) приходит в колёсах rasterio/pyproj
@@ -30,14 +31,16 @@ WORKDIR /app
 COPY requirements.lock .
 RUN pip install -r requirements.lock
 
-RUN useradd --create-home --uid 1000 app
+RUN useradd --create-home --uid 1000 app \
+    && mkdir /app/cache && chown app:app /app/cache
 
 COPY configs configs
 COPY pipeline pipeline
 COPY backend backend
 COPY --from=frontend /app/frontend/dist frontend/dist
-# data/ пишется во время работы: кеш течений и зон скопления, сохранённые запросы
-COPY --chown=app:app data data
+# data/ только читается. Что сервис докачивает во время работы (течения и ветер Open-Meteo, зоны скопления,
+# сохранённые запросы), пишется в /app/cache — его монтируем томом, чтобы переживал пересборку образа
+COPY data data
 
 USER app
 EXPOSE 8000

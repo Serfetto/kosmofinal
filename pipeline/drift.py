@@ -18,7 +18,7 @@ from rasterio.warp import transform as warp_transform
 from scipy.interpolate import RegularGridInterpolator
 from scipy.ndimage import binary_dilation
 
-from .config import AOIS, PROCESSED
+from .config import AOIS, PROCESSED, cached
 
 MARINE_URL = "https://marine-api.open-meteo.com/v1/marine"
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
@@ -49,7 +49,7 @@ def scene_time(aoi_id: str, date: str) -> datetime:
 
 def fetch_met(aoi_id: str, date: str, days: int = 4) -> dict:
     """Почасовые поля течений и ветра на сетке 0.1° вокруг акватории, с кэшем на диске."""
-    cache = PROCESSED / aoi_id / date / "met.npz"
+    cache = cached(PROCESSED / aoi_id / date / "met.npz")
     if cache.exists():
         z = np.load(cache)
         return {k: z[k] for k in z.files}
@@ -86,6 +86,7 @@ def fetch_met(aoi_id: str, date: str, days: int = 4) -> dict:
         cv = np.zeros_like(wv)
     t0 = datetime.combine(start, datetime.min.time(), tzinfo=timezone.utc).timestamp()
     met = dict(lons=lons, lats=lats, t=t0 + 3600.0 * np.arange(nt), cu=cu, cv=cv, wu=wu, wv=wv)
+    cache.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(cache, **met)
     return met
 
