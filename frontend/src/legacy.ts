@@ -412,10 +412,13 @@ async function showModelClasses(url, notify = false) {
     slow = true;
     toast('Готовим слой классов модели… Расчёт на сервере может занять до минуты.', 0);
   }, 800);
+  // Через fetch, а не img.src: при 404/503 в тосте текст ошибки сервера, а не «image cannot be decoded»
+  let blob;
+  try { blob = await (await request(url)).blob(); } finally { clearTimeout(timer); }
   const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = url;
-  try { await img.decode(); } finally { clearTimeout(timer); }
+  const src = URL.createObjectURL(blob);
+  img.src = src;
+  try { await img.decode(); } finally { URL.revokeObjectURL(src); }
   if (seq !== modelClassesSeq || !$('#l-model-classes')?.checked) return;
   sliceRaster('model-classes', img, S.grid);
   vis(rasterIds('model-classes'), true);
