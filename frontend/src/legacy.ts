@@ -266,9 +266,13 @@ function initLayers(corners) {
   map.addLayer({ id: 'draw-line', type: 'line', source: 'draw', paint: { 'line-color': '#fff', 'line-width': 1.5, 'line-dasharray': [1, 1] } });
   map.addLayer({ id: 'draw-pts', type: 'circle', source: 'draw', filter: ['==', '$type', 'Point'], paint: { 'circle-radius': 4, 'circle-color': '#fff' } });
   map.addLayer({ id: 'tracks', type: 'line', source: 'tracks', paint: { 'line-color': accentColor(), 'line-opacity': 0.16, 'line-width': 1 } });
+  // Мусор в прогнозе — пурпурный: этого цвета нет ни у штрихов течений (голубые) и ветра (оранжевые), ни у зон
+  // (красные). Выброшенная на берег частица — белая с пурпурным кольцом
   map.addLayer({ id: 'particles', type: 'circle', source: 'particles', paint: {
-    'circle-radius': 2.6, 'circle-color': ['case', ['==', ['get', 'b'], 1], '#ff6a3d', '#9ff0ff'],
-    'circle-stroke-color': '#04121a', 'circle-stroke-width': 0.5 } });
+    'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 2.8, 12, 4],
+    'circle-color': ['case', ['==', ['get', 'b'], 1], '#ffffff', '#ff3fd0'],
+    'circle-stroke-color': ['case', ['==', ['get', 'b'], 1], '#ff3fd0', '#2a0a24'],
+    'circle-stroke-width': ['case', ['==', ['get', 'b'], 1], 2, 1.2] } });
   map.addLayer({ id: 'cone', type: 'line', source: 'cone', paint: { 'line-color': '#9ff0ff', 'line-opacity': 0.35, 'line-width': 1 } });
   map.addLayer({ id: 'coneCenter', type: 'line', source: 'coneCenter', paint: { 'line-color': '#fff', 'line-width': 2.5 } });
   map.addLayer({ id: 'coneEnd', type: 'circle', source: 'coneCenter', filter: ['==', '$type', 'Point'], paint: { 'circle-radius': 5, 'circle-color': '#fff' } });
@@ -978,6 +982,7 @@ function showCone(r, lon, lat) {
   map.getSource('coneCenter').setData({ type: 'FeatureCollection', features: [
     { type: 'Feature', geometry: { type: 'LineString', coordinates: r.center } },
     { type: 'Feature', geometry: { type: 'Point', coordinates: end } }] });
+  dimFlow(true);
   return haversine(lon, lat, end[0], end[1]);
 }
 async function hexDrift(trigger = $('#hex-drift')) {
@@ -1244,7 +1249,7 @@ function sizeFlowCanvas() {
 function initFlowCanvas() {
   if (F.canvas) return;
   F.canvas = document.createElement('canvas');
-  F.canvas.className = 'flow-canvas';
+  F.canvas.className = `flow-canvas${F.dim ? ' is-dim' : ''}`;
   map.getCanvas().after(F.canvas);  // над картой, под маркерами
   F.ctx = F.canvas.getContext('2d');
   sizeFlowCanvas();
@@ -1253,6 +1258,11 @@ function initFlowCanvas() {
   map.on('moveend', () => { F.moving = false; resetFlowParticles(); });
 }
 const flowActive = () => F.on.cur || F.on.wind;
+// Пока на карте прогноз дрейфа (частицы, конус), штрихи приглушены — иначе частицы в них теряются
+function dimFlow(on) {
+  F.dim = on;
+  F.canvas?.classList.toggle('is-dim', on);
+}
 async function toggleFlow(kind, on) {
   F.on[kind] = on;
   initFlowCanvas();
@@ -1305,6 +1315,7 @@ function renderFlowLegend() {
 function clearDrift() {
   cancelAnimationFrame(S.anim); S.anim = null; S.drift = null;
   setFlowHour(0);
+  dimFlow(false);
   ['tracks', 'particles', 'cone', 'coneCenter'].forEach((id) => map.getSource(id)?.setData(EMPTY));
   $('#drift-ctrl').hidden = true;
   $('#drift-play').textContent = '▶';
@@ -1320,6 +1331,7 @@ async function runDrift(trigger = $('#drift-run')) {
     const tracks = [];
     for (let k = 0; k < n; k++) tracks.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: r.frames.map((f) => f[k]) } });
     map.getSource('tracks').setData({ type: 'FeatureCollection', features: tracks });
+    dimFlow(true);
     $('#drift-hour').max = r.hours;
     $('#drift-ctrl').hidden = false;
     showDriftHour(0);

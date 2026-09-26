@@ -119,8 +119,8 @@ button.icon:hover { background: #e4e8df; color: var(--tide); }
 .leg-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
 .sw { width: 18px; height: 10px; flex: none; border: 1px solid rgba(16,34,31,.12); }
 .dot { width: 9px; height: 9px; flex: none; border: 1px solid var(--ink); border-radius: 50%; margin-inline: 4px; }
-.particle { background: #21a4ae; }
-.beached { background: var(--signal); }
+.particle { border-color: #2a0a24; background: #ff3fd0; }
+.beached { border: 2px solid #ff3fd0; background: #fff; }
 .track { height: 0; border: 0; border-top: 2px solid rgba(0,125,114,.55); }
 .grad { height: 7px; margin: 7px 0 4px; }
 .grad-lbl { display: flex; justify-content: space-between; color: var(--muted); font-family: "Montserrat", sans-serif; font-size: 9px; }
@@ -2921,7 +2921,8 @@ html[data-theme="light"] #tip {
 }
 
 /* Течения и ветер: канвас со штрихами поверх карты и строки легенды */
-.flow-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+.flow-canvas { position: absolute; top: 0; left: 0; pointer-events: none; transition: opacity 200ms ease; }
+.flow-canvas.is-dim { opacity: .45; }
 .flow-legend { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--theme-border); font-size: 12px; line-height: 1.4; }
 .flow-legend .leg-row { margin: 6px 0; }
 .flow-legend[hidden] { display: none; }
