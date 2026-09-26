@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>AquaFlow — техническая документация</title>
+<style>
+:root {
+  --ink: #13211d; --muted: #5b6b66; --line: #d9e1dd; --soft: #f3f6f4; --soft2: #eaf1ee;
+  --teal: #0b7a68; --teal-d: #075446; --lime: #d9f24a; --amber: #a86a0c; --amber-bg: #fff6e3;
+  --red: #b3372b; --green: #15803d; --green-bg: #e7f6ec;
+}
+@page { size: A4; }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; color: var(--ink); font: 9.6pt/1.46 "Segoe UI", "Arial", sans-serif; background: #fff; }
+h1, h2, h3, h4 { font-family: "Segoe UI Semibold", "Segoe UI", Arial, sans-serif; line-height: 1.22; margin: 0; }
+h1 { font-size: 20pt; letter-spacing: -.01em; margin: 0 0 10pt; padding-top: 2pt; color: var(--ink); }
+h1 .num { color: var(--teal); margin-right: 6pt; }
+h2 { font-size: 13.5pt; margin: 16pt 0 6pt; color: var(--teal-d); }
+h3 { font-size: 11pt; margin: 12pt 0 4pt; }
+h4 { font-size: 9.8pt; margin: 9pt 0 3pt; color: var(--teal-d); }
+p { margin: 0 0 6pt; }
+ul, ol { margin: 0 0 6pt; padding-left: 16pt; }
+li { margin: 0 0 2pt; }
+a { color: var(--teal-d); text-decoration: none; }
+code, .mono { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.4pt; background: var(--soft); padding: 0 1pt; border-radius: 2pt; }
+th code { background: transparent; color: inherit; }
+h1, h2, h3, h4, .crit-head { break-after: avoid; }
+pre { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.2pt; line-height: 1.4; background: #f1f4f3; border: 1px solid var(--line); border-left: 3pt solid var(--teal); border-radius: 4pt; padding: 6pt 8pt; margin: 4pt 0 8pt; white-space: pre-wrap; break-inside: avoid; }
+pre .c { color: #6b7b76; }
+b, strong { font-weight: 650; }
+.chapter { break-before: page; }
+.avoid { break-inside: avoid; }
+.muted { color: var(--muted); }
+.small { font-size: 8.4pt; }
+
+table { width: 100%; border-collapse: collapse; margin: 4pt 0 9pt; font-size: 8.5pt; line-height: 1.36; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th { text-align: left; background: var(--ink); color: #fff; font-weight: 600; padding: 4pt 5pt; vertical-align: bottom; }
+td { padding: 3.5pt 5pt; border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr:nth-child(even) td { background: #f8faf9; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+tr.best td { background: #eef8d4 !important; font-weight: 600; }
+table.kv td:first-child { width: 30%; color: var(--muted); font-weight: 600; }
+
+.box { border: 1px solid var(--line); border-radius: 6pt; padding: 7pt 9pt; margin: 6pt 0 9pt; background: var(--soft); break-inside: avoid; }
+.box.teal { background: #e8f5f1; border-color: #b5ddd2; }
+.box.amber { background: var(--amber-bg); border-color: #f0d59b; }
+.box.lime { background: #f6fbdc; border-color: #d9e89a; }
+.box h4 { margin-top: 0; }
+.box > :last-child { margin-bottom: 0; }
+
+.tag { display: inline-block; font-size: 7.6pt; font-weight: 700; padding: 1pt 5pt; border-radius: 99pt; letter-spacing: .02em; vertical-align: 1pt; white-space: nowrap; }
+.ok { background: var(--green-bg); color: var(--green); }
+.part { background: var(--amber-bg); color: var(--amber); }
+.no { background: #fde8e6; color: var(--red); }
+.chk { color: var(--green); font-weight: 800; }
+.half { color: var(--amber); font-weight: 800; }
+
+/* обложка */
+.cover { height: 255mm; display: flex; flex-direction: column; justify-content: space-between; }
+.cover .top { border-top: 5pt solid var(--teal); padding-top: 14pt; }
+.brand { display: flex; align-items: center; gap: 10pt; margin-bottom: 26pt; }
+.brand .logo { width: 34pt; height: 34pt; border-radius: 9pt; background: var(--ink); display: flex; align-items: center; justify-content: center; }
+.brand .name { font-size: 15pt; font-weight: 700; letter-spacing: -.01em; }
+.cover h1.title { font-size: 30pt; line-height: 1.08; margin: 0 0 10pt; letter-spacing: -.02em; }
+.cover .sub { font-size: 12.5pt; color: var(--muted); max-width: 150mm; }
+.cover .lead { margin-top: 18pt; font-size: 10.5pt; max-width: 160mm; }
+.cover table.kv { font-size: 9pt; margin-top: 14pt; }
+.cover .band { background: var(--ink); color: #fff; border-radius: 8pt; padding: 10pt 12pt; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8pt; }
+.cover .band div b { display: block; font-size: 16pt; color: var(--lime); font-weight: 700; }
+.cover .band div span { font-size: 8pt; color: #c9d6d1; }
+
+/* содержание */
+.toc { columns: 1; font-size: 9.4pt; }
+.toc a { display: flex; gap: 6pt; color: var(--ink); padding: 1.6pt 0; }
+.toc a .t { flex: 1; border-bottom: 1px dotted #b9c4c0; }
+.toc a .p { min-width: 18pt; text-align: right; color: var(--muted); }
+.toc a.l1 { font-weight: 650; margin-top: 5pt; }
+.toc a.l2 { padding-left: 14pt; font-size: 8.9pt; }
+
+/* чек-лист критериев */
+.scoreboard td:nth-child(1) { width: 9%; font-weight: 700; }
+.scoreboard td:nth-child(3) { width: 9%; text-align: center; }
+.scoreboard td:nth-child(4) { width: 13%; }
+.crit { margin: 0 0 12pt; }
+.crit-head { display: flex; align-items: center; gap: 8pt; background: var(--ink); color: #fff; border-radius: 6pt 6pt 0 0; padding: 6pt 9pt; break-after: avoid; }
+.crit-head .code { background: var(--lime); color: var(--ink); font-weight: 800; border-radius: 4pt; padding: 1pt 6pt; font-size: 10pt; }
+.crit-head h3 { margin: 0; font-size: 11.5pt; color: #fff; flex: 1; }
+.crit-head .pts { font-size: 8.2pt; color: #c9d6d1; }
+.crit-req { background: var(--soft2); border: 1px solid var(--line); border-top: 0; padding: 5pt 9pt; font-size: 8.6pt; color: #33443f; break-inside: avoid; }
+table.ev { margin-top: 0; }
+table.ev td:first-child { width: 4%; text-align: center; font-size: 10pt; }
+table.ev td:nth-child(2) { width: 30%; font-weight: 600; }
+.how { border: 1px solid #b5ddd2; background: #e8f5f1; border-radius: 0 0 6pt 6pt; padding: 6pt 9pt; margin-top: -9pt; margin-bottom: 4pt; break-inside: avoid; }
+.how h4 { margin: 0 0 3pt; }
+.how ol { margin-bottom: 0; }
+.how pre { background: #fff; margin: 3pt 0; }
+
+figure { margin: 6pt 0 10pt; break-inside: avoid; }
+figure img { display: block; max-width: 100%; border-radius: 5pt; border: 1px solid var(--line); }
+figcaption { font-size: 8.2pt; color: var(--muted); margin-top: 3pt; }
+.fig2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt; align-items: start; }
+.fig3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8pt; align-items: start; }
+.side { display: grid; grid-template-columns: 62mm 1fr; gap: 10pt; align-items: start; }
+.side.rev { grid-template-columns: 1fr 62mm; }
+.side.wide { grid-template-columns: 1fr 86mm; }
+.cards { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 8pt; align-items: start; break-inside: avoid; }
+table.keep { break-inside: avoid; }
+.cards img { max-height: 205mm; width: auto; max-width: 100%; margin: 0 auto; }
+.chain { display: flex; flex-wrap: wrap; gap: 4pt; align-items: center; margin: 4pt 0 9pt; font-size: 8.3pt; }
+.chain span { background: #e8f5f1; border: 1px solid #b5ddd2; border-radius: 4pt; padding: 2pt 5pt; }
+.chain i { color: var(--teal); font-style: normal; font-weight: 700; }
+.qa { break-inside: avoid; margin: 0 0 7pt; }
+.qa .q { font-weight: 650; color: var(--teal-d); margin-bottom: 1.5pt; }
+.qa .q::before { content: "В: "; color: var(--muted); }
+.qa .a::before { content: "О: "; color: var(--muted); font-weight: 650; }
+.formula { font-family: "Cambria Math", Cambria, "Times New Roman", serif; font-size: 11pt; background: #f6fbdc; border: 1px solid #d9e89a; border-radius: 5pt; padding: 5pt 9pt; margin: 4pt 0 8pt; break-inside: avoid; }
+.two { columns: 2; column-gap: 12pt; }
+.two > * { break-inside: avoid; }
+svg text { font-family: "Segoe UI", Arial, sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- ============================ ОБЛОЖКА ============================ -->
+<section class="cover">
+  <div class="top">
+    <div class="brand">
+      <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 9c3-3 6 3 9 0s6 3 9 0M3 15c3-3 6 3 9 0s6 3 9 0" stroke="#d9f24a" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></div>
+      <div><div class="name">AquaFlow</div><div class="muted small">КосмоХакатон 2026 · кейс «Детектирование и оценка концентрации макропластика в морских акваториях»</div></div>
+    </div>
+    <h1 class="title">Техническая документация</h1>
+    <div class="sub">Как устроено решение, что проверено и чем, и где эксперту найти подтверждение каждого критерия оценки</div>
+    <p class="lead">AquaFlow — веб-сервис для специалиста по экологическому мониторингу. По снимкам Sentinel-2 он находит зоны вероятного скопления плавающего мусора, показывает полевые измерения из реестра кейса и модельную концентрацию в шт./км² с интервалом и статусом доверия, выгружает результаты в GeoJSON, CSV и PDF и повторяет сохранённый запрос с проверкой sha256.</p>
+    <table class="kv">
+      <tr><td>Репозиторий</td><td>GitHub: <a href="https://github.com/Serfetto/kosmofinal">github.com/Serfetto/kosmofinal</a> · GitVerse: <code>gitverse.ru/hackrus.experts/kosmo-moskva_aboba_40</code></td></tr>
+      <tr><td>Запуск</td><td><code>docker compose up -d --build</code> → <a href="http://localhost:8000">http://localhost:8000</a> (подробно — раздел 9)</td></tr>
+      <tr><td>Проверка за минуту</td><td><code>python -m pipeline.verify</code> — sha256 весов и выборок, пересчёт всех метрик из сохранённых предсказаний</td></tr>
+      <tr><td>Редакция</td><td>26.09.2026; критерии и постановка — в редакции организаторов от 23.09.2026</td></tr>
+    </table>
+    <div class="box teal" style="margin-top:14pt">
+      <h4>Как устроен документ</h4>
+      <table class="kv" style="margin:0; font-size:8.8pt; background:transparent">
+        <tr><td>Раздел 1</td><td>чек-лист по 11 критериям оценки: у каждого требования — отметка, что сделано, где лежит в репозитории и интерфейсе и как это проверить</td></tr>
+        <tr><td>Разделы 2–8</td><td>как работает решение: данные, реестр пар, детектор, концентрация, веб-сервис, дополнительные функции</td></tr>
+        <tr><td>Раздел 9</td><td>запуск, пересчёт метрик, тесты, ресурсы</td></tr>
+        <tr><td>Разделы 10–11</td><td>ограничения и компромиссы; ответы на вопросы, которые возникают при разборе</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="band">
+    <div><b>F1 0,80</b><span>детектор на MARIDA test (IoU 0,67) против 0,02–0,04 у базовых</span></div>
+    <div><b>935 → 220</b><span>строк реестра вошли в профили; у каждой из 935 — решение и причина</span></div>
+    <div><b>шт./км²</b><span>концентрация с 80/95% интервалом и статусом, два профиля</span></div>
+    <div><b>125 ✓</b><span>проверок pytest проходят; метрики пересчитываются из предсказаний</span></div>
+  </div>
+</section>
+
+<!-- ============================ СОДЕРЖАНИЕ ============================ -->
+<section class="chapter">
+  <h1>Содержание</h1>
+  <nav class="toc" id="toc">
+    <a class="l1" href="#s0" data-ref="s0"><span class="t">0. Как пользоваться документом</span><span class="p"></span></a>
+    <a class="l1" href="#s1" data-ref="s1"><span class="t">1. Критерии КосмоХакатона: что выполнено и где это найти</span><span class="p"></span></a>
+    <a class="l2" href="#s1-1" data-ref="s1-1"><span class="t">1.1. Сводная таблица по 11 критериям</span><span class="p"></span></a>
+    <a class="l2" href="#c-o1" data-ref="c-o1"><span class="t">О1–О6. Отраслевые критерии</span><span class="p"></span></a>
+    <a class="l2" href="#c-t1" data-ref="c-t1"><span class="t">Т1–Т5. Технические критерии</span><span class="p"></span></a>
+    <a class="l2" href="#s1-3" data-ref="s1-3"><span class="t">1.3. Обязательные элементы постановки и материалы для сдачи</span><span class="p"></span></a>
+    <a class="l2" href="#s1-4" data-ref="s1-4"><span class="t">1.4. Как перепроверить любой расчёт, не меняя код</span><span class="p"></span></a>
+    <a class="l1" href="#s2" data-ref="s2"><span class="t">2. Решение в целом</span><span class="p"></span></a>
+    <a class="l1" href="#s3" data-ref="s3"><span class="t">3. Данные: полевой реестр, отбор, открытые наборы</span><span class="p"></span></a>
+    <a class="l1" href="#s4" data-ref="s4"><span class="t">4. Реестр пар «событие ↔ снимок»</span><span class="p"></span></a>
+    <a class="l1" href="#s5" data-ref="s5"><span class="t">5. Детектор скоплений</span><span class="p"></span></a>
+    <a class="l1" href="#s6" data-ref="s6"><span class="t">6. Концентрация в шт./км²</span><span class="p"></span></a>
+    <a class="l1" href="#s7" data-ref="s7"><span class="t">7. Веб-сервис: карта, API, выгрузка</span><span class="p"></span></a>
+    <a class="l1" href="#s8" data-ref="s8"><span class="t">8. Дополнительные функции</span><span class="p"></span></a>
+    <a class="l1" href="#s9" data-ref="s9"><span class="t">9. Запуск и воспроизводимость</span><span class="p"></span></a>
+    <a class="l1" href="#s10" data-ref="s10"><span class="t">10. Ограничения, компромиссы и развитие</span><span class="p"></span></a>
+    <a class="l1" href="#s11" data-ref="s11"><span class="t">11. Вопросы и ответы</span><span class="p"></span></a>
+    <a class="l1" href="#s12" data-ref="s12"><span class="t">Приложения: структура репозитория, коды, статусы, колонки выгрузки, глоссарий</span><span class="p"></span></a>
+  </nav>
+</section>
+
+<!-- ============================ 0 ============================ -->
+<section class="chapter" id="s0">
+  <h1><span class="num">0</span>Как пользоваться документом</h1>
+  <p>Документ написан для экспертов КосмоХакатона и для всех, кто будет проверять или развивать AquaFlow. Раздел 1 — чек-лист по критериям оценки: у каждого критерия отмечено, что сделано, где это лежит в репозитории и интерфейсе и какой командой или какими кликами это проверить. Разделы 2–10 объясняют, как работает решение, раздел 11 отвечает на вопросы, которые чаще всего возникают при разборе.</p>
+
+  <h3>Три способа проверить любое утверждение</h3>
+  <table>
+    <thead><tr><th style="width:18%">Способ</th><th>Что даёт</th><th style="width:34%">С чего начать</th></tr></thead>
+    <tbody>
+      <tr><td><b>Интерфейс</b></td><td>Карта с выбором акватории и даты, карточки зоны, гекса и полевого измерения с расчётом по шагам, выгрузка, панель «Методика» с формулами и метриками</td><td><a href="http://localhost:8000/?aoi=batumi&amp;date=2024-06-05&amp;profile=B">localhost:8000/?aoi=batumi&amp;date=2024-06-05&amp;profile=B</a></td></tr>
+      <tr><td><b>API</b></td><td>37 ручек с описанием и примерами; всё, что видно в интерфейсе, приходит из них</td><td><code>/api/docs</code> (Swagger), <code>docs/api.md</code></td></tr>
+      <tr><td><b>Команды</b></td><td>Пересчёт метрик из сохранённых предсказаний, сквозной пересчёт, тесты, разбор одного расчёта</td><td><code>python -m pipeline.verify</code>, <code>python -m pytest -q</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box teal">
+    <h4>Проверка за 10 минут</h4>
+    <ol>
+      <li><code>docker compose up -d --build</code>, открыть <code>http://localhost:8000</code>. Снимки и модели уже лежат в репозитории, скачивать ничего не нужно.</li>
+      <li>Выбрать акваторию «Батуми — Кобулети», дату 05.06.2024. Это проверочная акватория: на одной карте снимок, зоны детекции, полевые полосы DOORS и модельная концентрация.</li>
+      <li>Открыть «Сводка» → нажать на полевое измерение T18 → увидеть C = N/A, источник, флаги качества. Нажать на гекс рядом → концентрация с интервалами, статус и «Расчёт по шагам».</li>
+      <li>В «Сводке» нажать «Зоны CSV» и «Сохранить», затем «Повторить»: sha256 результата совпадёт.</li>
+      <li>В терминале: <code>python -m pipeline.verify</code> — все метрики детектора и концентрации пересчитаются из сохранённых эталонов и предсказаний за секунды.</li>
+    </ol>
+  </div>
+
+  <h3>Обозначения</h3>
+  <table>
+    <tbody>
+      <tr><td style="width:18%"><span class="tag ok">✓ выполнено</span></td><td>Требование закрыто, есть код, данные и способ проверки</td></tr>
+      <tr><td><span class="tag part">◐ частично</span></td><td>Сделано не полностью; что именно не сделано и почему — написано рядом</td></tr>
+      <tr><td><code>path/to/file</code></td><td>Путь от корня репозитория</td></tr>
+      <tr><td><b>Интерфейс → …</b></td><td>Где найти в веб-карте: кнопка, вкладка, карточка</td></tr>
+    </tbody>
+  </table>
+  <p class="muted small">Все числа в документе взяты из файлов репозитория (<code>docs/summary.md</code>, <code>data/eval/</code>, <code>data/models/</code>) на момент сборки документа и совпадают с выводом <code>python -m pipeline.verify</code>.</p>
+</section>
+
+<!-- ============================ 1 ============================ -->
+<section class="chapter" id="s1">
+  <h1><span class="num">1</span>Критерии КосмоХакатона: что выполнено и где это найти</h1>
+  <p>Максимум — 105 баллов: 55 отраслевых (О1–О6) и 50 технических (Т1–Т5). Ниже для каждого критерия: формулировка организаторов, построчно — что сделано и где лежит, и как это проверить.</p>
+
+  <h2 id="s1-1">1.1. Сводная таблица</h2>
+  <table class="scoreboard">
+    <thead><tr><th>Код</th><th>Критерий и главное доказательство</th><th>Баллы</th><th>Статус</th></tr></thead>
+    <tbody>
+      <tr><td>О1</td><td><b>Корректность предметной постановки.</b> Два профиля целевой величины (пластик ≳2 см и весь мусор ≳2,5 см, шт./км²), решение по каждой из 935 строк реестра, измерения и оценки различаются в данных и на карте</td><td>0–15</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>О2</td><td><b>Достоверность количественных выводов.</b> C = N/A с ДИ Гарвуда, модели A и B с формулами, отложенная выборка и вложенная CV против медианы и IDW, 80/95% интервалы, статусы применимости, проверка переноса</td><td>0–15</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>О3</td><td><b>Обоснованность зон.</b> Разбор ложных срабатываний по классам фона (MARIDA, MADOS), галерея ошибок, фильтры против пены, блика, судов, облаков; разбор отбраковки по каждому снимку в интерфейсе</td><td>0–10</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>О4</td><td><b>Польза веб-карты.</b> Акватория и дата, 9 показателей карты, 11 слоёв, легенда с единицами, профилем, датами, источником и версией модели, фильтры статусов, выгрузка GeoJSON/CSV/PDF</td><td>0–5</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>О5</td><td><b>Аргументация и защита.</b> Отчёт с методом, вкладом, решениями, ошибками и компромиссами (<code>docs/report.md</code>), раздел 11 этого документа — ответы на типовые вопросы</td><td>0–5</td><td><span class="tag ok">✓ материалы</span></td></tr>
+      <tr><td>О6</td><td><b>Дополнительные функции.</b> Прогноз дрейфа на 72 ч с проверкой на парах снимков, дрейф без снимка по реанализам, зоны схождения течений, маршрут судна, сравнение участков, тренды, PDF-отчёт, сведение модели с измерениями</td><td>0–5</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>Т1</td><td><b>Подготовка и синхронизация данных.</b> Отбор в коде по <code>configs/profiles.yaml</code>, реестр 251 пары «событие ↔ снимок» с причинами, сдвигами, геометрией и масками качества, пересборка без сети</td><td>0–10</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>Т2</td><td><b>Алгоритм детектирования.</b> P/R/F1/IoU на MARIDA test, два базовых алгоритма на той же выборке, порог зафиксирован заранее, сохранённые предсказания и эталон, проверка на сложном фоне MADOS</td><td>0–15</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>Т3</td><td><b>Алгоритм оценки концентрации.</b> Код шт./км², контрольные примеры из постановки в тестах, MAE, RMSE и лог-ошибка с ДИ против базовых на тех же событиях, эталоны и предсказания в репозитории</td><td>0–15</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>Т4</td><td><b>Эксперименты и воспроизводимость.</b> Веса, выборки, эталоны и предсказания в репозитории с sha256, <code>requirements.lock</code>, составы выборок с ID событий и сцен, тесты на утечки</td><td>0–7</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+      <tr><td>Т5</td><td><b>Интеграция прототипа.</b> Docker, сохранённый запрос с проверкой sha256, одинаковые числа в алгоритмах, интерфейсе и выгрузке (тесты), 404/422/503 вместо падений</td><td>0–3</td><td><span class="tag ok">✓ выполнено</span></td></tr>
+    </tbody>
+  </table>
+  <div class="box amber">
+    <h4>Что сделано не полностью (честно)</h4>
+    <ul>
+      <li><b>Перенос численной оценки на снимки не подтверждён.</b> На 9 принятых парах связи детекций с полевой плотностью нет (ρ = −0,23, p = 0,56). Поэтому концентрация в сервисе — модель по полевым данным, а снимок показывает, где искать скопления. Постановка это допускает («раздельная проверка детектора и количественной модели»).</li>
+      <li><b>Профиль B на отложенной выборке уступает медиане</b> (MAE 231 против 132 шт./км², 7 событий в 3 группах). На вложенной CV он не хуже базовых. Мы не подгоняли модель под отложенную выборку и показываем точку только вместе с интервалом и статусом (раздел 6.5).</li>
+      <li><b>Локальной разметки наших вод нет.</b> Набор из 120 зон и 60 контрольных точек подготовлен (<code>python -m pipeline.review sample</code>), но не размечен. Детектор проверен на MARIDA и MADOS, на наших снимках — разбором отдельных случаев.</li>
+      <li><b>Презентация.</b> Есть план слайдов с цифрами и картинками (<code>docs/slides.md</code>); отчёт готов (<code>docs/report.md</code>).</li>
+    </ul>
+  </div>
+
+  <h2 id="s1-2">1.2. Критерии по отдельности</h2>
+
+  <!-- О1 -->
+  <div class="crit" id="c-o1">
+    <div class="crit-head"><span class="code">О1</span><h3>Корректность предметной постановки</h3><span class="pts">0–15 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Чёткое определение целевой величины, материала, размерного класса и единиц концентрации. Обоснованность выбора и совместимости наблюдений, различение пластика, общего мусора и отдельных категорий. Соответствие выводов области применения; различение измерений и модельных оценок.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Целевая величина, материал, размер, единица</td><td>Два профиля в <code>configs/profiles.yaml</code>. <b>A</b> — плавающий пластик, включая вспененный, &gt;2 см, судовой визуальный учёт в полосе 10 м, шт./км² (S2, Саргассово море, 63 события). <b>B</b> — весь плавающий макромусор &gt;2,5 см, не только пластик, шт./км² (S4, Чёрное море, 33 события). Профиль C (трал 5–50 см, S1) описан, но модель для него не строилась. Интерфейс → «Сводка» → карточка «Целевая величина»; «Методика» → «Целевая величина».</td></tr>
+        <tr><td class="chk">✓</td><td>Совместимость наблюдений, включения и исключения</td><td>Строка попадает в профиль, только если совпадают <code>record_type</code>, <code>target_scope</code> и <code>measurement_profile</code>; строки с флагом <code>source_total_vs_object_count_conflict</code> исключены всегда. Решение и код причины по каждой из 935 строк — <code>data/field/selection.csv</code>. Вошли 220 строк; исключены 362 (категория — подсовокупность), 337 (объектная запись — не метка), 16 (аэросъёмка S1 &gt;50 см без подтверждения). Раздел 3.1.</td></tr>
+        <tr><td class="chk">✓</td><td>Пластик ≠ общий мусор ≠ категория ≠ предмет</td><td>Профиль B подписан «не только пластик» везде: в интерфейсе, выгрузке и отчёте. Долю пластика из публикации к событиям не применяем. S3 (Северное море, порог 2 см) в обучение B не входит — только проверка переноса. Отдельные предметы (337 строк) показаны отдельным контекстным слоем, а не как метка. Тест <code>test_scopes_not_mixed</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Ловушки данных учтены в коде</td><td>Пустое поле — «неизвестно», а не 0; переход трансекты через полночь (15 событий S1); дата без времени (S4) — интервал в сутки, а не 00:00; 4 прерванные трансекты S2 восстановлены сегментами из PANGAEA 931834. Тесты <code>tests/test_field.py</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Выводы соответствуют области применения</td><td>У каждой оценки статус: «модельная оценка» (≤60 км от обучающих событий, тот же сезон, признаки в диапазоне), «исследовательская оценка» (перенос не подтверждён, с перечнем причин) или «концентрация недоступна» (другой бассейн, пресные воды). Раздел 6.7.</td></tr>
+        <tr><td class="chk">✓</td><td>Измерение ≠ модельная оценка</td><td>В данных — поле <code>value_type</code> (<code>measurement</code> / <code>model_estimate</code> / <code>research_estimate</code> / <code>unavailable</code>). На карте: полевое измерение — полоса или кружок с белой обводкой, модельная оценка — заливка гекса, исследовательская — жёлтый пунктир, зона детекции — красный контур с площадью в м², не в шт./км².</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+<pre><span class="c"># заново отбирает 935 строк → data/field/selection.csv, events.csv</span>
+python -m pipeline.field prepare
+<span class="c"># C = N/A, ДИ, площадь прерванной трансекты по сегментам</span>
+python -m pipeline.field explain S2:MSM41_litter-T18
+python -m pytest -q tests/test_field.py</pre>
+      <p>Интерфейс → «Данные кейса» — источники S1–S4, сколько событий на карте и какие снимки нашлись; карточка любого измерения показывает строки реестра события и решение по ним.</p>
+    </div>
+  </div>
+
+  <!-- О2 -->
+  <div class="crit" id="c-o2">
+    <div class="crit-head"><span class="code">О2</span><h3>Достоверность количественных выводов</h3><span class="pts">0–15 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Обоснованность численной концентрации в физических единицах, прозрачность расчёта и его допущений. Подтверждение выводов независимой проверкой, оценка неопределённости с помощью интервалов или сценариев. Корректное описание условий применения и ограничений переноса результатов на другие участки и спутниковые снимки.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Концентрация в физических единицах</td><td>Полевая: C = N / A, шт./км², точный 95% ДИ Гарвуда (<code>pipeline/measure.py</code>). Модельная: профиль A — отрицательно-биномиальная GLM числа предметов со смещением log A; профиль B — ридж-регрессия log(C + 1). Площадь маски детектора в шт./км² не переводится.</td></tr>
+        <tr><td class="chk">✓</td><td>Прозрачность расчёта</td><td>Формулы с текущими коэффициентами — «Методика» и <code>docs/models.md</code>. В карточке гекса — «Расчёт по шагам»: признаки, подстановка, интервал. Командой: <code>python -m pipeline.concentration explain B 39.72 43.55 2025-07-18T08:10</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Независимая проверка</td><td>Разбиение по группам зависимых событий зафиксировано до экспериментов; отложенная выборка (A: 13 событий, 6 групп; B: 7 событий, 3 группы) не участвовала ни в каком выборе. Вложенная CV как честная оценка всей процедуры. Базовые — медиана и IDW на тех же событиях. 95% ДИ MAE — групповой бутстреп.</td></tr>
+        <tr><td class="chk">✓</td><td>Неопределённость</td><td>Сплит-конформные 80% и 95% интервалы в лог-шкале по внефолдовым остаткам; покрытие на отложенной: A — 77% и 92%, B — 71% и 86%. У полевого измерения — ДИ Гарвуда. Сведение модели с измерениями рядом сужает интервал (раздел 6.9).</td></tr>
+        <tr><td class="chk">✓</td><td>Ограничения переноса на другие участки</td><td>Проверено обучение на S4 → применение к S3 (Северное море): модели завышают в 6–11 раз, перенос не работает — отсюда статусы применимости. <code>data/eval/concentration/B_transfer_predictions.csv</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Ограничения переноса на спутниковые снимки</td><td>Реестр пар и эксперимент «детекции в следе ↔ полевая плотность» на 9 принятых парах: ρ = −0,23 (p = 0,56), связи нет (<code>data/eval/transfer.json</code>). Физическое объяснение: 1000 шт./км² по 0,01 м² — это 10 м² на км², десятая часть одного пикселя. Вывод явно записан в отчёте и в интерфейсе.</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+<pre><span class="c"># MAE, RMSE, лог-ошибка и 95% ДИ из A/B_predictions.csv — за секунды</span>
+python -m pipeline.verify
+<span class="c"># заново: CV, вложенная CV, отложенная выборка, перенос</span>
+python -m pipeline.concentration evaluate</pre>
+      <p>Интерфейс → клик по любому гексу: значение, 80% и 95% интервалы, статус и его причины, «Расчёт по шагам», «Сведение с полевыми измерениями». «Методика» → «Проверка» — таблицы метрик с базовыми.</p>
+    </div>
+  </div>
+
+  <!-- О3 -->
+  <div class="crit" id="c-o3">
+    <div class="crit-head"><span class="code">О3</span><h3>Обоснованность зон загрязнения</h3><span class="pts">0–10 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Соответствие выделенных зон признакам возможного скопления макропластика. Разбор удачных и ошибочных обнаружений, различение пластика и сложного морского фона: водорослей, пены, судов, мутной воды и бликов. Подтверждение выводов снимками, масками и наблюдениями; понимание границ их достоверности.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Зоны соответствуют признакам скопления</td><td>Зона — связная группа пикселей, где XGBoost дал P(мусор) ≥ 0,5 и пройдены все фильтры. У зоны: площадь, эквивалентное покрытие мусором в м², число пикселей, средняя и максимальная P, условия съёмки, ближайшее полевое измерение (<code>pipeline/aggregate.py</code>).</td></tr>
+        <tr><td class="chk">✓</td><td>Различение мусора и сложного фона</td><td>Модель различает 6 групп: мусор, органика (саргассум, водоросли), суда, облака, вода (включая мутную и мелководье), пена/волны/кильватер. Фильтры: спектральный тест против пены, требование соседей, CFAR 5σ против блика и ряби, буфер 100 м от облаков, 400 м от судов, 300 м ото льда, постоянные объекты по ряду снимков, шторм ≥8 м/с и блик &gt;30% воды.</td></tr>
+        <tr><td class="chk">✓</td><td>Разбор удачных и ошибочных обнаружений</td><td>Ложные срабатывания по классам фона на MARIDA test (органика 26%, прочая вода 4,3%, суда 1,6%, волны 0,9%); галерея худших FP и FN — <code>data/eval/detector/gallery.png</code>; разбор по патчам — <code>errors.csv</code>. На новых сценах MADOS: слизь 45,5%, медузы 37,6%, нефть 0,65%. Наши снимки: края облаков (Батуми T21), блик (Батуми 30.06.2024), цветение (Куйбышевское), мазут (Керчь). Разделы 5.7–5.8, <code>docs/mados.md</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Подтверждение снимками, масками, наблюдениями</td><td>Снимок, маска качества (10 причин непригодности пикселя), слой «Классы модели» до порога и фильтров, блок «Мусор, а не пена, волны или суда» с отбраковкой по каждому снимку, в карточке зоны — «Почему это мусор» по каждому фильтру. Полевые полосы DOORS на тех же снимках (акватории Батуми и S4).</td></tr>
+        <tr><td class="chk">✓</td><td>Границы достоверности</td><td>Зона — «вероятное скопление»; видны полосы, закрывающие ≳20–30% пикселя, а не отдельные предметы. Слизь, медузы, плавник и эмульсии спектрально похожи на мусор — в карточке зоны это написано. Проверка на регионе вне обучения: F1 от 0 до 0,91, в среднем 0,52.</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+      <ol>
+        <li>Интерфейс → Керченский пролив, 03.06.2025 → «Слои» → включить «Классы модели» и «Маска качества»: видно, какие пиксели модель отнесла к органике, пене, судам, и почему часть снимка исключена.</li>
+        <li>«Сводка» → блок «Мусор, а не пена, волны или суда»: сколько кандидатов отсеяно каждым фильтром на этом снимке. То же — <code>GET /api/aois/{aoi}/{date}/separation</code>.</li>
+        <li>Клик по зоне → раздел «Почему это мусор, а не пена, волна, судно или водоросли».</li>
+        <li>Файлы: <code>data/eval/detector/metrics.json</code>, <code>errors.csv</code>, <code>gallery.png</code>, <code>mados.json</code>, <code>leave_region_out.json</code>.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- О4 -->
+  <div class="crit" id="c-o4">
+    <div class="crit-head"><span class="code">О4</span><h3>Польза веб-карты</h3><span class="pts">0–5 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Понятность карты для специалиста по экологическому мониторингу: выбор акватории и даты, сравнение показателей, поиск участков для обследования. Наличие единиц, источников, размерного профиля, сведений о качестве и статусе результата. Различение измерений и оценок, доступность выгрузки.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Выбор акватории и даты</td><td>Верхняя панель: список из 18 акваторий (мониторинг и районы полевых данных), даты снимков стрелками ← → или кликом по графику динамики.</td></tr>
+        <tr><td class="chk">✓</td><td>Сравнение показателей</td><td>«Показатель карты»: концентрация, статус, качество, покрытие, среднее, устойчивость, тренд, скопление, прогноз. Инструмент «Сравнить»: два обведённых участка — концентрация, покрытие, доля снимков с мусором, тренд.</td></tr>
+        <tr><td class="chk">✓</td><td>Поиск участков для обследования</td><td>«Приоритетные зоны» в «Сводке», режим «Устойчивость» (где мусор возвращается), «Маршрут» из порта с поправкой на дрейф, PDF-отчёт с координатами и ориентирами крупнейших зон.</td></tr>
+        <tr><td class="chk">✓</td><td>Единицы, источники, профиль, версия</td><td>Легенда: шт./км² и м²/км², размерный класс профиля, дата снимка и период измерений, источник (Sentinel-2 L2A, полевой реестр), версия модели и порог детектора.</td></tr>
+        <tr><td class="chk">✓</td><td>Качество и статус</td><td>Сведения о сцене (время пролёта, облачность, видимая вода, блик, ветер, состояние моря), слой «Маска качества», статусы детекции и концентрации, фильтры по ним.</td></tr>
+        <tr><td class="chk">✓</td><td>Измерения ≠ оценки; выгрузка</td><td>Разные обозначения (О1). Выгрузка зон и гексов в GeoJSON и CSV, PDF-отчёт, сохранение и повтор запроса.</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+      <p>Раздел 7.1 — сценарий по скриншотам. Открыть <code>http://localhost:8000/?aoi=sochi&amp;date=2026-09-11&amp;profile=B</code>, пройти: «Сводка» → зона из «Приоритетных» → «Зоны CSV» → «Маршрут» → «Построить маршрут».</p>
+    </div>
+  </div>
+
+  <!-- О5 -->
+  <div class="crit" id="c-o5">
+    <div class="crit-head"><span class="code">О5</span><h3>Аргументация и защита</h3><span class="pts">0–5 баллов</span><span class="tag ok">✓ материалы готовы</span></div>
+    <div class="crit-req">Ясное объяснение метода, собственного вклада команды и ключевых решений на основе результатов экспериментов. Содержательные ответы на вопросы, разбор ошибок и компромиссов. Понимание ограничений решения и обоснованность предложений по его развитию.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Метод и ключевые решения на основе экспериментов</td><td><code>docs/report.md</code> §1–8; раздел 2 и разделы 5–6 здесь. Решения опираются на эксперименты: почему концентрация не со снимка (реестр пар), почему XGBoost, а не пороги (F1 0,80 против 0,02), почему детектор не дообучен на MADOS (<code>docs/mados.md</code>), почему модели концентрации простые (объём данных, вложенная CV).</td></tr>
+        <tr><td class="chk">✓</td><td>Вклад команды</td><td><code>docs/report.md</code> §10: профили и отбор по 935 строкам, реестр пар, групповое разбиение и тесты утечек, модели с интервалами и областью применимости, нормализация фона и фильтры, проверка MADOS, статусы и маска качества, веб-карта, проверка дрейфа.</td></tr>
+        <tr><td class="chk">✓</td><td>Ошибки, компромиссы, ограничения, развитие</td><td><code>docs/report.md</code> §9, §11; разделы 10 и 11 здесь.</td></tr>
+        <tr><td class="half">◐</td><td>Презентация</td><td>План из 10 слайдов с цифрами и картинками — <code>docs/slides.md</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- О6 -->
+  <div class="crit" id="c-o6">
+    <div class="crit-head"><span class="code">О6</span><h3>Реализация дополнительных функций</h3><span class="pts">0–5 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Практическая польза функций сверх обязательной части: пользовательская потребность, связь с основным сценарием, подтверждение пользы примером или сравнением. Прогноз представляется отдельно от наблюдений; его проверка — без будущих данных.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Функция</th><th>Потребность, связь со сценарием, подтверждение</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Прогноз дрейфа на 72 ч</td><td>Куда унесёт найденное скопление к выходу судна. Лагранжев ансамбль: течения SMOC + 1–3% ветра ERA5, выброс на берег. <b>Проверен без будущих данных</b> на 7 парах соседних снимков: медиана расстояния до новых детекций 3,0 км против 1,4 км у гипотезы «пятно на месте» — поэтому прогноз помечен как справочный (<code>data/eval/drift_check.json</code>).</td></tr>
+        <tr><td class="chk">✓</td><td>Дрейф без снимка</td><td>Для полевых событий 2014–2016 гг. (S1–S3), над которыми снимков нет: реанализы Copernicus Marine (GLORYS12, NWS, волны, ветер). Кнопка «Рассчитать дрейф на 72 ч» в карточке измерения, <code>GET /api/drift</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Маршрут обследования</td><td>Куда отправить судно для подтверждения: остановки у крупнейших скоплений с поправкой на дрейф к моменту прибытия, длина маршрута, время, доля покрытия.</td></tr>
+        <tr><td class="chk">✓</td><td>Зоны схождения течений</td><td>Показатель «Скопление»: во сколько раз вырастет плотность равномерно засеянных частиц за 72 ч — где течения собирают мусор.</td></tr>
+        <tr><td class="chk">✓</td><td>Анализ во времени и сравнение</td><td>Показатели «Среднее», «Устойчивость», «Тренд» по ряду снимков; инструмент «Сравнить» для двух участков.</td></tr>
+        <tr><td class="chk">✓</td><td>Сведение модели с измерениями</td><td>Регрессионный кригинг остатков: рядом с полевым измерением оценка опирается на него. На отложенной выборке B с соседями MAE 185 против 231 у модели (раздел 6.9).</td></tr>
+        <tr><td class="chk">✓</td><td>PDF-отчёт по снимку</td><td>Для выхода в море: карта районов скопления, таблица зон с координатами и ориентирами, графики, методика. <code>GET /api/report</code>.</td></tr>
+      </tbody>
+    </table>
+    <div class="how"><h4>Как проверить</h4><p>Раздел 8. Прогнозы на карте всегда подписаны «Прогноз, не наблюдение» и рисуются отдельным цветом.</p></div>
+  </div>
+
+  <!-- Т1 -->
+  <div class="crit" id="c-t1">
+    <div class="crit-head"><span class="code">Т1</span><h3>Подготовка и синхронизация данных</h3><span class="pts">0–10 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Реализованный в коде отбор наблюдений и спутниковых сцен: фильтры материала и размера, единицы, координаты, геометрия, временные сдвиги и маски качества. Параметры отбора заданы в конфигурации. Повторный запуск подготовки формирует реестр принятых и отклонённых пар с идентификаторами, источниками и причинами решений; записи согласованы с исходными данными.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Отбор наблюдений в коде, параметры в конфигурации</td><td><code>pipeline/field.py</code> по <code>configs/profiles.yaml</code>: тип записи, совокупность, протокол (материал и порог размера), исключающие флаги. Перед обработкой — проверка контракта реестра (935 строк, 56 полей, 318 событий, уникальный <code>sample_id</code>).</td></tr>
+        <tr><td class="chk">✓</td><td>Единицы, координаты, геометрия</td><td>C пересчитывается как N / A и сверяется с опубликованной (расхождение &gt;1% останавливает обработку). Геометрия: 183 полосы, 4 прерванные трансекты сегментами, 33 точки S4 с радиусом 3 км. Все координаты — WGS 84.</td></tr>
+        <tr><td class="chk">✓</td><td>Отбор сцен, временные сдвиги</td><td><code>pipeline/pairs.py</code> по <code>configs/pairs.yaml</code>: Sentinel-2 L2A из STAC Planetary Computer, окно ±1 сут., сдвиг хранится интервалом [dt_min, dt_max]; ярусы синхронизации: A ≤3 ч, B ≤18 ч, иначе «недостоверная синхронизация». Дрейфовый буфер = max|dt| × (0,3 м/с + 2% ветра ERA5).</td></tr>
+        <tr><td class="chk">✓</td><td>Маски качества</td><td>По следу события с буфером, а не по центральному пикселю: покрытие ≥90%, доля чистой воды по SCL ≥50%, медиана B11 по воде ≤0,03 (иначе блик). Пригодность пикселя и принадлежность классу мусора проверяются раздельно.</td></tr>
+        <tr><td class="chk">✓</td><td>Реестр принятых и отклонённых пар</td><td><code>data/registry/pairs.csv</code>: 251 строка по 220 событиям и 89 сценам-кандидатам. В строке: <code>pair_id</code>, <code>event_id</code>, <code>sample_ids</code>, источник, <code>scene_id</code>, время съёмки, сдвиги, ярус, буфер, <code>footprint_wkt</code>, покрытие, доля чистой воды, облака, суша, блик, решение, код и текст причины, хеш конфига. Отдельно фиксируются NO_SCENE, INSUFFICIENT_COVERAGE, UNUSABLE_PIXELS, UNRELIABLE_SYNC (приложение Б).</td></tr>
+        <tr><td class="chk">✓</td><td>Повторный запуск согласован с исходными данными</td><td>Ответы STAC и измерения качества кешируются в <code>data/registry/cache/</code>: <code>python -m pipeline.pairs build --offline</code> пересобирает тот же реестр без сети; sha256 <code>pairs.csv</code> и <code>selection.csv</code> — в <code>data/models/MANIFEST.json</code>.</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+<pre>python -m pipeline.field prepare && python -m pipeline.pairs build --offline
+<span class="c"># пусто — реестр воспроизвёлся</span>
+git diff --stat data/field data/registry
+curl "http://localhost:8000/api/pairs?format=csv"</pre>
+    </div>
+  </div>
+
+  <!-- Т2 -->
+  <div class="crit" id="c-t2">
+    <div class="crit-head"><span class="code">Т2</span><h3>Алгоритм детектирования</h3><span class="pts">0–15 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Запускаемый алгоритм формирует зоны или маски из входных снимков. Качество подтверждается повторным расчётом precision, recall, F1 и, для масок, IoU по проверочной выборке с эталонной разметкой, описанием классов и источника меток. Базовый и основной алгоритмы сравниваются на одной выборке. Порог и настройки зафиксированы; сохранённые предсказания позволяют проверить ложные обнаружения, пропуски и результаты на сложном фоне.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Запускаемый алгоритм, зоны и маски</td><td><code>python -m pipeline.build run</code>: снимок → признаки → XGBoost → фильтры → маска детекций, зоны-полигоны, гексы H3, маска качества. Код — <code>pipeline/detect.py</code>, <code>pipeline/aggregate.py</code>; веса — <code>data/models/xgb.joblib</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>P, R, F1, IoU на размеченной выборке</td><td>MARIDA test, 15 сцен, 359 патчей: <b>P 0,778, R 0,829, F1 0,803 (95% ДИ по сценам 0,72–0,88), IoU 0,671</b>. Положительный класс — MARIDA «Marine Debris» (мусор любого материала), фон — классы 2–15, неразмеченные пиксели игнорируются.</td></tr>
+        <tr><td class="chk">✓</td><td>Базовый и основной на одной выборке</td><td>Пороги FDI и NDVI (F1 0,022) и наивный Байес на FDI+NDVI, как у Biermann et al. 2020 (F1 0,041), на тех же 359 патчах. Пороги базовых подобраны на val.</td></tr>
+        <tr><td class="chk">✓</td><td>Порог и настройки зафиксированы</td><td><code>p_det: 0.5</code> и все пороги фильтров — в <code>configs/detector.yaml</code>; порог задан до проверки на test (оптимум на val был 0,64). Тест <code>test_detector_threshold_fixed_before_test</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Сохранённые предсказания, ошибки, сложный фон</td><td><code>data/eval/detector/pred_test.npz</code> (предсказания) и <code>ref_test.npz</code> (эталон), <code>errors.csv</code> по патчам, <code>gallery.png</code>, FP по классам фона; внешняя проверка на 27 новых сценах MADOS test (<code>mados.json</code>), проверка на исключённом регионе (<code>leave_region_out.json</code>).</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+<pre><span class="c"># TP/FP/FN, P, R, F1, IoU заново из pred_test.npz и ref_test.npz — MARIDA не нужна</span>
+python -m pipeline.verify
+<span class="c"># полный пересчёт с базовыми (нужна MARIDA в data/raw/marida)</span>
+python -m pipeline.eval_detector</pre>
+    </div>
+  </div>
+
+  <!-- Т3 -->
+  <div class="crit" id="c-t3">
+    <div class="crit-head"><span class="code">Т3</span><h3>Алгоритм оценки концентрации</h3><span class="pts">0–15 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Код рассчитывает концентрацию в шт./км² для заявленного профиля; формулы, преобразования единиц и агрегация проверяются на контрольных примерах. Повторно вычисляются MAE и дополнительная метрика, сравнение с базовым решением на той же проверочной выборке. Доступны эталонные значения и предсказания. Индекс или площадь маски не заменяют концентрацию. Заявленный перенос на снимки подтверждается доступными данными и воспроизводимым экспериментом.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Код шт./км² для профиля</td><td><code>pipeline/measure.py</code> (C = N/A, ДИ, агрегация ΣN/ΣA), <code>pipeline/concentration.py</code> (модели A и B, интервалы, статусы).</td></tr>
+        <tr><td class="chk">✓</td><td>Контрольные примеры</td><td><code>tests/test_measure.py</code>: 12 предметов на 0,20 км² → 60 шт./км²; оценка 75 → абсолютная ошибка 15; площадь полосы 19,68 км × 10 м = 0,1968 км²; реальные строки S2 T1 и T4; ДИ Гарвуда для N = 4 на 0,2 км² — 5,45–51,2; агрегация участков — ΣN/ΣA, а не среднее концентраций.</td></tr>
+        <tr><td class="chk">✓</td><td>MAE и дополнительная метрика против базового</td><td>MAE, RMSE и ошибка в лог-шкале |ln(Ĉ+1) − ln(C+1)| для основной модели, медианы и IDW на одних и тех же событиях: CV, вложенная CV, отложенная выборка, перенос. MAPE не используется. Таблицы — раздел 6.5.</td></tr>
+        <tr><td class="chk">✓</td><td>Эталоны и предсказания доступны</td><td><code>data/eval/concentration/A_predictions.csv</code>, <code>B_predictions.csv</code> (<code>y_true</code>, <code>pred_&lt;модель&gt;</code>, часть выборки), <code>B_transfer_predictions.csv</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Площадь маски не заменяет концентрацию</td><td>Покрытие детектора (м², м²/км²) — отдельный вспомогательный показатель, в шт./км² не переводится. Тест <code>test_mask_share_is_not_concentration</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Перенос на снимки — воспроизводимым экспериментом</td><td><code>python -m pipeline.pairs transfer</code> → <code>data/eval/transfer.json</code>: перенос не подтверждён, и сервис его не заявляет.</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+<pre>python -m pytest -q tests/test_measure.py tests/test_metrics.py
+<span class="c"># таблица MAE / RMSE / лог-ошибка с ДИ для основной и базовых</span>
+python -m pipeline.verify</pre>
+    </div>
+  </div>
+
+  <!-- Т4 -->
+  <div class="crit" id="c-t4">
+    <div class="crit-head"><span class="code">Т4</span><h3>Эксперименты и воспроизводимость</h3><span class="pts">0–7 баллов</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">По README воспроизводятся запуск моделей и пересчёт метрик: доступна выборка, её эталонные ответы, необходимые веса, версии зависимостей и конфигурации; указаны команды и требования к ресурсам. Сохранены составы обучающей и проверочной выборок с идентификаторами событий и сцен. Код и разбиение позволяют проверить отсутствие пересечений зависимых записей и утечек целевых значений с учётом пространственных и временных групп.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Выборки, эталоны, веса в репозитории</td><td>Полевые эталоны (<code>data/field/events.csv</code>), эталон и предсказания MARIDA test (<code>ref_test.npz</code>, <code>pred_test.npz</code>), веса <code>xgb.joblib</code>, <code>conc_A/B.json</code>, <code>fusion_A/B.json</code>. sha256 всех — <code>data/models/MANIFEST.json</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Версии и конфигурации</td><td><code>requirements.lock</code> (точные версии, на которых получены метрики), <code>configs/*.yaml</code>; в каждом файле метрик и модели — коммит, хеши конфигов, версии пакетов.</td></tr>
+        <tr><td class="chk">✓</td><td>Команды и ресурсы</td><td>README → «Воспроизведение результатов»; раздел 9 здесь. Сервис ~1 ГБ RAM; <code>pipeline.reproduce</code> — 4 ГБ, несколько минут на CPU; полный пересчёт снимков — ~17 ГБ, ~45 мин на GPU, 16 ГБ RAM.</td></tr>
+        <tr><td class="chk">✓</td><td>Составы выборок с ID событий и сцен</td><td><code>data/splits/A.csv</code>, <code>B.csv</code> (событие, строка реестра, группа, фолд, отложено ли), <code>A_links.csv</code>, <code>B_links.csv</code> (почему события связаны), <code>data/splits/marida/{train,val,test}_X.txt</code>; сцены пар — <code>data/registry/pairs.csv</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Нет пересечений и утечек</td><td>Группа = связная компонента событий одного дня рейса, ближе 30 км и 3 сут. или с общей сценой; группа целиком в обучении или в отложенной выборке. Запрещённые предикторы (<code>items_count</code>, <code>parent_*</code>, <code>reported_*</code>, волнение, судовой ветер…) — в конфиге. Тесты <code>tests/test_leakage.py</code>, <code>tests/test_metrics.py</code>.</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+<pre>python -m pipeline.verify               <span class="c"># sha256 + пересчёт метрик</span>
+python -m pipeline.reproduce --offline  <span class="c"># сквозной пересчёт без сети</span>
+python -m pytest -q                     <span class="c"># 125 проверок</span></pre>
+    </div>
+  </div>
+
+  <!-- Т5 -->
+  <div class="crit" id="c-t5">
+    <div class="crit-head"><span class="code">Т5</span><h3>Интеграция прототипа</h3><span class="pts">0–3 балла</span><span class="tag ok">✓ выполнено</span></div>
+    <div class="crit-req">Запуск по инструкции и сохранённому примеру запроса воспроизводит сценарий: выбор акватории и даты, расчёт, отображение зон на вебкарте и выгрузка. Числа, единицы, геометрия и статусы согласованы между алгоритмами, интерфейсом и экспортом. Проверяемы обработка пустых данных, некорректных входов и ошибок; повторный запрос с теми же данными даёт согласованный результат.</div>
+    <table class="ev">
+      <thead><tr><th></th><th>Требование</th><th>Что сделано и где найти</th></tr></thead>
+      <tbody>
+        <tr><td class="chk">✓</td><td>Запуск по инструкции</td><td><code>docker compose up -d --build</code> или локально (<code>requirements.lock</code>, <code>npm ci &amp;&amp; npm run build</code>, <code>uvicorn backend.app:app</code>). Проверка — <code>GET /api/health</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Сохранённый пример запроса</td><td><code>data/queries/0a0b3aaaf8f9.json</code> — зоны «Батуми — Кобулети» на 05.06.2024, профиль B. Ссылка <code>/?aoi=batumi&amp;date=2024-06-05&amp;profile=B&amp;mode=conc&amp;q=0a0b3aaaf8f9</code> → «Повторить»; <code>POST /api/queries/0a0b3aaaf8f9/rerun</code> → <code>"match": true</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Согласованность алгоритм ↔ интерфейс ↔ экспорт</td><td>Интерфейс и выгрузка читают одни и те же файлы <code>data/web/</code>. Тесты: <code>test_export_matches_zones_and_units</code>, <code>test_zones_consistent_with_series</code>, <code>test_zones_flat_json</code>, <code>test_separation_matches_published_detections</code>.</td></tr>
+        <tr><td class="chk">✓</td><td>Пустые данные, некорректные входы, ошибки</td><td>Пустой результат — пустая коллекция; неверный параметр — 422 с разбором по полям; нет объекта — 404; отказ внешнего сервиса — 503 с <code>Retry-After</code>. Ни одна ручка не отвечает 500 на мусорный ввод (<code>tests/test_robustness.py</code>).</td></tr>
+        <tr><td class="chk">✓</td><td>Повторный запрос — тот же результат</td><td>Одинаковый запрос выгрузки даёт побайтно одинаковый файл, sha256 в заголовке <code>X-Result-SHA256</code>; при расхождении ответ показывает, какой конфиг или модель изменились. Тест <code>test_same_request_same_bytes</code>.</td></tr>
+      </tbody>
+    </table>
+    <div class="how">
+      <h4>Как проверить</h4>
+<pre><span class="c"># "match": true</span>
+curl -X POST http://localhost:8000/api/queries/0a0b3aaaf8f9/rerun
+<span class="c"># 404 с текстом по-русски; 422 с разбором поля date</span>
+curl -i "http://localhost:8000/api/aois/sochi/2000-01-01/zones"
+curl -i "http://localhost:8000/api/export?aoi=sochi&amp;date=13.09.2026"</pre>
+    </div>
+  </div>
+
+  <h2 id="s1-3">1.3. Обязательные элементы постановки и материалы для сдачи</h2>
+  <table>
+    <thead><tr><th style="width:4%"></th><th style="width:30%">Требование постановки</th><th>Где выполнено</th></tr></thead>
+    <tbody>
+      <tr><td class="chk">✓</td><td>Детектирование: зоны или маски с учётом морского фона</td><td>Раздел 5; зоны, маска детекций, маска качества, слой классов модели</td></tr>
+      <tr><td class="chk">✓</td><td>Концентрация в шт./км² для размерного класса и области применимости, с неопределённостью</td><td>Раздел 6; профили A и B, интервалы 80/95%, статусы</td></tr>
+      <tr><td class="chk">✓</td><td>Веб-карта: снимки, полевые наблюдения, зоны, оценки, качество, статусы, выгрузка</td><td>Раздел 7</td></tr>
+      <tr><td class="chk">✓</td><td>Проверка качества: отложенные данные, базовое решение, разбор ошибок, повторный расчёт</td><td>Разделы 5.7, 6.5, 9; <code>pipeline.verify</code></td></tr>
+      <tr><td class="chk">✓</td><td>Подбор снимков через публичный STAC; проекция, разрешение, радиометрия, сетка каналов</td><td>Planetary Computer STAC; сетка 10 м в зоне UTM акватории; сдвиг радиометрии −1000 для обработки ≥04.00; 20 и 60 м → 10 м билинейно, SCL — ближайшим соседом (раздел 5.1)</td></tr>
+      <tr><td class="chk">✓</td><td>Сопоставление на уровне <code>event_id</code> с учётом геометрии; прерванные трансекты по первоисточникам</td><td>Разделы 3.2 и 4</td></tr>
+      <tr><td class="chk">✓</td><td>Реестр кандидатов, принятых и отклонённых пар с причинами</td><td><code>data/registry/pairs.csv</code>, <code>GET /api/pairs</code></td></tr>
+      <tr><td class="chk">✓</td><td>Разбиение с учётом события, сцены, пространства и времени; порог без финальных меток</td><td>Разделы 6.2 и 5.4; <code>tests/test_leakage.py</code></td></tr>
+      <tr><td class="chk">✓</td><td>Исключение производных от ответа предикторов</td><td><code>forbidden_predictors</code> в <code>configs/concentration.yaml</code>; тест</td></tr>
+      <tr><td class="chk">✓</td><td>Отдельно указано, что проверено на полевых данных, разметке и парах</td><td>Раздел 6.10, <code>docs/report.md</code> §6, <code>GET /api/metrics</code> → <code>validated_where</code></td></tr>
+      <tr><td class="chk">✓</td><td>Статусы «обнаружено», «не обнаружено», «недостаточно данных», «исследовательская оценка»</td><td>Все четыре, плюс «модельная оценка» и «концентрация недоступна»; приложение В</td></tr>
+      <tr><td class="chk">✓</td><td>Легенда: единицы, размерный класс, даты снимка и измерения, источник, версия модели, маска качества; фильтры по дате и статусу</td><td>Раздел 7.2</td></tr>
+      <tr><td class="chk">✓</td><td>Выгрузка GeoJSON и CSV, повторный запуск сохранённого запроса</td><td>Раздел 7.4</td></tr>
+      <tr><td class="chk">✓</td><td>Работающий прототип</td><td>Docker, раздел 9.1</td></tr>
+      <tr><td class="chk">✓</td><td>Исходный код и README: окружение, версии, конфиги, команды, ресурсы, ключи без секретов</td><td><code>README.md</code>, <code>.env.example</code> (секретов в репозитории нет)</td></tr>
+      <tr><td class="chk">✓</td><td>Реестр данных и пар: источники и лицензии, строки, ID, сдвиги, геометрия, маски, разбиение, причины</td><td><code>docs/datasets.md</code>, <code>configs/datasets.yaml</code>, <code>data/field/selection.csv</code>, <code>data/registry/pairs.csv</code>, <code>data/splits/</code></td></tr>
+      <tr><td class="chk">✓</td><td>Результаты проверки: выборка с эталонами, веса, предсказания, базовые на том же разбиении</td><td><code>data/eval/</code>, <code>data/models/</code></td></tr>
+      <tr><td class="chk">✓</td><td>Краткий отчёт</td><td><code>docs/report.md</code></td></tr>
+      <tr><td class="half">◐</td><td>Презентация</td><td>План слайдов — <code>docs/slides.md</code></td></tr>
+      <tr><td class="chk">✓</td><td>Демонстрация: снимок с проверкой качества, детекция, карта; концентрация по полю, отложенная проверка; сложный случай</td><td>Сценарий — раздел 7.1; сложные случаи — Батуми 30.06.2024 (блик), Керчь (мазут), раздел 5.8</td></tr>
+      <tr><td class="chk">✓</td><td>Повторная проверка выбранного экспертом расчёта без изменения кода</td><td>Раздел 1.4</td></tr>
+      <tr><td class="chk">✓</td><td>Сдача через GitVerse (проект до 2 ГБ — целиком)</td><td>Файлы репозитория ~71 МБ; удалённый репозиторий <code>gitverse</code> настроен</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="s1-4">1.4. Как перепроверить любой расчёт, не меняя код</h2>
+  <p>Постановка требует, чтобы эксперт мог выбрать расчёт и проверить его «в пределах подготовленных данных без изменения исходного кода под конкретную точку». Для этого есть готовые входы:</p>
+  <table>
+    <thead><tr><th style="width:30%">Что проверить</th><th>Команда или ручка</th></tr></thead>
+    <tbody>
+      <tr><td>Полевое измерение: N, A, C, ДИ, сегменты трансекты</td><td><code>python -m pipeline.field explain &lt;event_id&gt;</code> · <code>GET /api/field/{event_id}</code> · клик по полосе</td></tr>
+      <tr><td>Модельная оценка в любой точке и момент</td><td><code>python -m pipeline.concentration explain &lt;A|B&gt; &lt;lon&gt; &lt;lat&gt; &lt;ISO-время&gt;</code></td></tr>
+      <tr><td>Оценка в гексе на дату снимка: признаки, формула, интервал, статус</td><td><code>GET /api/aois/{aoi}/{date}/hex/{i}?profile=B</code> (поле <code>calc</code>) · клик по гексу</td></tr>
+      <tr><td>Сведение модели с измерениями в точке</td><td><code>python -m pipeline.fusion explain B 41.60 41.62 2024-06-05T08:30</code> · <code>GET /api/fusion</code></td></tr>
+      <tr><td>Почему пара «событие ↔ снимок» принята или отклонена</td><td><code>GET /api/field/{event_id}</code> (раздел пар) · строки события в <code>data/registry/pairs.csv</code> · <code>GET /api/pairs?format=csv</code></td></tr>
+      <tr><td>Как детектор отделил мусор от фона на снимке</td><td><code>GET /api/aois/{aoi}/{date}/separation</code> · «Сводка» → «Мусор, а не пена, волны или суда»</td></tr>
+      <tr><td>Метрики детектора и концентрации</td><td><code>python -m pipeline.verify</code> · <code>GET /api/metrics</code></td></tr>
+      <tr><td>Воспроизводимость выгрузки</td><td><code>POST /api/queries</code>, затем <code>POST /api/queries/{id}/rerun</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section class="chapter" id="s2">
+  <h1><span class="num">2</span>Решение в целом</h1>
+  <h2>2.1. Пользователь и задача</h2>
+  <p>Пользователь — специалист по экологическому мониторингу. Ему нужно выбрать акваторию и дату снимка, проверить найденные зоны возможного скопления, сравнить количественные оценки с полевыми измерениями, понять, насколько результату можно доверять, и выбрать участки для обследования судном или дроном.</p>
+
+  <h2>2.2. Главная идея: три разные величины</h2>
+  <p>Спутник и полевые данные отвечают на разные вопросы, и мы их не смешиваем.</p>
+  <ul>
+    <li><b>Снимок показывает, где искать.</b> При пикселе 10 м видны плотные скопления и полосы мусора, но не рассеянный мусор: даже 1000 предметов на км² по 0,01 м² — это ~10 м² на км², десятая часть одного пикселя. Поэтому детектор находит зоны вероятного скопления, а их площадь в шт./км² не переводится.</li>
+    <li><b>Полевые данные дают количество.</b> Концентрацию в шт./км² считает модель, обученная на полевых учётах. Модель сама сообщает, где ей можно верить.</li>
+  </ul>
+  <table>
+    <thead><tr><th>Величина</th><th>Откуда</th><th>Единица</th><th>Как показана на карте</th></tr></thead>
+    <tbody>
+      <tr><td><b>Зона детекции</b></td><td>детектор по снимку Sentinel-2</td><td>площадь зоны и покрытие, м²; м²/км²</td><td>красный контур; вдали — кружок с числом зон</td></tr>
+      <tr><td><b>Полевое измерение</b></td><td>C = N / A по полосе учёта, 95% ДИ Гарвуда</td><td>шт./км²</td><td>полоса или кружок с белой обводкой</td></tr>
+      <tr><td><b>Модельная оценка</b></td><td>модель профиля по полевым данным</td><td>шт./км² с 80/95% интервалом</td><td>заливка гекса; жёлтый пунктир — исследовательская оценка</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2.3. Архитектура</h2>
+  <figure>
+  <svg viewBox="0 0 736 440" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0b7a68"/></marker>
+      <style>
+        .lane{font-size:11px;font-weight:700;fill:#5b6b66;letter-spacing:.06em}
+        .bx{fill:#f3f6f4;stroke:#c9d4d0;stroke-width:1}
+        .bx2{fill:#e8f5f1;stroke:#9fd0c3;stroke-width:1}
+        .bx3{fill:#13211d;stroke:#13211d}
+        .t1{font-size:11.5px;font-weight:650;fill:#13211d}
+        .t2{font-size:9.6px;fill:#5b6b66}
+        .w1{font-size:11.5px;font-weight:650;fill:#fff}
+        .w2{font-size:9.6px;fill:#c9d6d1}
+        .ln{stroke:#0b7a68;stroke-width:1.3;fill:none;marker-end:url(#ar)}
+        .ln2{stroke:#a86a0c;stroke-width:1.2;fill:none;stroke-dasharray:4 3;marker-end:url(#ar)}
+      </style>
+    </defs>
+    <text x="10" y="16" class="lane">ИСТОЧНИКИ ДАННЫХ</text>
+    <text x="250" y="16" class="lane">PIPELINE/ — РАСЧЁТ ЗАРАНЕЕ</text>
+    <text x="540" y="16" class="lane">СЕРВИС</text>
+
+    <rect x="10" y="30" width="200" height="50" rx="7" class="bx"/><text x="20" y="50" class="t1">Полевой реестр кейса</text><text x="20" y="67" class="t2">S1–S4 · 935 строк · 318 событий</text>
+    <rect x="10" y="100" width="200" height="50" rx="7" class="bx"/><text x="20" y="120" class="t1">Sentinel-2 L2A</text><text x="20" y="137" class="t2">STAC Microsoft Planetary Computer</text>
+    <rect x="10" y="170" width="200" height="50" rx="7" class="bx"/><text x="20" y="190" class="t1">MARIDA · MADOS</text><text x="20" y="207" class="t2">размеченные снимки: обучение и проверка</text>
+    <rect x="10" y="240" width="200" height="50" rx="7" class="bx"/><text x="20" y="260" class="t1">ERA5 · global-land-mask</text><text x="20" y="277" class="t2">ветер, расстояние до берега</text>
+    <rect x="10" y="330" width="200" height="50" rx="7" class="bx"/><text x="20" y="350" class="t1">SMOC · Copernicus Marine</text><text x="20" y="367" class="t2">течения, волны, ветер для дрейфа</text>
+
+    <rect x="250" y="30" width="250" height="44" rx="7" class="bx2"/><text x="260" y="48" class="t1">field.py · measure.py</text><text x="260" y="64" class="t2">отбор по профилям, C = N/A, ДИ, геометрия</text>
+    <rect x="250" y="88" width="250" height="44" rx="7" class="bx2"/><text x="260" y="106" class="t1">pairs.py</text><text x="260" y="122" class="t2">реестр пар «событие ↔ снимок», причины</text>
+    <rect x="250" y="146" width="250" height="44" rx="7" class="bx2"/><text x="260" y="164" class="t1">splits.py → concentration.py → fusion.py</text><text x="260" y="180" class="t2">группы, модели A и B, интервалы, сведение</text>
+    <rect x="250" y="204" width="250" height="44" rx="7" class="bx2"/><text x="260" y="222" class="t1">features.py · train.py</text><text x="260" y="238" class="t2">нормализация фона, 20 признаков, XGBoost</text>
+    <rect x="250" y="262" width="250" height="44" rx="7" class="bx2"/><text x="260" y="280" class="t1">s2.py → detect.py → aggregate.py</text><text x="260" y="296" class="t2">снимок → детекции → зоны, гексы, статусы</text>
+    <rect x="250" y="330" width="250" height="50" rx="7" class="bx"/><text x="260" y="350" class="t1">drift.py · cmems.py · route.py</text><text x="260" y="367" class="t2">дрейф, скопление, маршрут — по запросу</text>
+
+    <rect x="540" y="30" width="170" height="70" rx="7" class="bx"/><text x="550" y="50" class="t1">data/ в репозитории</text><text x="550" y="67" class="t2">слои карты, веса моделей,</text><text x="550" y="81" class="t2">метрики, реестры, выборки</text>
+    <rect x="540" y="130" width="170" height="60" rx="7" class="bx3"/><text x="550" y="152" class="w1">backend/ · FastAPI</text><text x="550" y="170" class="w2">37 ручек /api, Swagger</text>
+    <rect x="540" y="220" width="170" height="60" rx="7" class="bx3"/><text x="550" y="242" class="w1">frontend/ · React</text><text x="550" y="260" class="w2">MapLibre GL, Chart.js</text>
+    <rect x="540" y="310" width="170" height="70" rx="7" class="bx"/><text x="550" y="330" class="t1">Выгрузка</text><text x="550" y="347" class="t2">GeoJSON · CSV · PDF-отчёт</text><text x="550" y="361" class="t2">сохранённые запросы + sha256</text>
+
+    <path d="M210,55 L250,52" class="ln"/>
+    <path d="M375,74 L375,88" class="ln"/>
+        <path d="M250,60 C232,60 232,160 250,166" class="ln"/>
+    <path d="M210,125 L250,112" class="ln"/>
+    <path d="M210,128 C232,150 228,270 250,282" class="ln"/>
+    <path d="M210,195 L250,224" class="ln"/>
+    <path d="M375,248 L375,262" class="ln"/>
+    <path d="M210,262 C228,240 230,190 250,180" class="ln"/>
+    <path d="M210,355 L250,355" class="ln"/>
+    <path d="M375,132 L375,146" class="ln"/>
+    <path d="M500,168 L540,80" class="ln"/>
+    <path d="M500,284 L540,90" class="ln"/>
+    <path d="M625,100 L625,130" class="ln"/>
+    <path d="M625,190 L625,220" class="ln"/>
+    <path d="M500,355 C520,355 520,175 540,168" class="ln2"/>
+    <path d="M710,168 C730,210 730,300 712,338" class="ln"/>
+    <text x="10" y="410" class="t2">Сплошные стрелки — расчёт заранее, результаты лежат в data/ и сервисом только читаются. Пунктир — расчёт по запросу пользователя</text>
+    <text x="10" y="425" class="t2">(дрейф, маршрут, зоны схождения); поля течений и ветра кешируются. Детектор и модели концентрации друг от друга не зависят.</text>
+  </svg>
+  <figcaption>Рис. 1. Архитектура AquaFlow: данные → pipeline → готовые файлы → API → интерфейс и выгрузка.</figcaption>
+  </figure>
+  <p><b>Почему расчёт заранее.</b> Детекция по снимку идёт десятки секунд на дату и требует скачать ~17 ГБ снимков. Поэтому <code>pipeline/</code> один раз считает зоны, гексы, статусы и концентрацию для всех дат, а сервис раздаёт готовые файлы из <code>data/web/</code>. Это же даёт повторяемость: выгрузка строится из тех же файлов, что и карта, и одинаковый запрос даёт одинаковые байты. Тяжёлые интерактивные расчёты (дрейф, маршрут) идут по запросу и кешируются.</p>
+
+  <h2>2.4. Акватории</h2>
+  <p>18 акваторий, 198 обработанных снимков Sentinel-2 (даты, где видно ≥30% воды).</p>
+  <table>
+    <thead><tr><th>Группа</th><th>Акватории</th><th>Концентрация</th></tr></thead>
+    <tbody>
+      <tr><td>Мониторинг, Чёрное море</td><td>Сочи — Адлер (30 снимков), Новороссийск — Цемесская бухта (30), Керченский пролив — Анапа, разлив мазута (19)</td><td>профиль B, «исследовательская оценка»: полевых точек у побережья РФ нет</td></tr>
+      <tr><td>Проверочная</td><td>Батуми — Кобулети (3 снимка, 21.05–30.06.2024) — полевые полосы DOORS T18–T21, T26 рядом</td><td>профиль B, «модельная оценка» рядом с полосами</td></tr>
+      <tr><td>Районы полевых данных</td><td>8 акваторий «S4 DOORS» (Мангалия, Зонгулдак, Амасра, Инеболу, Синоп, Орду, Ризе, Поти) и 2 «S3 Северное море» (Гельголанд, Германская бухта) — снимки на даты измерений ±1 сут.</td><td>S4 — профиль B; S3 — недоступна (другой бассейн)</td></tr>
+      <tr><td>Другие бассейны и пресные воды</td><td>Невская губа, Амурский залив (Владивосток), Куйбышевское водохранилище, Волгоград</td><td>недоступна; детектор работает</td></tr>
+    </tbody>
+  </table>
+  <p>Новая акватория добавляется одной командой: <code>python -m pipeline.build add azov "Таганрогский залив" 38.6 46.9 39.3 47.3 --port 38.93,47.2 --tz 3</code>, затем <code>python -m pipeline.build run azov</code>.</p>
+
+  <h2>2.5. Технологии</h2>
+  <table>
+    <tbody>
+      <tr><td style="width:22%"><b>Расчёт</b></td><td>Python 3.12; numpy, scipy, pandas; rasterio, pyproj, shapely, h3; pystac-client, planetary-computer; XGBoost (CUDA при наличии, иначе CPU), scikit-learn, statsmodels; copernicusmarine</td></tr>
+      <tr><td><b>Сервис</b></td><td>FastAPI + uvicorn; схемы ответов pydantic; OpenAPI 3.1; PDF-отчёт на matplotlib</td></tr>
+      <tr><td><b>Интерфейс</b></td><td>React + TypeScript, MapLibre GL, Chart.js, Tailwind, сборка Vite</td></tr>
+      <tr><td><b>Поставка</b></td><td>Dockerfile (двухэтапная сборка), docker-compose с томом кеша <code>aquaflow-cache</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section class="chapter" id="s3">
+  <h1><span class="num">3</span>Данные: полевой реестр, отбор, открытые наборы</h1>
+  <h2>3.1. Полевой реестр и отбор по профилям</h2>
+  <p>Реестр кейса <code>data/field/raw/macroplastic_marine_samples.csv</code> — 935 строк, 56 полей, 318 событий из четырёх открытых источников. «Макропластик» в нём — несколько разных величин: суммарный пластик, отдельные категории, весь мусор и отдельные предметы, измеренные разными методами и с разными порогами размера. Поэтому мы заявляем профили и не смешиваем их.</p>
+  <table>
+    <thead><tr><th>Источник</th><th class="n">Строк</th><th>Что внутри</th><th>Как использован</th></tr></thead>
+    <tbody>
+      <tr><td>S1 · Тихий океан (Lebreton et al., 2018)</td><td class="n">350</td><td>тралы 5–50 см, категории &gt;5 см, аэросъёмка &gt;50 см</td><td>83 события трала — профиль C без модели; слой на карте и дрейф без снимка</td></tr>
+      <tr><td>S2 · Саргассово море, MSM41 (Gutow et al., 2021)</td><td class="n">330</td><td>визуальные трансекты, пластик и EPS &gt;2 см, N и A известны</td><td><b>обучение профиля A</b>, 63 события</td></tr>
+      <tr><td>S3 · Северное море (Gutow et al., 2018)</td><td class="n">222</td><td>весь мусор и категории &gt;2 см</td><td>41 событие — только проверка переноса профиля B</td></tr>
+      <tr><td>S4 · Чёрное море, DOORS 3 (2024)</td><td class="n">33</td><td>весь мусор &gt;2,5 см, только опубликованная плотность и середина полосы</td><td><b>обучение профиля B</b>, 33 события</td></tr>
+    </tbody>
+  </table>
+  <p>Строка попадает в профиль, только если совпадают <code>record_type</code>, <code>target_scope</code> и <code>measurement_profile</code> (<code>configs/profiles.yaml</code>). В каждом профиле одна строка на событие; повтор события останавливает обработку.</p>
+  <table>
+    <thead><tr><th>Куда попали строки</th><th class="n">Строк</th></tr></thead>
+    <tbody>
+      <tr><td>профиль A, обучение (S2, суммарный пластик &gt;2 см)</td><td class="n">63</td></tr>
+      <tr><td>профиль B, обучение (S4, весь мусор &gt;2,5 см)</td><td class="n">33</td></tr>
+      <tr><td>профиль B, проверка переноса (S3, весь мусор &gt;2 см)</td><td class="n">41</td></tr>
+      <tr><td>профиль C, без модели (S1, трал 5–50 см)</td><td class="n">83</td></tr>
+      <tr><td>исключены <code>subpopulation_not_target</code>: отдельная категория — другая целевая величина</td><td class="n">362</td></tr>
+      <tr><td>исключены <code>object_context_not_label</code>: объектная запись (положение наблюдателя, неполная выборка)</td><td class="n">337</td></tr>
+      <tr><td>исключены <code>total_missing_or_conflict</code>: суммарная аэросъёмка S1 без подтверждения, класс &gt;50 см</td><td class="n">16</td></tr>
+      <tr class="best"><td>итого</td><td class="n">935</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3.2. Время, геометрия и формула C = N / A</h2>
+  <ul>
+    <li><b>Чтение.</b> CSV читается как текст; пустое поле становится NaN и нигде не заменяется нулём. Перед обработкой проверяется контракт (935 строк, 56 полей, 318 событий, уникальный <code>sample_id</code>).</li>
+    <li><b>Время.</b> Интервал наблюдения переводится в UTC. Если конец меньше начала — это переход через полночь, к концу прибавляются сутки (15 событий S1). Если известна только дата (все 33 события S4), интервалом считаются целые сутки и событие помечается <code>time_known = false</code>.</li>
+    <li><b>Геометрия следа.</b> Концентрация относится ко всей обследованной полосе, а не к точке. 183 события — отрезок от начала до конца трансекты; 4 прерванные трансекты S2 (T18, T22, T35, T49) — несколько отрезков, восстановленных вместе со временем из PANGAEA 931834; 33 события S4 — середина полосы с радиусом неопределённости 3 км (концы полос в DOORS не даны).</li>
+  </ul>
+  <div class="formula">C = N / A, шт./км² &nbsp;&nbsp;·&nbsp;&nbsp; 95% ДИ Гарвуда: [ χ²(0,025; 2N) / 2 ; χ²(0,975; 2N + 2) / 2 ] / A &nbsp;&nbsp;·&nbsp;&nbsp; для нескольких участков C = ΣN / ΣA</div>
+  <p>Если N и A известны (S2, S3), C считается заново и сверяется с опубликованной плотностью; расхождение больше 1% останавливает обработку. Для S4 и S1 берётся опубликованная плотность без интервала. Пример: N = 4 на 0,20 км² даёт 20 шт./км² с 95% ДИ 5,45–51,2 — интервал показывается и у измерений, не только у модели. Выход — <code>data/field/events.csv</code> и <code>events.geojson</code> (одна строка на событие с геометрией, интервалом времени, N, A, C и ДИ), итоги — <code>data/field/summary.json</code>.</p>
+
+  <h2>3.3. Открытые наборы данных</h2>
+  <p>Организаторы выдали только полевой реестр; остальные наборы мы нашли и подключили сами. Полный реестр с версиями, полями и условиями — <code>docs/datasets.md</code> (генерируется из <code>configs/datasets.yaml</code>), в интерфейсе — «Методика» → «Данные», в API — <code>GET /api/datasets</code>.</p>
+  <table>
+    <thead><tr><th style="width:24%">Набор</th><th>Зачем</th><th style="width:26%">Доступ и лицензия</th></tr></thead>
+    <tbody>
+      <tr><td>MARIDA v1.0.0</td><td>обучение и проверка детектора: 1 381 патч, 63 сцены Sentinel-2, 15 классов</td><td>Zenodo 5151941; CC BY 4.0</td></tr>
+      <tr><td>MADOS</td><td>проверка детектора на фоне, которого нет в MARIDA: нефть, слизь, медузы, платформы</td><td>Zenodo 10664073; CC BY 4.0</td></tr>
+      <tr><td>PANGAEA 931834</td><td>сегменты и время прерванных трансект S2</td><td>CC BY 4.0; <code>data/field/raw/</code></td></tr>
+      <tr><td>Sentinel-2 L2A</td><td>снимки акваторий, реестр пар, подложка</td><td>Planetary Computer; условия Copernicus</td></tr>
+      <tr><td>Landsat C2 L2</td><td>просмотр сцен там, где Sentinel-2 нет (S2, S3 2014); детектор не применяется — нет красного края</td><td>Planetary Computer; USGS</td></tr>
+      <tr><td>ERA5, ветер 10 м (Open-Meteo)</td><td>кандидат в признаки, статус «шторм», дрейфовый буфер, ветер в дрейфе</td><td>CC BY 4.0; лицензия Copernicus</td></tr>
+      <tr><td>Течения SMOC (Open-Meteo Marine)</td><td>дрейф от снимка, зоны скопления, маршрут, проверка дрейфа</td><td>CC BY 4.0; Copernicus Marine</td></tr>
+      <tr><td>Реанализы Copernicus Marine</td><td>дрейф без снимка (GLORYS12, NWS, волны, ветер L4)</td><td>бесплатный аккаунт; лицензия CMEMS</td></tr>
+      <tr><td>global-land-mask</td><td>расстояние до берега (признак B), суша для частиц дрейфа</td><td>MIT</td></tr>
+      <tr><td>Подложки Esri</td><td>только отображение</td><td>условия Esri</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">Проверяли, но не взяли: Copernicus Data Space и Earth Search (над районом S1 сцен нет нигде), Sentinel-3 OLCI (300 м — слишком грубо для макромусора), течения Open-Meteo за 2014–2016 гг. (начинаются с 2022 г.).</p>
+
+  <h2>3.4. Что лежит в репозитории</h2>
+  <p>В git попадает то, что нужно для запуска сервиса и проверки метрик (~71 МБ). Снимки Sentinel-2 (~17 ГБ), MARIDA и MADOS не входят — они нужны только для переобучения и полного пересчёта.</p>
+  <table>
+    <thead><tr><th style="width:26%">Путь</th><th>Содержимое</th></tr></thead>
+    <tbody>
+      <tr><td><code>data/web/&lt;aoi&gt;/</code></td><td>готовые слои карты: гексы, ряды по датам, зоны, маска качества, растры, оценки концентрации, разбор отбраковки</td></tr>
+      <tr><td><code>data/models/</code></td><td>веса и параметры моделей, <code>MANIFEST.json</code> с sha256</td></tr>
+      <tr><td><code>data/field/</code></td><td>исходный реестр, отбор по строкам, события с геометрией, кеш ERA5</td></tr>
+      <tr><td><code>data/registry/</code></td><td>реестр пар, фрагменты снимков, кеш STAC для пересборки без сети</td></tr>
+      <tr><td><code>data/splits/</code></td><td>составы обучения, фолдов CV и отложенной выборки; списки MARIDA</td></tr>
+      <tr><td><code>data/eval/</code></td><td>метрики, эталоны и предсказания: детектор, концентрация, сведение, перенос, дрейф</td></tr>
+      <tr><td><code>data/processed/&lt;aoi&gt;/</code></td><td>маски воды, метаданные сцен, кеш полей течений и ветра (сами снимки не хранятся)</td></tr>
+      <tr><td><code>data/queries/</code></td><td>сохранённые запросы для повтора по sha256</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section class="chapter" id="s4">
+  <h1><span class="num">4</span>Реестр пар «событие ↔ снимок»</h1>
+  <p>Реестр нужен, чтобы честно проверить, видит ли спутник то, что измерено в поле, и можно ли откалибровать перевод «снимок → шт./км²». Код — <code>pipeline/pairs.py</code>, параметры — <code>configs/pairs.yaml</code>, результат — <code>data/registry/pairs.csv</code>, сводка — <code>data/registry/summary.json</code>.</p>
+  <h2>4.1. Как строится</h2>
+  <div class="chain"><span>событие профиля</span><i>→</i><span>STAC: Sentinel-2 L2A, дата ±1 сут.</span><i>→</i><span>сдвиг [dt_min, dt_max]</span><i>→</i><span>ярус синхронизации</span><i>→</i><span>след = геометрия + полуширина + буфер</span><i>→</i><span>качество по следу</span><i>→</i><span>решение и причина</span></div>
+  <ul>
+    <li><b>Кандидаты:</b> сцены Sentinel-2 L2A на дату события ±1 сут. Сцены Landsat учитываются в реестре с причиной <code>SENSOR_UNSUPPORTED</code>: у Landsat нет каналов красного края (B05–B07), на которых работает детектор.</li>
+    <li><b>Синхронизация:</b> сдвиг хранится интервалом, потому что время наблюдения известно не всегда. Ярус A — |dt| ≤ 3 ч при известном времени (пара для количественного сравнения), ярус B — ≤ 18 ч (тот же день, только исследование), дальше — <code>UNRELIABLE_SYNC</code>, пара остаётся как контекст.</li>
+    <li><b>Дрейфовый буфер:</b> max|dt| × (0,3 м/с течения + 2% ветра ERA5). Исторических течений на даты событий в Open-Meteo нет, поэтому 0,3 м/с — консервативная оценка.</li>
+    <li><b>Качество — по следу, а не по центральному пикселю:</b> покрытие следа данными ≥ 90%, доля чистой воды по SCL ≥ 50%, медиана B11 по воде ≤ 0,03 (иначе сильный блик). Из нескольких пригодных сцен остаётся лучшая, остальные — <code>DUPLICATE_BETTER_SCENE</code>.</li>
+  </ul>
+  <h2>4.2. Итог</h2>
+  <div class="side rev">
+    <div>
+      <table>
+        <thead><tr><th>Причина (строки реестра)</th><th class="n">Строк</th></tr></thead>
+        <tbody>
+          <tr><td><code>NO_SCENE</code> — сцен Sentinel-2 нет (S1 — открытый океан; S2 — апрель 2015, до запуска Sentinel-2A; S3 — 2014)</td><td class="n">162</td></tr>
+          <tr><td><code>UNRELIABLE_SYNC</code> — сдвиг &gt;18 ч (дрейф до 30–56 км)</td><td class="n">39</td></tr>
+          <tr><td><code>SENSOR_UNSUPPORTED</code> — есть только Landsat</td><td class="n">23</td></tr>
+          <tr class="best"><td><code>ACCEPTED_UNCERTAIN_TIME</code> — принято: S4, тот же день, время неизвестно</td><td class="n">9</td></tr>
+          <tr><td><code>INSUFFICIENT_COVERAGE</code> — след покрыт &lt;90%</td><td class="n">7</td></tr>
+          <tr><td><code>DUPLICATE_BETTER_SCENE</code></td><td class="n">6</td></tr>
+          <tr><td><code>UNUSABLE_PIXELS</code> — чистой воды &lt;50%</td><td class="n">4</td></tr>
+          <tr><td><code>GLINT</code> — сильный блик</td><td class="n">1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box">
+      <h4>По событиям</h4>
+      <p>220 событий, 89 сцен-кандидатов.<br>Отклонено 188, контекст 23, <b>принято 9</b>.</p>
+      <p class="small">Ответы STAC и измерения качества кешируются в <code>data/registry/cache/</code>: <code>python -m pipeline.pairs build --offline</code> пересобирает реестр без сети.</p>
+    </div>
+  </div>
+  <h2>4.3. Эксперимент переноса на снимки</h2>
+  <p>По 9 принятым парам детектор прогнан по фрагментам снимков вокруг следа (~200 км² видимой воды на пару; <code>python -m pipeline.pairs detect</code>, затем <code>transfer</code>). В 7 парах из 9 в следе 0–1 пиксель детекций. В двух парах у Батуми (T20, T21, облачность тайла 31%) — 551 и 738 срабатываний, но это края и полупрозрачные облака, а не мусор. Ранговая корреляция доли детекций с полевой плотностью <b>ρ = −0,23 (p = 0,56)</b> — связи нет (<code>data/eval/transfer.json</code>).</p>
+  <div class="box amber"><p><b>Вывод.</b> Рассеянный мусор с плотностью 50–1000 шт./км² при разрешении 10 м не виден. Перенос численной оценки на снимки не подтверждён, поэтому концентрация в сервисе — модель по полевым данным, а спутник показывает, где искать плотные скопления. Постановка это допускает: «допускается раздельная проверка детектора и количественной модели».</p></div>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section class="chapter" id="s5">
+  <h1><span class="num">5</span>Детектор скоплений</h1>
+  <div class="chain"><span>Sentinel-2 L2A, 11 каналов</span><i>→</i><span>сетка 10 м UTM, SCL, маска воды</span><i>→</i><span>нормализация фона</span><i>→</i><span>20 признаков</span><i>→</i><span>XGBoost: 6 классов</span><i>→</i><span>P(мусор) ≥ 0,5</span><i>→</i><span>фильтры: пена · соседи · CFAR</span><i>→</i><span>правила сцены</span><i>→</i><span>зоны, гексы H3, статусы</span></div>
+
+  <h2>5.1. Подготовка снимка</h2>
+  <ul>
+    <li><b>Поиск:</b> Sentinel-2 L2A из Microsoft Planetary Computer (STAC, без ключа), одна сцена на дату; акватория на стыке тайлов склеивается из тайлов одного пролёта (<code>pipeline/s2.py</code>).</li>
+    <li><b>Сетка:</b> у каждой акватории своя фиксированная сетка 10 м в зоне UTM — все даты совпадают попиксельно. Каналы 10 м (B02–B04, B08) остаются в исходном разрешении, каналы 20 и 60 м приводятся к сетке 10 м билинейно (новых деталей это не создаёт, но совмещает спектр пикселя), слой классов SCL — ближайшим соседом.</li>
+    <li><b>Радиометрия:</b> те же 11 каналов, что в MARIDA (B01–B12 без B09, B10); отражение = (DN + сдвиг) / 10 000, сдвиг −1000 для обработки 04.00 и новее (с 25.01.2022).</li>
+    <li><b>Маска воды:</b> пиксель — вода, если по SCL он вода не меньше чем в половине безоблачных снимков ряда; минус 30 м от берега; при необходимости отбрасываются лиманы и озёра за узкими протоками.</li>
+    <li><b>Пригодность пикселя</b> (облака, тени, перистые, снег, дефекты по SCL) и <b>принадлежность классу</b> «мусор» считаются раздельно.</li>
+  </ul>
+
+  <h2>5.2. Нормализация фона и признаки</h2>
+  <p>Главный шаг, который делает сцены MARIDA (атмосферная коррекция ACOLITE) и наши сцены (Sen2Cor) сопоставимыми. Из каждого пикселя вычитается локальный спектр окружающей воды и прибавляется эталонный спектр чистой воды MARIDA. Так уходят солнечный блик, дымка и разница атмосферной коррекции, и модель видит только отличие пикселя от воды вокруг.</p>
+  <div class="formula">ρ̃<sub>b</sub> = ρ<sub>b</sub> − медиана воды<sub>320 м</sub>(ρ<sub>b</sub>) + ρ<sub>b</sub><sup>эталон MARIDA</sup></div>
+  <p>Локальный фон: кандидаты в воду (NDWI &gt; 0, FDI &lt; 0,01, 0 &lt; B02 &lt; 0,25) → медиана по блокам 32×32 пикселя → второй проход убирает из фона пиксели ярче первой оценки в NIR или FDI (чтобы пятна мусора не попали в собственный фон) → пустые блоки заполняются от соседей, сглаживание 3×3 блока, билинейное растяжение. Один и тот же код (<code>pipeline/features.py</code>) работает при обучении и в сервисе.</p>
+  <p><b>20 признаков пикселя:</b> 11 каналов после нормализации; индексы FDI (Biermann et al., 2020), FAI (Hu, 2009), NDVI, NDWI, PI, NDMI; текстура — среднее FDI в окне 3×3, стандартное отклонение FDI в окне 5×5, высокочастотная часть B08. Самые важные: PI (23%), NDVI (13%), FDI_std5 (8%), NDWI (6%), B08_hp5 (6%).</p>
+
+  <h2>5.3. Обучение</h2>
+  <p>MARIDA, официальное разбиение без изменений; неразмеченные пиксели (метка 0) не участвуют ни в обучении, ни в метриках. 15 классов сведены в 6 групп:</p>
+  <table>
+    <thead><tr><th>Группа</th><th>Классы MARIDA</th><th class="n">Пикселей в train</th></tr></thead>
+    <tbody>
+      <tr><td><b>debris</b> (положительный класс)</td><td>Marine Debris — плавающий мусор любого материала, не только пластик</td><td class="n">1 943</td></tr>
+      <tr><td>organic</td><td>Dense Sargassum, Sparse Sargassum, Natural Organic Material</td><td class="n">2 684</td></tr>
+      <tr><td>ship</td><td>Ship</td><td class="n">3 289</td></tr>
+      <tr><td>cloud</td><td>Clouds, Cloud Shadows</td><td class="n">70 970</td></tr>
+      <tr><td>water</td><td>Marine, Sediment-Laden, Turbid, Shallow, Mixed Water</td><td class="n">342 108</td></tr>
+      <tr><td>foam</td><td>Foam, Waves, Wakes</td><td class="n">8 418</td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>Часть MARIDA</th><th class="n">Патчей</th><th class="n">Сцен</th><th class="n">Размеченных пикселей</th><th class="n">Из них мусор</th><th>Роль</th></tr></thead>
+    <tbody>
+      <tr><td>train</td><td class="n">694</td><td class="n">36</td><td class="n">429 412</td><td class="n">1 943</td><td>обучение</td></tr>
+      <tr><td>val</td><td class="n">328</td><td class="n">12</td><td class="n">213 102</td><td class="n">1 075</td><td>ранняя остановка; пороги базовых</td></tr>
+      <tr><td>test</td><td class="n">359</td><td class="n">15</td><td class="n">194 863</td><td class="n">381</td><td>только итоговые метрики</td></tr>
+    </tbody>
+  </table>
+  <p>XGBoost <code>multi:softprob</code>, до 1 500 деревьев, глубина 8, learning rate 0,05, подвыборка строк и признаков 0,8, ранняя остановка через 60 деревьев без улучшения mlogloss на val. На группу — не больше 250 000 пикселей (урезается только вода), вес пикселя обратен частоте группы. Вместе с моделью сохраняется спектр «плотного скопления» (средний спектр мусора с FDI ≥ 99-го перцентиля) — по нему оценивается доля покрытия пикселя.</p>
+
+  <h2>5.4. Применение и фильтры</h2>
+  <p>Модель считается только по пикселям с аномалией относительно воды (ΔFDI &gt; 0,01, ΔB08 &gt; 0,01 или ΔB02 &gt; 0,03) — остальное заведомо чистая вода. Пиксель становится детекцией при P(мусор) ≥ 0,5 и прохождении трёх фильтров:</p>
+  <table>
+    <thead><tr><th style="width:22%">Фильтр</th><th>Правило</th><th>Против чего</th></tr></thead>
+    <tbody>
+      <tr><td>Спектральный тест</td><td>аномалия в NIR (B08) сильнее, чем в синем (B02)</td><td>белая пена и барашки ярче в видимом диапазоне</td></tr>
+      <tr><td>Соседство</td><td>≥ 2 соседа с P &gt; 0,3 в окне 3×3</td><td>одиночные «искры» — рябь и шум</td></tr>
+      <tr><td>CFAR 5σ</td><td>аномалия NIR ≥ 5σ локального шума (окно 51 пиксель)</td><td>блик и рябь поднимают порог</td></tr>
+    </tbody>
+  </table>
+  <p><b>Правила уровня сцены</b> (пороги в <code>configs/detector.yaml</code>, не обучаются): постоянные объекты — срабатывания на ≥3 снимках ряда и ≥20% наблюдений (причалы, буи, садки, стоящие суда); ближе 400 м к судну — кильватер; ближе 300 м ко льду; ближе 100 м к облаку или тени; на сцене со штормом (ветер ERA5 ≥ 8 м/с), льдом (&gt;0,5% акватории) или сильным бликом (&gt;30% воды под бликом) остаются только скопления от 4 пикселей, а «не обнаружено» не выставляется. Сцена, где видно меньше 30% воды, не публикуется.</p>
+  <p><b>Порог</b> P ≥ 0,5 задан до проверки на test (оптимум на val — 0,64); тест <code>test_detector_threshold_fixed_before_test</code> сверяет порог в метриках с конфигом.</p>
+
+  <h2>5.5. Зоны, гексы, покрытие</h2>
+  <ul>
+    <li><b>Зона</b> — связная группа детекций (соседние пиксели и детекции через 1 пиксель объединяются). Атрибуты: <code>zone_id</code>, центр, H3-ячейка, площадь зоны, число пикселей, P средняя и максимальная, покрытие, условия съёмки, ближайшее полевое измерение и концентрация профиля в центре зоны.</li>
+    <li><b>Покрытие</b> — эквивалентная площадь мусора: доля пикселя по линейному смешению «вода + плотное скопление» по каналам B05–B12, сумма долей × 100 м². Это вспомогательный показатель детектора; в шт./км² не переводится.</li>
+    <li><b>Гексы H3</b> разрешения 8 (~0,74 км²) — аналитическая сетка. По каждой дате: число детекций, покрытие м²/км², доля видимой воды, статус; по ряду: среднее и максимальное покрытие, устойчивость (доля снимков с мусором), тренд (м²/км² в месяц, от 4 наблюдений).</li>
+  </ul>
+
+  <h2>5.6. Маска качества и статус детекции</h2>
+  <p>Маска качества (<code>quality.png</code>) объясняет, почему пиксель исключён или ненадёжен: 0 — пригоден, 1 — суша, 2 — нет данных, 3 — облако, 4 — тень, 5 — перистые, 6 — сильный блик, 7 — лёд, 8 — судно и кильватер, 9 — постоянный объект.</p>
+  <table class="keep">
+    <thead><tr><th style="width:22%">Статус детекции</th><th>Когда ставится (гекс, зона, снимок)</th></tr></thead>
+    <tbody>
+      <tr><td><b>обнаружено</b></td><td>в гексе есть хотя бы одна детекция, прошедшая все фильтры</td></tr>
+      <tr><td><b>не обнаружено</b></td><td>детекций нет, и снимок позволяет это утверждать: видно ≥ 50% воды гекса, блик не занимает половину гекса, сцена надёжна (нет шторма, льда, сильного блика)</td></tr>
+      <tr><td><b>недостаточно данных</b></td><td>облака, блик, шторм или лёд — отсутствие мусора подтвердить нельзя</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5.7. Качество на размеченных данных</h2>
+  <h3>MARIDA test: основной против базовых на одной выборке</h3>
+  <table>
+    <thead><tr><th>Метод</th><th class="n">P</th><th class="n">R</th><th class="n">F1 (95% ДИ по сценам)</th><th class="n">IoU</th><th class="n">Recall по объектам</th></tr></thead>
+    <tbody>
+      <tr><td>Пороги FDI и NDVI (базовый; FDI 0,02–0,06, NDVI ≤ 0,2 подобраны на val)</td><td class="n">0,011</td><td class="n">0,580</td><td class="n">0,022 (0,01–0,08)</td><td class="n">0,011</td><td class="n">0,61</td></tr>
+      <tr><td>Наивный Байес на FDI+NDVI, как Biermann et al. 2020 (базовый)</td><td class="n">0,022</td><td class="n">0,320</td><td class="n">0,041 (0,01–0,29)</td><td class="n">0,021</td><td class="n">0,34</td></tr>
+      <tr><td>XGBoost, P ≥ 0,5</td><td class="n">0,657</td><td class="n">0,906</td><td class="n">0,762 (0,67–0,86)</td><td class="n">0,615</td><td class="n">0,94</td></tr>
+      <tr class="best"><td>XGBoost + фильтры (как в сервисе)</td><td class="n">0,778</td><td class="n">0,829</td><td class="n">0,803 (0,72–0,88)</td><td class="n">0,671</td><td class="n">0,83</td></tr>
+    </tbody>
+  </table>
+  <p>15 сцен, 359 патчей; TP 316, FP 90, FN 65. Простые пороги не работают на сложном фоне: мутная вода и плотный саргассум дают FDI выше, чем мусор (медиана аномалии FDI 0,19 и 0,18 против 0,03), поэтому окно по FDI ловит в основном взвесь. Фильтры убирают половину ложных срабатываний XGBoost (180 → 90 пикселей) ценой 8% попаданий (345 → 316). F1 по остальным группам: вода 0,98, органика 0,98, облака 0,92, суда 0,71, пена 0,46.</p>
+  <div class="fig2">
+    <table>
+      <thead><tr><th>Фон, принятый за мусор (MARIDA test)</th><th class="n">Доля класса</th></tr></thead>
+      <tbody>
+        <tr><td>органика и плавник — главный источник ошибок</td><td class="n">26% (13 пикс.)</td></tr>
+        <tr><td>прочая вода</td><td class="n">4,3%</td></tr>
+        <tr><td>суда</td><td class="n">1,6%</td></tr>
+        <tr><td>волны</td><td class="n">0,9%</td></tr>
+        <tr><td>облака, вода со взвесью</td><td class="n">&lt;0,03%</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Разбор по каждому патчу (TP, FP, FN, класс главного ложного срабатывания) — <code>data/eval/detector/errors.csv</code>; предсказания и эталон для пересчёта — <code>pred_test.npz</code>, <code>ref_test.npz</code>.</p>
+  </div>
+  <figure><img src="img/marida_gallery.jpg" alt="Галерея ошибок"><figcaption>Рис. 2. <code>data/eval/detector/gallery.png</code>: верхний ряд — патчи MARIDA test с наибольшим числом ложных срабатываний, нижний — с наибольшим числом пропусков. Зелёный — верная детекция, красный — ложная, жёлтый — пропуск.</figcaption></figure>
+
+  <h3>Регион вне обучения</h3>
+  <p>Официальное разбиение MARIDA не пересекается по сценам, но 6 тайлов есть и в train, и в test — оценка скорее оптимистична. Поэтому модель обучалась без целого региона и проверялась на нём (<code>python -m pipeline.eval_detector_lro</code>, <code>leave_region_out.json</code>): Карибы F1 0,91, Юго-Восточная Азия 0,85, Восточная Азия 0,61, Южная Африка 0,50, Центральная Америка 0,26, Северная Европа 0,00. <b>Средний F1 на новом регионе — 0,52.</b> Для Чёрного моря это значит: детектор нужно проверять на местной разметке.</p>
+
+  <h3>Сложный фон: MADOS</h3>
+  <p>MADOS — набор тех же авторов, что MARIDA. Мы проверили, что он <b>включает MARIDA целиком</b> (все 63 сцены, число пикселей мусора совпадает до пикселя, разбиение то же), и проверяем детектор только на 27 <b>новых</b> тестовых сценах (мусор в 4): <b>P 0,193, R 0,650, F1 0,297 (0,02–0,60)</b>. За мусор принимается 45,5% пикселей морской слизи, 37,6% медуз, 4,3% редких водорослей, 3,0% судов, 0,84% нефтяных платформ, 0,65% нефтяных пятен (<code>mados.json</code>).</p>
+  <table>
+    <thead><tr><th>Вариант обучения</th><th class="n">MARIDA F1</th><th class="n">Полнота</th><th class="n">MADOS F1</th><th class="n">Слизь</th><th class="n">Полосы Бали из 41</th><th>На наших снимках</th></tr></thead>
+    <tbody>
+      <tr class="best"><td>Только MARIDA (в сервисе)</td><td class="n">0,803</td><td class="n">0,829</td><td class="n">0,297</td><td class="n">45%</td><td class="n">40</td><td>—</td></tr>
+      <tr><td>MARIDA + MADOS, нефть — вода</td><td class="n">0,809</td><td class="n">0,751</td><td class="n">0,579</td><td class="n">4,9%</td><td class="n">19</td><td>цветение в Невской губе — в 7 раз больше срабатываний</td></tr>
+      <tr><td>MARIDA + MADOS, нефть — отдельная группа</td><td class="n">0,804</td><td class="n">0,743</td><td class="n">0,577</td><td class="n">5,3%</td><td class="n">16</td><td>на всех снимках не проверяли</td></tr>
+      <tr><td>MARIDA + MADOS без яркой нефти</td><td class="n">0,826</td><td class="n">0,822</td><td class="n">0,481</td><td class="n">6,3%</td><td class="n">41</td><td>тысячи ложных срабатываний на плёнках и фронтах</td></tr>
+    </tbody>
+  </table>
+  <p><b>Решение: модель сервиса осталась обученной только на MARIDA.</b> Все варианты дообучения резко снижают ложные срабатывания на слизи, но один теряет длинные полосы мусора (яркие полосы нефти в MADOS спектрально почти совпадают с полосами мусора у Бали), а лучший на тестах вариант на наших снимках отмечает плёнки, фронты и цветение. Выбрать можно только по разметке наших вод. Главный вывод: метрики на размеченных наборах не заменяют проверку на своих снимках. Подробно — <code>docs/mados.md</code>.</p>
+
+  <h2>5.8. Ошибки на наших акваториях</h2>
+  <table>
+    <thead><tr><th style="width:24%">Случай</th><th>Что происходит</th><th style="width:28%">Как обработано</th></tr></thead>
+    <tbody>
+      <tr><td>Края облаков (Батуми, пара T21, облачность тайла 31%)</td><td>766 «детекций» у мелких и полупрозрачных облаков; буфер 100 м помог мало (до 738) — полупрозрачные облака SCL не отмечает</td><td>буфер от облаков; такие сцены нужно отбраковывать по облачности тайла</td></tr>
+      <tr><td>Блик (Батуми 30.06.2024)</td><td>под бликом 27% воды, порог 30% не сработал — тысячи ложных «зон»</td><td>пример неудачной сцены; маска качества показывает блик</td></tr>
+      <tr><td>Цветение (Куйбышевское, 03.08.2025)</td><td>~27 тыс. пикселей</td><td>пресная вода вне области применения, концентрация недоступна</td></tr>
+      <tr><td>Мазут (Керченский пролив, 2025)</td><td>детектор ищет плавающий мусор, не плёнку; класса нефти в MARIDA нет</td><td>сложный случай для разбора; слой «Классы модели» показывает, что модель видит</td></tr>
+    </tbody>
+  </table>
+  <figure><img src="img/ui_model_classes.jpg" alt="Классы модели"><figcaption>Рис. 3. Керченский пролив — Анапа, 03.06.2025, слой «Классы модели»: для каждого пикселя с аномалией — класс с наибольшей вероятностью до порога и фильтров (мусор, органика, суда, облака, вода, пена). Видно, какие аномальные пиксели модель относит к органике (зелёный), пене и облакам, а какие — к мусору (красный), до того как фильтры отсеют ложные.</figcaption></figure>
+  <p>Для систематической оценки на наших водах подготовлен набор для ручной разметки: <code>python -m pipeline.review sample</code> — 120 зон и 60 контрольных точек, классы: скопление, пена, судно, водоросли, блик, берег и взвесь, нефтепродукты, «не ясно», «ничего нет». После разметки <code>python -m pipeline.review score</code> даст локальную precision с ДИ Уилсона.</p>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section class="chapter" id="s6">
+  <h1><span class="num">6</span>Концентрация в шт./км²</h1>
+  <h2>6.1. Профили</h2>
+  <table>
+    <thead><tr><th></th><th>Профиль A — основной</th><th>Профиль B — региональный</th></tr></thead>
+    <tbody>
+      <tr><td><b>Величина</b></td><td>число плавающих предметов пластика, включая EPS, крупнее ~2 см на 1 км²</td><td>число плавающих предметов мусора всех материалов крупнее 2,5 см на 1 км² (не только пластик)</td></tr>
+      <tr><td><b>Эталон</b></td><td>S2: судовой учёт в полосе 10 м, N и A известны, 63 события</td><td>S4: опубликованная плотность, N, A и время неизвестны, 33 события</td></tr>
+      <tr><td><b>Модель</b></td><td>отрицательно-биномиальная GLM числа предметов со смещением log A</td><td>ридж-регрессия log(C + 1), α = 1</td></tr>
+      <tr><td><b>Признаки</b></td><td>широта, долгота</td><td>log(1 + расстояние до берега)</td></tr>
+      <tr><td><b>Бассейн</b></td><td><code>nw_atlantic_subtropical</code></td><td><code>black_sea</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>6.2. Разбиение и защита от утечек</h2>
+  <p>Разбиение зафиксировано до экспериментов (<code>pipeline/splits.py</code>, seed 20260925). Строки одного события уже сведены в одну запись, но и разные события бывают зависимы. Два события попадают в одну группу, если это один день одного рейса, или они ближе 30 км и не дальше 3 суток друг от друга, или им сопоставлена одна сцена в реестре пар. Группа — связная компонента по этим связям. Около 20% событий целыми группами уходят в отложенную выборку, остальные группы раскладываются по 5 фолдам CV.</p>
+  <table>
+    <thead><tr><th>Профиль</th><th class="n">Событий</th><th class="n">Обучение</th><th class="n">Отложено</th><th>Файлы</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td class="n">63</td><td class="n">50 (19 групп)</td><td class="n">13 (6 групп)</td><td><code>data/splits/A.csv</code>, <code>A_links.csv</code></td></tr>
+      <tr><td>B</td><td class="n">33</td><td class="n">26 (7 групп)</td><td class="n">7 (3 группы)</td><td><code>data/splits/B.csv</code>, <code>B_links.csv</code></td></tr>
+    </tbody>
+  </table>
+  <p><b>Только то, что есть при применении.</b> Модель потом считает концентрацию для гексов и зон на снимке, поэтому признаки — координаты, расстояние до берега (global-land-mask, сетка 1/60°) и средний ветер ERA5 на 10 м за 24 ч до момента оценки. Всё, что производно от ответа или наблюдалось на борту, запрещено: концентрации, <code>items_count</code>, <code>density_numerator_items</code>, <code>source_object_filtered_items</code>, <code>reported_*</code>, <code>parent_*</code>, волнение по Бофорту, судовой ветер, плотность саргассума (<code>forbidden_predictors</code>, 25 полей). Тесты <code>tests/test_leakage.py</code>: группа целиком по одну сторону, события одного дня в одной группе, модель сервиса обучена без отложенных событий.</p>
+
+  <h2>6.3. Выбор признаков</h2>
+  <p>Кандидаты заданы заранее в <code>configs/concentration.yaml</code>; набор выбирается по MAE на групповой CV, отложенная выборка не участвует. Ветер не помог ни в одном профиле.</p>
+  <div class="fig2">
+    <table>
+      <thead><tr><th>Профиль A: признаки</th><th class="n">CV MAE</th></tr></thead>
+      <tbody><tr class="best"><td>lat, lon</td><td class="n">30,4</td></tr><tr><td>wind24, lat, lon</td><td class="n">34,3</td></tr><tr><td>wind24</td><td class="n">41,7</td></tr><tr><td>wind24, lat</td><td class="n">50,3</td></tr></tbody>
+    </table>
+    <table>
+      <thead><tr><th>Профиль B: признаки</th><th class="n">CV MAE</th></tr></thead>
+      <tbody><tr class="best"><td>log расстояния до берега</td><td class="n">173,2</td></tr><tr><td>wind24, расстояние</td><td class="n">200,4</td></tr><tr><td>wind24</td><td class="n">221,4</td></tr><tr><td>wind24, расстояние, lat, lon</td><td class="n">280,1</td></tr></tbody>
+    </table>
+  </div>
+
+  <h2>6.4. Модели и формулы</h2>
+  <h4>Профиль A</h4>
+  <div class="formula">C = exp(3,889 + 0,290 · z<sub>lat</sub> + 0,421 · z<sub>lon</sub>), &nbsp; z — координаты, стандартизованные по обучению (центр 27,7° с. ш., 64,0° з. д.; SD 2,6° и 4,5°)</div>
+  <p>В центре района ~49 шт./км²; на градус к северу концентрация растёт на ~12%, к востоку — на ~10% (к субтропической зоне конвергенции). Сверхдисперсия α = 0,26. Моделируется само число предметов N со смещением log A — счётный шум учитывается честно, а не через готовое C.</p>
+  <h4>Профиль B</h4>
+  <div class="formula">ln(C + 1) = 5,336 − 0,372 · z, &nbsp; z = (ln(1 + d) − 4,154) / 1,051, &nbsp; d — расстояние до берега, км</div>
+  <p>При d ≈ 63 км это ~207 шт./км²; C + 1 ∝ (1 + d)<sup>−0,35</sup>: вдвое дальше от берега — примерно в 0,78 раза меньше мусора (береговые источники).</p>
+
+  <h2>6.5. Качество: основная модель против базовых</h2>
+  <p>Основная метрика — MAE в шт./км²; дополнительные — RMSE и ошибка в лог-шкале |ln(Ĉ + 1) − ln(C + 1)| (концентрации различаются в десятки раз, и MAE определяют несколько самых загрязнённых полос). MAPE не используем. Базовые: медиана обучающей выборки и IDW (8 соседей). Все модели считаются на одних и тех же событиях трёх выборок: CV, по которой выбирались признаки (для основной модели оптимистична), <b>вложенная CV</b> (признаки выбираются заново внутри каждого внешнего фолда — честная оценка процедуры) и <b>отложенная выборка</b>. 95% ДИ — групповой бутстреп: группы выбираются целиком, как в разбиении.</p>
+  <h4>Профиль A (обучение 50 событий, 19 групп; отложено 13, 6 групп)</h4>
+  <table>
+    <thead><tr><th>Модель</th><th class="n">CV MAE*</th><th class="n">Вложенная CV MAE</th><th class="n">Отложенная MAE</th><th class="n">Отложенная RMSE</th><th class="n">Ошибка ln</th></tr></thead>
+    <tbody>
+      <tr><td>медиана (базовая)</td><td class="n">37,1</td><td class="n">37,1 (24–53)</td><td class="n">24,8 (21–28)</td><td class="n">28,5</td><td class="n">0,68</td></tr>
+      <tr><td>IDW (базовая)</td><td class="n">36,3</td><td class="n">36,3 (26–49)</td><td class="n">20,6 (13–26)</td><td class="n">25,2</td><td class="n">0,54</td></tr>
+      <tr class="best"><td>NB-GLM (в сервисе)</td><td class="n">30,4</td><td class="n">38,4 (26–54)</td><td class="n">22,9 (19–27)</td><td class="n">26,6</td><td class="n">0,64</td></tr>
+    </tbody>
+  </table>
+  <p>Разность MAE «модель − базовая»: на вложенной CV +1,2 (−7,8…+11,5) с медианой и +2,1 (−3,8…+9,2) с IDW; на отложенной −1,9 (−5,7…+2,5) и +2,2 (−1,2…+6,8). <b>По MAE модель, медиана и IDW неразличимы.</b> Нижняя граница MAE из-за счётного шума — 12,2 шт./км²: при N ~ 8 предметов на полосе даже модель, знающая истинную интенсивность, ошибается на эту величину, так что половина ошибки неустранима.</p>
+  <h4>Профиль B (обучение 26 событий, 7 групп; отложено 7, 3 группы)</h4>
+  <table>
+    <thead><tr><th>Модель</th><th class="n">CV MAE*</th><th class="n">Вложенная CV MAE</th><th class="n">Отложенная MAE</th><th class="n">Отложенная RMSE</th><th class="n">Ошибка ln</th></tr></thead>
+    <tbody>
+      <tr><td>медиана (базовая)</td><td class="n">208,1</td><td class="n">208,1 (143–335)</td><td class="n">132,3 (91–166)</td><td class="n">172,4</td><td class="n">0,51</td></tr>
+      <tr><td>IDW (базовая)</td><td class="n">178,5</td><td class="n">178,5 (102–298)</td><td class="n">198,7 (123–376)</td><td class="n">236,4</td><td class="n">0,68</td></tr>
+      <tr class="best"><td>log-ridge (в сервисе)</td><td class="n">173,2</td><td class="n">183,7 (121–233)</td><td class="n">230,9 (135–355)</td><td class="n">285,4</td><td class="n">0,84</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">* По этой CV выбирались признаки; для основной модели она оптимистична. MAE и RMSE — шт./км², в скобках 95% ДИ группового бутстрепа.</p>
+  <p>На вложенной CV модель точнее медианы на 24 шт./км² (−114…+31) — в пределах шума. <b>На отложенной выборке медиана точнее на 99 (+11…+264)</b>, но групп там всего 3, и бутстреп грубый. Разбор по событиям: в отложенных группах связь с берегом обратная той, что в обучении. У берега Батуми (T20 и T21, 3–7 км) измерено 225 и 67 шт./км², модель дала 438 и 564; в открытом море в 100–130 км (T2, T30, T31) измерено 345–587, модель дала 165–176. Одного расстояния до берега мало; возможная причина — скопления в зонах схождения течений вдали от берега, проверить это можно только новыми полевыми данными.</p>
+  <div class="box lime"><p><b>Правило выбора модели сервиса.</b> Сервис использует основную модель, пока базовая не точнее её значимо на вложенной CV (95% ДИ разности MAE целиком выше нуля); отложенная выборка в выборе не участвует. По MAE базовые с основной неразличимы, но у основной модели есть признаки: она даёт оценку вдали от измерений (IDW там вырождается в константу) и служит основой для сведения с полевыми измерениями. Слабость точечной оценки мы не прячем: у значения всегда есть 80%-интервал и статус.</p></div>
+
+  <h2>6.6. Интервалы</h2>
+  <p>Интервалы 80% и 95% — сплит-конформные: квантили остатков внефолдовых предсказаний CV в лог-шкале. Профиль A: 80% — (C + 1) × [0,28; 2,0], 95% — (C + 1) × [0,14; 6,7]. Профиль B: 80% — (C + 1) × [0,21; 3,35]. Покрытие на отложенной выборке: A — 80% → 77% (10 из 13), 95% → 92% (12 из 13); B — 80% → 71% (5 из 7), 95% → 86% (6 из 7).</p>
+
+  <h2>6.7. Область применимости и статусы</h2>
+  <p>В файле модели хранятся точки обучающих событий, их месяцы и диапазоны признаков. По ним каждой оценке присваивается статус и перечень причин:</p>
+  <table class="keep">
+    <thead><tr><th style="width:24%">Статус</th><th>Условие</th></tr></thead>
+    <tbody>
+      <tr><td><b>модельная оценка</b></td><td>точка внутри бассейна профиля, не дальше 60 км от обучающего события, месяц встречался в обучении, признаки (кроме координат) в диапазоне обучения с запасом 10%</td></tr>
+      <tr><td><b>исследовательская оценка</b></td><td>бассейн тот же, но хотя бы одно условие не выполнено; причины перечисляются в карточке и выгрузке («ближайшее полевое измерение в 181 км (&gt; 60 км)», «месяц 9 вне месяцев обучения [6]», «log_dist_coast_km = 1,2 вне диапазона обучения»)</td></tr>
+      <tr><td><b>концентрация недоступна</b></td><td>профиль к месту не применим: другой бассейн или пресные воды</td></tr>
+    </tbody>
+  </table>
+  <p>Все обучающие события профиля A — апрель 2015 г., профиля B — июнь 2024 г., поэтому в другие месяцы оценка всегда «исследовательская». Для побережья РФ полевых точек нет — там профиль B даёт только исследовательскую оценку.</p>
+
+  <h2>6.8. Перенос на другое море</h2>
+  <p>Обучение на S4 (Чёрное море) → проверка на 41 событии S3 (Северное море, порог 2 см; в обучение не входило): MAE log-ridge 166 (118–228), медиана 202, IDW 278. Уровень другой: медиана 237 шт./км² в Чёрном море против 29 в Северном, модели завышают в 6–11 раз. <b>Перенос между морями не работает</b>, и сервис это учитывает статусами: S3-акватории получают «концентрация недоступна».</p>
+
+  <h2>6.9. Сведение модели с полевыми измерениями</h2>
+  <p>Рядом с полевым измерением разумно опираться на него, а не на модель. Метод — регрессионный кригинг остатков модели в пространстве-времени (<code>pipeline/fusion.py</code>), в лог-шкале z = ln(C + 1):</p>
+  <div class="formula">ẑ(x₀) = m(x₀) + Σ wᵢ rᵢ, &nbsp; w = K⁻¹k, &nbsp; K<sub>ij</sub> = s·e<sup>−h<sub>ij</sub>/ρ</sup> + δ<sub>ij</sub>(τ² + σᵢ²), &nbsp; h = √(d² + (v·Δt)²)</div>
+  <p>rᵢ — остаток модели в месте и момент измерения; сутки давности весят как v км расстояния (скорость дрейфа пятна); σᵢ² — счётный шум измерения, если известны N и A. Параметры подобраны по вариограмме внефолдовых остатков на обучающей части: A — s = 0,32, τ² = 0,26, ρ = 158 км, v = 36 км/сут.; B — s = 0,61, τ² = 0,26, ρ = 89 км, v = 31 км/сут. Спутниковые детекции в число шт./км² не входят.</p>
+  <table class="keep">
+    <thead><tr><th>Отложенная выборка</th><th class="n">A: MAE</th><th class="n">A: покрытие 80%</th><th class="n">B: MAE</th><th class="n">B: покрытие 80%</th></tr></thead>
+    <tbody>
+      <tr><td>только модель</td><td class="n">22,9</td><td class="n">77%</td><td class="n">230,9</td><td class="n">71%</td></tr>
+      <tr><td>сведение, соседние измерения есть</td><td class="n">25,3</td><td class="n">69%</td><td class="n">184,9</td><td class="n">86%</td></tr>
+      <tr><td>сведение, соседей нет</td><td class="n">21,9</td><td class="n">77%</td><td class="n">277,2</td><td class="n">86%</td></tr>
+    </tbody>
+  </table>
+  <p>Для профиля B сведение с соседями заметно улучшает оценку (231 → 185) и покрытие интервала; для A разница в пределах шума. В интерфейсе — блок «Сведение с полевыми измерениями» в карточке гекса и зоны: вес модели и каждого измерения, расстояние и давность.</p>
+
+  <h2>6.10. Что где проверено</h2>
+  <table>
+    <thead><tr><th>Вывод</th><th>Полевые данные</th><th>Спутниковая разметка</th><th>Совместные пары</th></tr></thead>
+    <tbody>
+      <tr><td>Детектор находит скопления плавающего мусора</td><td>—</td><td>MARIDA test (15 сцен), новые сцены MADOS test (27)</td><td>качественно, 9 пар S4</td></tr>
+      <tr><td>Концентрация профиля, шт./км²</td><td>вложенная CV и отложенная выборка (A: 13, B: 7 событий)</td><td>—</td><td>—</td></tr>
+      <tr><td>Сведение модели с измерениями</td><td>CV кригинга и отложенная выборка</td><td>—</td><td>—</td></tr>
+      <tr><td>Перенос концентрации на снимок</td><td>—</td><td>—</td><td>не подтверждён: ρ = −0,23</td></tr>
+      <tr><td>Перенос концентрации между морями</td><td>S4 → S3: не подтверждён</td><td>—</td><td>—</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section class="chapter" id="s7">
+  <h1><span class="num">7</span>Веб-сервис: карта, API, выгрузка</h1>
+  <h2>7.1. Сценарий пользователя</h2>
+  <p>Акватория и дата → снимок и сведения о его качестве → слой зон и показатель карты → карточка зоны, гекса или полевого измерения → сравнение с измерениями, статус и неопределённость → выгрузка.</p>
+  <figure><img src="img/ui_main.jpg" alt="Главный экран"><figcaption>Рис. 4. Главный экран: Сочи — Адлер, 11.09.2026, показатель «Концентрация», профиль B. Сверху — акватория, дата снимка, «Сводка» и «Слои»; слева — показатель карты и легенда с единицами, размерным классом, датами снимка и измерений, источником и версией модели; снизу — инструменты. Жёлтый пунктир у гексов — «исследовательская оценка»: полевых точек рядом нет. Красные кружки с числом — зоны детекции.</figcaption></figure>
+  <p>Клик по объекту на карте открывает его карточку. Карточки трёх величин устроены по-разному, чтобы их нельзя было перепутать:</p>
+  <div class="cards">
+    <figure><img src="img/ui_field_card.jpg" alt="Карточка измерения"><figcaption>Рис. 5. <b>Полевое измерение</b> S4:DOORS3:T18: значение и способ расчёта, материал и размер, метод, совокупность, время, источник и лицензия, флаги качества, строки реестра и решения по ним, дрейф от места измерения.</figcaption></figure>
+    <figure><img src="img/ui_hex_card.jpg" alt="Карточка гекса"><figcaption>Рис. 6. <b>Гекс</b>: концентрация с 80/95% интервалами, статусы, признаки, «Расчёт по шагам» с коэффициентами, «Сведение с полевыми измерениями» с весами полос T17–T22, ряд покрытия.</figcaption></figure>
+    <figure><img src="img/ui_zone_card.jpg" alt="Карточка зоны"><figcaption>Рис. 7. <b>Зона детекции</b>: площадь и покрытие отдельно от концентрации, P, снимок и качество, «Почему это мусор» по каждому фильтру, ближайшее измерение, сведение, выгрузка.</figcaption></figure>
+  </div>
+
+  <h2>7.2. Элементы интерфейса</h2>
+  <div class="side wide">
+  <table>
+    <thead><tr><th style="width:20%">Элемент</th><th>Что даёт</th></tr></thead>
+    <tbody>
+      <tr><td><b>Показатель карты</b></td><td>9 режимов окраски гексов: Концентрация (модель, шт./км²), Статус (обнаружено / не обнаружено / недостаточно данных), Качество (доля видимой воды), Покрытие, Среднее, Устойчивость, Тренд, Скопление (прогноз), Прогноз (покрытие через 72 ч)</td></tr>
+      <tr><td><b>Слои</b></td><td>11 независимых слоёв: снимок Sentinel-2, детекции мусора, классы модели, маска качества, зоны детекции, полевые измерения, отдельные предметы, аналитическая сетка H3, спутниковая подложка, течения, ветер</td></tr>
+      <tr><td><b>Легенда</b></td><td>шкала и подписи текущего режима, легенда включённых масок; внизу — единица, размерный класс профиля, дата снимка, период измерений профиля, источник, версия модели, порог детектора</td></tr>
+      <tr><td><b>Фильтры</b></td><td>по статусу детекции и статусу концентрации («Сводка»); по дате — переключение снимков стрелками или кликом по графику; в API — <code>date_from</code>/<code>date_to</code> у <code>/api/zones</code> и <code>/api/field</code></td></tr>
+      <tr><td><b>Инструменты</b></td><td>Данные кейса (источники S1–S4 и снимки на даты измерений), Участок (история гекса), Сравнить (два участка), Дрейф, Маршрут, Методика (формулы, проверка, реестр данных)</td></tr>
+      <tr><td><b>Выгрузка</b></td><td>Отчёт PDF, Зоны GeoJSON/CSV, Гексы GeoJSON/CSV, Сохранить / Повторить запрос</td></tr>
+    </tbody>
+  </table>
+    <figure style="margin-top:4pt"><img src="img/ui_sheet.jpg" alt="Сводка"><figcaption>Рис. 8. «Сводка» (Батуми, 05.06.2024): профиль и целевая величина, динамика по снимкам, условия пролёта, полевые измерения в акватории, ключевые показатели, приоритетные зоны, разбор «Мусор, а не пена, волны или суда», фильтры статусов, выгрузка и сохранённый запрос.</figcaption></figure>
+  </div>
+  <div class="fig2">
+    <figure><img src="img/ui_status_quality.jpg" alt="Статус и маска качества"><figcaption>Рис. 9. Сложный случай: Батуми, 30.06.2024, показатель «Статус» и маска качества. Облака и сильный блик (жёлтый) — детектор выдаёт тысячи ложных срабатываний, поэтому сцена разбирается как неудачная.</figcaption></figure>
+    <figure><img src="img/ui_layers.jpg" alt="Слои"><figcaption>Рис. 10. «Слои»: каждый источник включается независимо.</figcaption></figure>
+  </div>
+
+  <h2>7.3. API</h2>
+  <p>37 ручек; интерфейс пользуется теми же ручками. Интерактивная документация — <code>/api/docs</code> (Swagger) и <code>/api/redoc</code>, схема OpenAPI 3.1 — <code>/api/openapi.json</code>, справочник с примерами — <code>docs/api.md</code>. Авторизации нет; данные меняет только <code>POST /api/queries</code>.</p>
+  <table>
+    <thead><tr><th style="width:22%">Группа</th><th>Ручки</th></tr></thead>
+    <tbody>
+      <tr><td>Служебное</td><td><code>/api/health</code>, <code>/api/statuses</code>, <code>/api/datasets</code>, <code>/api/methodology</code>, <code>/api/metrics</code></td></tr>
+      <tr><td>Акватории и снимки</td><td><code>/api/aois</code>, <code>/api/aois/{aoi}</code>, <code>…/scenes</code>, <code>…/hexes</code>, <code>…/series</code>, <code>…/grid</code>, <code>…/{date}/model-classes</code></td></tr>
+      <tr><td>Детекции</td><td><code>/api/aois/{aoi}/{date}/zones</code>, <code>…/points</code>, <code>…/separation</code>, <code>/api/zones</code> (все скопления одним JSON с фильтрами)</td></tr>
+      <tr><td>Концентрация</td><td><code>/api/profiles</code>, <code>/api/aois/{aoi}/concentration</code>, <code>…/{date}/hex/{i}</code>, <code>/api/fusion</code></td></tr>
+      <tr><td>Полевые данные и пары</td><td><code>/api/field</code>, <code>/api/field/objects</code>, <code>/api/field/sources</code>, <code>/api/field/{event_id}</code>, <code>/api/pairs</code></td></tr>
+      <tr><td>Дрейф и маршрут</td><td><code>…/{date}/drift</code>, <code>…/drift_point</code>, <code>/api/drift</code>, <code>…/flow</code>, <code>/api/flow</code>, <code>…/accumulation</code>, <code>…/route</code></td></tr>
+      <tr><td>Выгрузка и запросы</td><td><code>/api/export</code>, <code>/api/report</code>, <code>POST /api/queries</code>, <code>/api/queries/{qid}</code>, <code>POST /api/queries/{qid}/rerun</code></td></tr>
+    </tbody>
+  </table>
+  <figure><img src="img/ui_swagger.jpg" alt="Swagger" style="max-height:88mm; object-fit:cover; object-position:top"><figcaption>Рис. 11. <code>/api/docs</code>: у каждой ручки — назначение, параметры с примерами, схема ответа и коды ошибок (тест <code>test_every_endpoint_documented</code>).</figcaption></figure>
+
+  <h2>7.4. Выгрузка, отчёт и сохранённые запросы</h2>
+  <ul>
+    <li><b>Выгрузка</b> <code>GET /api/export?aoi=&amp;date=&amp;profile=&amp;layer=zones|hexes&amp;format=geojson|csv</code>. Колонки CSV и атрибуты GeoJSON одинаковые (приложение Г); у зоны — площадь и покрытие отдельно от концентрации, профиль, размерный класс, единица, интервалы, статус и его причины, версия модели, условия съёмки, ближайшее измерение. В GeoJSON дополнительно <code>meta</code>: параметры, единица, версии конфигов и моделей. CSV — UTF-8 с BOM, открывается в Excel.</li>
+    <li><b>Повторяемость:</b> одинаковый запрос даёт побайтно одинаковый файл, sha256 — в заголовке <code>X-Result-SHA256</code>.</li>
+    <li><b>Сохранённый запрос</b> <code>POST /api/queries</code>: id — первые 12 символов sha256 параметров; сохраняются параметры, sha256 результата, версии конфигов и моделей. <code>POST /api/queries/{id}/rerun</code> строит выгрузку заново и возвращает <code>match</code>, а при расхождении — сохранённые и текущие версии, чтобы было видно, что изменилось. Ссылка с <code>&amp;q=&lt;id&gt;</code> открывает запрос в интерфейсе.</li>
+    <li><b>PDF-отчёт</b> <code>GET /api/report</code>: обзорная карта с районами скопления, фрагменты снимка и таблица крупнейших зон с координатами и ориентирами, графики динамики, распределение концентрации, отбраковка похожих объектов, прогноз дрейфа, методика с коэффициентами моделей.</li>
+  </ul>
+  <div class="side">
+    <figure><img src="img/report_p1.jpg" alt="PDF-отчёт"><figcaption>Рис. 12. Первая страница PDF-отчёта (Сочи, 11.09.2026).</figcaption></figure>
+    <div>
+      <h3 style="margin-top:0">7.5. Согласованность и ошибки</h3>
+      <p>Интерфейс, выгрузка и отчёт читают одни и те же файлы <code>data/web/</code>, поэтому числа, единицы, геометрия и статусы в них совпадают. Это проверяют тесты:</p>
+      <ul>
+        <li><code>test_export_matches_zones_and_units</code> — CSV совпадает с зонами на карте: те же зоны, концентрация, статус, единица «шт./км²»;</li>
+        <li><code>test_zones_consistent_with_series</code> — число зон и пикселей совпадает со сводкой ряда;</li>
+        <li><code>test_separation_matches_published_detections</code> — кандидаты = отбраковано + осталось, осталось = детекции снимка;</li>
+        <li><code>test_raster_grid_matches_corners</code> — растры снимка не сдвинуты относительно зон и гексов.</li>
+      </ul>
+      <table class="keep">
+        <thead><tr><th>Код</th><th>Когда</th></tr></thead>
+        <tbody>
+          <tr><td>200</td><td>успех; пустой результат — пустой массив или коллекция</td></tr>
+          <tr><td>404</td><td>нет акватории, снимка на дату, гекса, события, запроса</td></tr>
+          <tr><td>422</td><td>неверный параметр; в ответе <code>errors</code> — разбор по полям</td></tr>
+          <tr><td>503</td><td>Open-Meteo или Copernicus Marine не ответили; заголовок <code>Retry-After</code></td></tr>
+        </tbody>
+      </table>
+      <p>Текст ошибки — по-русски, его можно показывать пользователю: <code>{"detail": "нет обработанного снимка sochi на 2000-01-01"}</code>. <code>tests/test_robustness.py</code> прогоняет мусорные входы по всем ручкам: ни одна не отвечает 500.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section class="chapter" id="s8">
+  <h1><span class="num">8</span>Дополнительные функции</h1>
+  <p>Все прогнозы на карте подписаны «Прогноз, не наблюдение» и рисуются отдельным цветом (пурпурные частицы, пунктир маршрута), чтобы их нельзя было спутать с детекциями и измерениями.</p>
+  <h2>8.1. Прогноз дрейфа на 72 ч</h2>
+  <p><b>Потребность:</b> судно выходит через несколько часов после пролёта — нужно знать, куда сместится найденное скопление. <b>Метод</b> (<code>pipeline/drift.py</code>): лагранжев ансамбль, скорость частицы = течение + windage × ветер + случайное блуждание. Течения — Meteo-France SMOC через Open-Meteo Marine (суммарные поверхностные с приливом и стоксовым дрейфом, 1/12°, ежечасно); ветер — ERA5, а за последние 6 суток — прогноз Open-Meteo. Windage 2% для моря (3% для водохранилищ, где течений нет — там дрейф только ветровой), в ансамбле — от 1% до 3%; 4 частицы на пиксель детекции; частицы, дошедшие до берега, выбрасываются. Поля кешируются в <code>data/processed/&lt;aoi&gt;/&lt;date&gt;/met.npz</code>.</p>
+  <figure><img src="img/ui_drift.jpg" alt="Дрейф"><figcaption>Рис. 13. Прогноз дрейфа (Сочи, 11.09.2026): траектории частиц, положение через 72 ч, выброс на берег; медианное смещение 29,9 км, 58% частиц выброшено на берег. Ползунок проигрывает прогноз по часам.</figcaption></figure>
+  <div class="box amber"><p><b>Проверка без будущих данных</b> (<code>python -m pipeline.drift_check</code>, <code>data/eval/drift_check.json</code>). Частицы засеваются детекциями дня d и сравниваются с детекциями дня d+1…d+2, которые в прогнозе не участвуют. 7 пар (Сочи, Амурский залив, Новороссийск; горизонт 24–48 ч): медианное расстояние от новых детекций до частиц прогноза — 3,0 км, до исходного положения детекций — 1,4 км; прогноз ближе в 2 парах из 7. Вывод: у берега на 1–2 суток прогноз по течениям не лучше предположения «пятно на месте» — повторяющиеся детекции привязаны к месту (устья рек, береговые скопления). До калибровки парусности прогноз справочный.</p></div>
+
+  <h2>8.2. Дрейф без снимка</h2>
+  <p>Для полевых событий 2014–2016 гг. в Тихом океане, Саргассовом и Северном морях снимков Sentinel-2 нет, а течения Open-Meteo начинаются с 2022 г. Поэтому подключены реанализы Copernicus Marine (<code>pipeline/cmems.py</code>): GLORYS12 (1/12°, среднесуточные) в открытом океане, NWS (~7 км, ежечасно, с приливом) на шельфе Северного моря, стоксов дрейф волн (0,2°), ветер L4 (0,125°). Кнопка «Рассчитать дрейф на 72 ч» в карточке полевого измерения, <code>GET /api/drift</code>. Нужен бесплатный аккаунт Copernicus Marine в <code>.env</code>; без него ручка честно отвечает 503, остальное работает.</p>
+
+  <h2>8.3. Маршрут обследования</h2>
+  <p><b>Потребность:</b> куда отправить судно для подтверждения. <b>Метод</b> (<code>pipeline/route.py</code>): цели — скопления детекций по гексам; судно выходит из порта через заданное время, поэтому точки берутся из прогноза дрейфа на момент прибытия; следующая точка выбирается жадно по «ценность / время» (задача ориентирования). Параметры: число точек, скорость в узлах, задержка выхода.</p>
+  <figure><img src="img/ui_route.jpg" alt="Маршрут"><figcaption>Рис. 14. План обследования (Сочи, 11.09.2026): 8 точек, 61,6 км, 4,8 ч в море, 79% покрытия всех скоплений; у каждой точки — смещение пятна к прибытию и время.</figcaption></figure>
+
+  <h2>8.4. Остальное</h2>
+  <table>
+    <thead><tr><th style="width:24%">Функция</th><th>Зачем и как работает</th></tr></thead>
+    <tbody>
+      <tr><td>Скопление течениями</td><td>Акватория равномерно засевается частицами (шаг 600 м), за 72 ч считается, во сколько раз выросла их плотность, — где течения собирают мусор. Режим «Скопление», <code>…/accumulation</code>.</td></tr>
+      <tr><td>Анализ во времени</td><td>«Среднее» (по безоблачным и нештормовым снимкам), «Устойчивость» (доля снимков с мусором — места хронического скопления), «Тренд» (наклон покрытия в м²/км² в месяц); в карточке участка — ряд по датам.</td></tr>
+      <tr><td>Сравнение участков</td><td>Обвести два участка на карте: площадь, число зон, концентрация модели, покрытие, среднее, доля снимков с мусором, устойчивые гексы, тренд.</td></tr>
+      <tr><td>Сведение с измерениями</td><td>Раздел 6.9: рядом с полевым измерением оценка опирается на него; для профиля B MAE на отложенной выборке 231 → 185.</td></tr>
+      <tr><td>PDF-отчёт</td><td>Раздел 7.4: документ для экипажа с координатами и ориентирами крупнейших зон.</td></tr>
+      <tr><td>Классы модели и разбор отбраковки</td><td>Раздел 5.8 и рис. 3: что модель видит до порога и сколько кандидатов отсеял каждый фильтр — для проверки специалистом, мусор ли это.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section class="chapter" id="s9">
+  <h1><span class="num">9</span>Запуск и воспроизводимость</h1>
+  <h2>9.1. Запуск сервиса</h2>
+  <p>Готовые результаты обработки всех акваторий, модели и метрики лежат в репозитории, поэтому скачивать снимки и обучать модели для запуска не нужно. Нужен интернет: течения и ветер для дрейфа приходят из Open-Meteo, подложка — от Esri.</p>
+  <h4>Docker</h4>
+<pre>git clone https://github.com/Serfetto/kosmofinal && cd kosmofinal
+cp .env.example .env          <span class="c"># необязательно: только для дрейфа без снимка</span>
+docker compose up -d --build  <span class="c"># → http://localhost:8000</span>
+curl localhost:8000/api/health</pre>
+  <h4>Локально (Python 3.12, Node.js 20+)</h4>
+<pre>python -m venv .venv && .venv\Scripts\activate   <span class="c"># Linux/macOS: source .venv/bin/activate</span>
+pip install -r requirements.lock                  <span class="c"># точные версии пакетов</span>
+cd frontend && npm ci && npm run build && cd ..
+python -m uvicorn backend.app:app --port 8000</pre>
+  <p class="small">На сервере добавьте <code>--host 0.0.0.0</code>. Если <code>data/</code> только для чтения, задайте каталог кеша в <code>AQUAFLOW_CACHE</code>. В Windows с кириллицей в консоли — <code>$env:PYTHONIOENCODING="utf-8"</code>.</p>
+  <table>
+    <thead><tr><th>Переменная <code>.env</code></th><th>Зачем</th><th>Если не задана</th></tr></thead>
+    <tbody>
+      <tr><td><code>COPERNICUSMARINE_SERVICE_USERNAME</code>, <code>…_PASSWORD</code></td><td>дрейф без снимка по реанализам</td><td><code>GET /api/drift</code> отвечает 503</td></tr>
+      <tr><td><code>AQUAFLOW_CACHE</code></td><td>отдельный каталог кеша</td><td>кеш пишется в <code>data/</code> (в Docker — <code>/app/cache</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9.2. Пересчёт метрик</h2>
+<pre><span class="c"># секунды, без датасетов: sha256 весов, выборок, эталонов и предсказаний;</span>
+<span class="c"># P/R/F1/IoU и MAE/RMSE/лог-ошибка с 95% ДИ заново из сохранённых файлов</span>
+python -m pipeline.verify
+<span class="c"># сквозной пересчёт ~5 мин; --offline — реестр пар из кеша, без сети</span>
+python -m pipeline.reproduce
+<span class="c"># 125 проверок (83 тестовые функции)</span>
+python -m pytest -q</pre>
+  <p><code>pipeline.reproduce</code> по шагам: полевой реестр → реестр пар → разбиение → концентрация (CV, вложенная CV, отложенная, перенос) → сведение → детектор на MARIDA test (если MARIDA скачана) → MADOS (если скачан) → реестр данных → <code>docs/summary.md</code> → манифест sha256 и сверка метрик с предсказаниями.</p>
+  <h4>Полный пересчёт с нуля</h4>
+<pre><span class="c"># MARIDA: zenodo.org/records/5151941 → data/raw/marida</span>
+<span class="c"># MADOS:  zenodo.org/records/10664073 → data/raw/MADOS.zip (не распаковывать)</span>
+python -m pipeline.train              <span class="c"># обучение детектора</span>
+python -m pipeline.build run          <span class="c"># снимки → детекция → карты (~17 ГБ)</span>
+python -m pipeline.eval_detector      <span class="c"># MARIDA test: базовые и основной</span>
+python -m pipeline.eval_detector_mados
+python -m pipeline.eval_detector_lro  <span class="c"># регион вне обучения (~10 мин, GPU)</span>
+python -m pipeline.pairs transfer     <span class="c"># детекции в следе ↔ полевая плотность</span>
+python -m pipeline.drift_check        <span class="c"># дрейф на парах соседних снимков</span></pre>
+
+  <h2>9.3. Ресурсы</h2>
+  <table class="keep">
+    <thead><tr><th>Задача</th><th>Время</th><th>Память</th><th>Прочее</th></tr></thead>
+    <tbody>
+      <tr><td>Сервис на готовых данных</td><td>—</td><td>~1 ГБ RAM</td><td>интернет для дрейфа и подложки</td></tr>
+      <tr><td><code>pipeline.verify</code></td><td>секунды</td><td>&lt;1 ГБ</td><td>без сети и датасетов</td></tr>
+      <tr><td><code>pipeline.reproduce</code></td><td>~5 мин на CPU</td><td>4 ГБ RAM</td><td>MARIDA — по желанию</td></tr>
+      <tr><td>Полный пересчёт снимков</td><td>~45 мин на GPU</td><td>16 ГБ RAM</td><td>~17 ГБ снимков; GPU с CUDA ускоряет XGBoost, но не обязателен</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9.4. Тесты</h2>
+  <table>
+    <thead><tr><th style="width:24%">Файл</th><th>Что проверяет</th></tr></thead>
+    <tbody>
+      <tr><td><code>test_measure.py</code></td><td>контрольные примеры постановки (60 шт./км², ошибка 15), площадь полосы, реальные строки, ДИ Гарвуда, ΣN/ΣA, MAE/RMSE/MedAE, лог-ошибка, групповой бутстреп</td></tr>
+      <tr><td><code>test_field.py</code></td><td>контракт реестра (935/56/318), пустое ≠ 0, решение по каждой строке, совокупности не смешаны, полночь, дата без времени, N/A, площадь прерванных трансект</td></tr>
+      <tr><td><code>test_leakage.py</code></td><td>запрещённые признаки, группы не пересекают отложенную выборку и фолды, модель сервиса без отложенных событий, порог детектора задан до test, MADOS — внешняя проверка</td></tr>
+      <tr><td><code>test_metrics.py</code></td><td>метрики пересчитываются из сохранённых предсказаний, основная и базовые на одних событиях, вложенная CV выбирает признаки заново</td></tr>
+      <tr><td><code>test_mados.py</code></td><td>сведение классов MADOS, MARIDA внутри MADOS, обучение без test и повторов</td></tr>
+      <tr><td><code>test_fusion.py</code></td><td>сведение: без соседей — ровно модель, свежее измерение доминирует, вес падает с расстоянием и давностью, параметры без отложенной выборки; методика в интерфейсе из моделей сервиса; реестр данных</td></tr>
+      <tr><td><code>test_cmems.py</code></td><td>выбор продукта Copernicus Marine, кеш, даты вне реанализа, чтение <code>.env</code></td></tr>
+      <tr><td><code>test_api.py</code>, <code>test_robustness.py</code></td><td>ошибки 404/422/503, пустые выборки, выгрузка = зоны, одинаковые байты, повтор запроса, документация каждой ручки, привязка растров, мусорный ввод без 500</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Сеть тестам не нужна: загрузки подменяются. Один тест пропускается, если в <code>data/raw</code> нет архива MADOS.</p>
+
+  <h2>9.5. Версии и происхождение</h2>
+  <ul>
+    <li><code>requirements.lock</code> — точные версии пакетов; <code>requirements.txt</code> — минимальные.</li>
+    <li>В каждом файле метрик, модели и разбиения — блок <code>meta</code>: время, git-коммит, хеши конфигов, версия Python и пакетов (<code>pipeline/provenance.py</code>).</li>
+    <li><code>data/models/MANIFEST.json</code> — sha256 и размер весов, разбиений, эталонов, реестров и предсказаний; <code>pipeline.verify</code> сверяет их и завершается с кодом 1 при расхождении.</li>
+    <li><code>GET /api/health</code> возвращает хеши конфигов и версии моделей, которые сейчас работают в сервисе; они же пишутся в сохранённые запросы и <code>meta</code> выгрузки.</li>
+    <li>XGBoost на GPU не вполне детерминирован: повторное обучение может дать немного другие деревья, поэтому метрики проверяются по сохранённым весам и предсказаниям.</li>
+  </ul>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section class="chapter" id="s10">
+  <h1><span class="num">10</span>Ограничения, компромиссы и развитие</h1>
+  <h2>10.1. Компромиссы, на которые мы пошли сознательно</h2>
+  <ul>
+    <li><b>Спутник не «измеряет» шт./км².</b> Мы не переводим площадь маски в число предметов без калибровки, даже ценой того, что вне районов полевых измерений концентрация — только исследовательская оценка.</li>
+    <li><b>Профиль B описывает весь мусор, а не пластик.</b> Долю пластика из публикации к отдельным событиям не применяем — это была бы подмена целевой величины.</li>
+    <li><b>Простые модели концентрации.</b> 50 и 26 событий для обучения; сложная модель переобучится. Цена — широкие интервалы и неразличимость с базовыми по MAE.</li>
+    <li><b>Детектор сервиса не дообучен на MADOS.</b> Дообучение убирает ложные срабатывания на слизи, но теряет полосы мусора или ловит плёнки на наших снимках; без локальной разметки выбрать нельзя.</li>
+    <li><b>Расчёт заранее.</b> Новые даты требуют прогона pipeline; взамен — быстрый сервис и побайтно повторяемая выгрузка.</li>
+  </ul>
+  <h2>10.2. Ограничения</h2>
+  <ul>
+    <li>При пикселе 10 м видны скопления и полосы мусора (от ~20–30% пикселя), а не отдельные предметы.</li>
+    <li>Пластик, плавник, водоросли, слизь и медузы спектрально разделяются не полностью; подтверждение — судно или дрон.</li>
+    <li>Детектор обучен на MARIDA (в основном тропики); на регионе вне обучения F1 в среднем 0,52. Нефтяные плёнки он не ищет.</li>
+    <li>Для побережья РФ полевых измерений нет: профиль B даёт там только исследовательскую оценку; для пресных водоёмов концентрация недоступна.</li>
+    <li>Течения SMOC (1/12°) не разрешают мелкие бухты; прогноз дрейфа у берега пока не лучше «пятно на месте».</li>
+    <li>Выборки для проверки концентрации малы (13 и 7 отложенных событий) — ДИ широкие.</li>
+  </ul>
+  <h2>10.3. Предложения по развитию</h2>
+  <ol>
+    <li>Разметить подготовленный набор (120 зон, 60 точек) по снимкам Чёрного моря и по нему выбрать между текущим детектором и вариантами с MADOS.</li>
+    <li>Совместные полевые и спутниковые кампании: трансекты в день пролёта с GPS-временем. Только они позволят откалибровать перенос «снимок → шт./км²».</li>
+    <li>Восстановить числитель «только пластик» для S3 из PANGAEA 890781 — второй регион для профиля A и проверка его переноса.</li>
+    <li>Архив оперативных прогнозов течений и ветра для честной проверки дрейфа; калибровка парусности на парах снимков.</li>
+    <li>Сенсоры выше разрешения (PlanetScope, WorldView) для проверки отдельных зон.</li>
+  </ol>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section class="chapter" id="s11">
+  <h1><span class="num">11</span>Вопросы и ответы</h1>
+  <div class="two">
+    <div class="qa"><div class="q">Почему концентрация в шт./км² не считается по снимку?</div><div class="a">Потому что связь не подтверждена данными. На 9 парах «событие ↔ снимок в тот же день» детекций в следе почти нет, корреляция с полевой плотностью ρ = −0,23 (p = 0,56). Физически: 1000 шт./км² по 0,01 м² — это 10 м² на км², десятая часть пикселя. Снимок показывает плотные скопления, полевые учёты — рассеянный мусор; это разные совокупности.</div></div>
+    <div class="qa"><div class="q">Тогда откуда число в шт./км² на снимке?</div><div class="a">Это модель профиля по полевым данным, посчитанная в центре гекса или зоны на момент снимка по координатам, расстоянию до берега и ветру. Площадь зоны детекции показана рядом отдельно, в м².</div></div>
+    <div class="qa"><div class="q">Что такое «покрытие, м²/км²»?</div><div class="a">Эквивалентная площадь мусора по долям пикселей (линейное смешение «вода + плотное скопление»), делённая на видимую площадь воды. Вспомогательный показатель детектора для сравнения снимков и участков; в шт./км² не переводится.</div></div>
+    <div class="qa"><div class="q">Почему два профиля, а не один «макропластик»?</div><div class="a">В реестре под этим словом разные величины: суммарный пластик &gt;2 см (S2), весь мусор &gt;2,5 см (S4), категории, отдельные предметы, тралы 5–50 см. Их нельзя смешивать в одну метку — отличаются материал, порог размера и метод.</div></div>
+    <div class="qa"><div class="q">Почему S3 не в обучении профиля B?</div><div class="a">Другое море и порог 2 см вместо 2,5. Мы использовали его как внешнюю проверку переноса: уровень в 8 раз ниже (29 против 237 шт./км²), модели завышают в 6–11 раз. Это и обосновывает статус «недоступна» вне Чёрного моря.</div></div>
+    <div class="qa"><div class="q">Модель B хуже медианы на отложенной выборке. Почему она в сервисе?</div><div class="a">Правило выбора зафиксировано заранее: модель заменяется базовой, только если та значимо точнее на вложенной CV. На вложенной CV модель не хуже (−24, ДИ −114…+31). Отложенная выборка — 7 событий в 3 группах, и мы не подгоняли модель под неё. Разбор ошибок записан (связь с берегом в отложенных группах обратная). Главное в сервисе — интервал и статус, а не точка; рядом с измерениями оценку поправляет сведение.</div></div>
+    <div class="qa"><div class="q">Почему MAE приводится по отложенной выборке и вложенной CV, а не по обычной CV?</div><div class="a">По обычной CV выбирались признаки, поэтому для основной модели она оптимистична (у A 30,4 против честных 38,4). Вложенная CV выбирает признаки заново внутри каждого фолда.</div></div>
+    <div class="qa"><div class="q">Почему MAE A не может быть сильно меньше?</div><div class="a">Счётный шум: при N ~ 8 предметов на полосе даже модель, знающая истинную интенсивность, имела бы MAE ≈ 12 шт./км². Половина ошибки неустранима при таком методе учёта.</div></div>
+    <div class="qa"><div class="q">Почему 60 км для «модельной оценки»?</div><div class="a">Радиус задан в <code>configs/concentration.yaml</code> (<code>validated_radius_km</code>) заранее, до проверки. Для сравнения: остатки модели коррелируют на расстояниях порядка 89–158 км (вариограмма сведения), так что 60 км — консервативная граница. Кроме расстояния, проверяются сезон и диапазон признаков.</div></div>
+    <div class="qa"><div class="q">Почему XGBoost по пикселям, а не сегментационная сеть?</div><div class="a">Разметка MARIDA точечная — размечены отдельные пиксели, а не сплошные маски; попиксельный классификатор использует каждый размеченный пиксель, неразмеченные пропускает. Признаки физически осмысленны и интерпретируемы (PI, NDVI, текстура FDI), инференс идёт на CPU. Качество F1 0,80 против 0,02–0,04 у порогов.</div></div>
+    <div class="qa"><div class="q">Почему порог 0,5, если на val лучше 0,64?</div><div class="a">Порог зафиксирован до проверки на test, чтобы test не участвовал ни в каком выборе; кривая F1 на val плоская. Базовым порогам дали преимущество — подобрали на val.</div></div>
+    <div class="qa"><div class="q">Не завышены ли метрики на MARIDA test?</div><div class="a">Скорее да: 6 тайлов есть и в train, и в test. Поэтому есть проверка на регионе вне обучения (F1 в среднем 0,52) и на новых сценах MADOS (F1 0,30). Мы приводим все три цифры.</div></div>
+    <div class="qa"><div class="q">Как детектор отличает мусор от водорослей, пены, судов, бликов?</div><div class="a">Модель различает 6 групп (органика, пена/волны, суда, облака, вода — отдельно от мусора); поверх — тест против пены, соседство, CFAR против блика и ряби, буферы от судов, облаков и льда, постоянные объекты, отбраковка штормовых и бликовых сцен. Для каждого снимка сервис показывает, сколько кандидатов отсеял каждый фильтр.</div></div>
+    <div class="qa"><div class="q">Что детектор различает плохо?</div><div class="a">Органику и плавник (26% ложных срабатываний на MARIDA test), морскую слизь и медуз (45% и 38% на MADOS). В карточке зоны это прямо написано: подтвердите судном или дроном.</div></div>
+    <div class="qa"><div class="q">Почему не дообучили на MADOS, если F1 на MADOS вырос до 0,58?</div><div class="a">Этот вариант теряет длинные полосы мусора (полнота на MARIDA 0,75 против 0,83), а вариант, который их возвращает, на наших снимках отмечает плёнки, фронты и цветение. Без разметки наших вод нельзя честно выбрать. Подробно — <code>docs/mados.md</code>.</div></div>
+    <div class="qa"><div class="q">Почему MADOS — это не просто +174 сцены к обучению?</div><div class="a">Мы проверили: MADOS включает все 63 сцены MARIDA с тем же разбиением. Если сложить наборы без проверки, 3 399 пикселей мусора войдут дважды, а сцены test окажутся в обучении.</div></div>
+    <div class="qa"><div class="q">Когда ставится «не обнаружено», а когда «недостаточно данных»?</div><div class="a">«Не обнаружено» — только если видно ≥50% воды гекса, нет сильного блика и сцена надёжна (ветер &lt;8 м/с, без льда). Иначе отсутствие мусора подтвердить нельзя — «недостаточно данных».</div></div>
+    <div class="qa"><div class="q">Как учтено, что концентрация относится ко всей полосе?</div><div class="a">В реестре пар качество и признаки считаются по следу события (геометрия + полуширина + радиус неопределённости + дрейфовый буфер), а не по центральному пикселю. Для профиля A модель в середине полосы совпадает со средним вдоль полосы с точностью 0,1% (тест).</div></div>
+    <div class="qa"><div class="q">Как учтён временной сдвиг между снимком и учётом?</div><div class="a">Сдвиг хранится интервалом [dt_min, dt_max]; при неизвестном времени это целые сутки. От сдвига зависят ярус синхронизации и дрейфовый буфер следа; пары со сдвигом &gt;18 ч остаются только контекстом.</div></div>
+    <div class="qa"><div class="q">Где гарантия, что нет утечек?</div><div class="a">Группы зависимых событий целиком по одну сторону разбиения, запрещённые предикторы в конфиге, порог и признаки выбираются без отложенной выборки — всё это проверяют тесты <code>test_leakage.py</code> и <code>test_metrics.py</code>.</div></div>
+    <div class="qa"><div class="q">Можно ли проверить метрики, не скачивая MARIDA?</div><div class="a">Да: <code>python -m pipeline.verify</code> пересчитывает P/R/F1/IoU из сохранённых предсказаний <code>pred_test.npz</code> и эталона <code>ref_test.npz</code>, а MAE — из <code>*_predictions.csv</code>, и сверяет sha256 файлов.</div></div>
+    <div class="qa"><div class="q">Прогноз дрейфа не лучше «пятно на месте». Зачем он?</div><div class="a">Он честно помечен справочным. Полезен как инструмент планирования маршрута и оценки выброса на берег; повторяющиеся детекции у берега привязаны к месту (устья, береговые скопления), и это тоже вывод проверки. Для улучшения нужна калибровка парусности.</div></div>
+    <div class="qa"><div class="q">Что будет на акватории, где полевых данных нет?</div><div class="a">Детектор работает везде. Концентрация: в Чёрном море — «исследовательская оценка» с причинами; в других бассейнах и пресных водах — «концентрация недоступна» с объяснением.</div></div>
+    <div class="qa"><div class="q">Как добавить новую акваторию?</div><div class="a"><code>python -m pipeline.build add &lt;id&gt; "&lt;название&gt;" lon0 lat0 lon1 lat1 --port lon,lat --tz 3</code>, затем <code>python -m pipeline.build run &lt;id&gt;</code>: скачивание снимков, детекция, карты.</div></div>
+    <div class="qa"><div class="q">Нужны ли ключи?</div><div class="a">Нет, кроме необязательного аккаунта Copernicus Marine для дрейфа без снимка. Planetary Computer, Open-Meteo, PANGAEA, Zenodo и подложки Esri открыты.</div></div>
+  </div>
+</section>
+
+<!-- ============================ ПРИЛОЖЕНИЯ ============================ -->
+<section class="chapter" id="s12">
+  <h1>Приложения</h1>
+  <h2>А. Структура репозитория</h2>
+<pre>kosmofinal/
+├── backend/      FastAPI: app.py — карта, слои, дрейф, маршрут; case_api.py — профили, поле,
+│                 зоны, выгрузка, запросы, метрики; methodology.py; report.py (PDF); schemas.py
+├── pipeline/     расчёт, обучение, проверка: python -m pipeline.&lt;модуль&gt;
+│   ├── s2, download, features, detect, aggregate, build, class_layer — снимки, детекция
+│   ├── field, measure, pairs, splits, covariates — полевые данные, реестр пар
+│   ├── train, concentration, fusion, mados — модели
+│   ├── drift, cmems, route — дрейф и маршрут
+│   ├── eval_detector*, drift_check, review, verify, reproduce — проверка
+│   └── config, status, provenance, datasets — общее
+├── frontend/     React + TypeScript, MapLibre GL, Chart.js, Tailwind (Vite)
+├── configs/      profiles, concentration, detector, pairs, datasets (.yaml)
+├── data/         web, models, field, registry, splits, eval, processed, queries
+├── docs/         report, summary, models, data, datasets, mados, api, tests, slides,
+│                 techdoc/ (исходник этого документа), AquaFlow_TechDoc.pdf
+├── tests/        pytest: 83 тестовые функции
+└── Dockerfile, docker-compose.yml, requirements.txt, requirements.lock, .env.example</pre>
+
+  <h2>Б. Коды причин реестра пар</h2>
+  <table>
+    <thead><tr><th style="width:30%">Код</th><th style="width:14%">Решение</th><th>Смысл</th></tr></thead>
+    <tbody>
+      <tr><td><code>ACCEPTED</code></td><td>принято</td><td>сдвиг ≤ 3 ч при известном времени, чистая вода</td></tr>
+      <tr><td><code>ACCEPTED_UNCERTAIN_TIME</code></td><td>принято</td><td>тот же день, время наблюдения неизвестно — только исследование</td></tr>
+      <tr><td><code>NO_SCENE</code></td><td>отклонено</td><td>нет сцен Sentinel-2 L2A в окне ±1 сут.</td></tr>
+      <tr><td><code>SENSOR_UNSUPPORTED</code></td><td>отклонено</td><td>есть только Landsat — детектору нужен красный край</td></tr>
+      <tr><td><code>UNRELIABLE_SYNC</code></td><td>контекст</td><td>сдвиг больше 18 ч</td></tr>
+      <tr><td><code>INSUFFICIENT_COVERAGE</code></td><td>отклонено</td><td>след покрыт данными сцены меньше чем на 90%</td></tr>
+      <tr><td><code>UNUSABLE_PIXELS</code></td><td>отклонено</td><td>чистой воды по SCL в следе меньше 50%</td></tr>
+      <tr><td><code>GLINT</code></td><td>отклонено</td><td>медиана B11 по воде выше 0,03 — сильный блик</td></tr>
+      <tr><td><code>DUPLICATE_BETTER_SCENE</code></td><td>отклонено</td><td>для события есть сцена лучше</td></tr>
+    </tbody>
+  </table>
+
+  <h2>В. Словарь статусов</h2>
+  <div class="fig2">
+    <table>
+      <thead><tr><th>Детекция</th><th class="n">Код</th></tr></thead>
+      <tbody><tr><td>обнаружено (<code>detected</code>)</td><td class="n">1</td></tr><tr><td>не обнаружено (<code>not_detected</code>)</td><td class="n">0</td></tr><tr><td>недостаточно данных (<code>insufficient_data</code>)</td><td class="n">2</td></tr></tbody>
+    </table>
+    <table>
+      <thead><tr><th>Концентрация</th><th class="n">Код</th></tr></thead>
+      <tbody><tr><td>модельная оценка (<code>model_estimate</code>)</td><td class="n">1</td></tr><tr><td>исследовательская оценка (<code>research_estimate</code>)</td><td class="n">2</td></tr><tr><td>концентрация недоступна (<code>unavailable</code>)</td><td class="n">0</td></tr></tbody>
+    </table>
+  </div>
+  <p>Маска качества: 0 пригоден · 1 суша / вне маски воды · 2 нет данных · 3 облако · 4 тень облака · 5 перистые облака · 6 сильный блик · 7 лёд / шуга · 8 судно / кильватер · 9 постоянный объект. Полевое измерение имеет <code>value_type = measurement</code>. Тот же словарь отдаёт <code>GET /api/statuses</code>.</p>
+
+  <h2>Г. Колонки выгрузки</h2>
+  <p><b>Зоны</b> (<code>layer=zones</code>): <code>zone_id, aoi, date, scene_id, scene_datetime_utc, lon, lat, h3, zone_area_km2, n_pixels, cover_m2, cover_m2_km2, p_mean, p_max, detection_status(_ru), profile, profile_label, size_class, unit, conc_items_km2, conc_lo80, conc_hi80, conc_lo95, conc_hi95, conc_status(_ru), conc_reasons, model_version, valid_frac_scene, wind_ms, sea, field_event_id, field_profile, field_date, field_distance_km, field_date_gap_days, field_conc_items_km2</code>.</p>
+  <p><b>Гексы</b> (<code>layer=hexes</code>): <code>aoi, date, scene_id, h3, hex_index, lon, lat, water_km2, valid_frac, detection_status(_ru), n_det_px, cover_m2_km2, profile, unit, conc_items_km2, conc_lo80, conc_hi80, conc_status(_ru), model_version</code>.</p>
+
+  <h2>Д. Глоссарий</h2>
+  <table>
+    <tbody>
+      <tr><td style="width:22%"><b>Профиль</b></td><td>зафиксированное определение целевой величины: материал, порог размера, метод учёта, единица, бассейн</td></tr>
+      <tr><td><b>Событие</b></td><td><code>event_id</code> — одна трансекта или трал; строки одного события зависимы</td></tr>
+      <tr><td><b>След события</b></td><td>обследованная площадь: полоса учёта, сегменты или точка с радиусом неопределённости, плюс дрейфовый буфер</td></tr>
+      <tr><td><b>Зона детекции</b></td><td>связная группа пикселей 10 м, где детектор нашёл вероятное скопление мусора</td></tr>
+      <tr><td><b>Гекс</b></td><td>ячейка H3 разрешения 8, ~0,74 км², — аналитическая сетка карты</td></tr>
+      <tr><td><b>Покрытие</b></td><td>эквивалентная площадь мусора по долям пикселей, м² и м²/км²</td></tr>
+      <tr><td><b>Отложенная выборка</b></td><td>~20% групп событий, не участвовавших ни в обучении, ни в выборе модели</td></tr>
+      <tr><td><b>Вложенная CV</b></td><td>кросс-валидация, где выбор признаков повторяется внутри каждого внешнего фолда</td></tr>
+      <tr><td><b>Сведение</b></td><td>регрессионный кригинг остатков: поправка модели по соседним полевым измерениям с весами по расстоянию и давности</td></tr>
+      <tr><td><b>CFAR</b></td><td>постоянный уровень ложных тревог: порог аномалии, пропорциональный локальному шуму</td></tr>
+      <tr><td><b>FDI, FAI, PI, NDVI, NDWI, NDMI</b></td><td>спектральные индексы плавающего мусора, водорослей, пластика, растительности, воды и влажности</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>
