@@ -554,7 +554,7 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
           <label>
             <span className="layer-icon accent-sky"><CloudSun size={19} /></span>
             <span><strong>Спутниковая подложка</strong><small>Контекст береговой линии</small></span>
-            <input type="checkbox" id="l-sat" />
+            <input type="checkbox" id="l-sat" defaultChecked />
           </label>
         </div>
       </div>

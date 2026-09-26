@@ -175,7 +175,7 @@ const map = new maplibregl.Map({
       { id: 'bg', type: 'background', paint: { 'background-color': initialTheme === 'light' ? '#dfe7e2' : '#071412' } },
       { id: 'dark', type: 'raster', source: 'dark', layout: { visibility: initialTheme === 'dark' ? 'visible' : 'none' } },
       { id: 'light', type: 'raster', source: 'light', layout: { visibility: initialTheme === 'light' ? 'visible' : 'none' } },
-      { id: 'sat', type: 'raster', source: 'sat', layout: { visibility: 'none' } },
+      { id: 'sat', type: 'raster', source: 'sat', layout: { visibility: 'visible' } },
     ],
   },
   center: [39.8, 43.5], zoom: 10, attributionControl: { compact: true },
