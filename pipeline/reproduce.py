@@ -1,4 +1,5 @@
-"""Сквозной пересчёт: полевые данные → реестр пар → разбиение → концентрация → детектор → сводка.
+"""Сквозной пересчёт: полевые данные → реестр пар → разбиение → концентрация → сведение → детектор → сводка →
+реестр данных → манифест sha256 и сверка метрик с сохранёнными предсказаниями (pipeline.verify).
 
 python -m pipeline.reproduce                 # всё, что не требует скачивания снимков
 python -m pipeline.reproduce --offline       # реестр пар из кеша STAC и качества (без сети)
@@ -70,6 +71,24 @@ def summary() -> str:
                 f"{m} {v['mae']:.0f}" for m, v in t.items() if isinstance(v, dict)) +
                 f"; медианы {t['target_median_train']:.0f} → {t['target_median_check']:.0f} шт./км².")
         lines.append("")
+    for pid in ("A", "B"):
+        p = ev / "fusion" / f"{pid}_metrics.json"
+        if not p.exists():
+            continue
+        r = json.loads(p.read_text(encoding="utf-8"))
+        vg = r["variogram"]
+        lines += [f"## Сведение с полевыми измерениями, профиль {pid}", "",
+                  f"Регрессионный кригинг остатков модели: s = {vg['psill']:.2f}, τ² = {vg['nugget']:.2f}, "
+                  f"ρ = {vg['range_km']:.0f} км, v = {r['v_km_day']:.0f} км/сут. Кросс-валидация на обучающей части: "
+                  f"средний квадрат ошибки ln(C+1) {vg['loo_mse_no_neighbours']:.3f} → {vg['loo_mse']:.3f}.", "",
+                  "| Отложенная выборка | MAE | ошибка ln(C+1) | покрытие 80% | вес измерений |",
+                  "|---|---:|---:|---:|---:|",
+                  f"| модель | {r['model']['mae']:.1f} | {r['model']['mae_log']:.2f} | {r['model']['cover80']:.0%} | 0 |"]
+        for k, name in (("nearby", "сведение, соседи есть"), ("isolated", "сведение, соседей нет")):
+            v = r["scenarios"][k]
+            lines.append(f"| {name} | {v['mae']:.1f} | {v['mae_log']:.2f} | {v['cover80']:.0%} | "
+                         f"{v['mean_field_weight']:.2f} |")
+        lines.append("")
     reg = DATA / "registry" / "summary.json"
     if reg.exists():
         s = json.loads(reg.read_text(encoding="utf-8"))
@@ -90,12 +109,13 @@ def main() -> None:
         print(write_summary())
         return
     offline = "--offline" in sys.argv
-    from . import concentration, field, pairs, splits
+    from . import concentration, datasets, field, fusion, pairs, splits
 
     step("Полевой реестр: отбор по профилям", field.prepare)
     step("Реестр пар «событие ↔ снимок»", lambda: pairs.build(offline=offline))
     step("Разбиение с группами", lambda: [splits.build(p) for p in ("A", "B")])
     step("Концентрация: CV, отложенная выборка, перенос", lambda: [concentration.evaluate(p) for p in ("A", "B")])
+    step("Сведение модели с полевыми измерениями: вариограмма, проверка", lambda: [fusion.fit(p) for p in ("A", "B")])
     if "--skip-marida" not in sys.argv:
         if (RAW / "marida" / "splits").exists():
             from . import eval_detector, mados
@@ -116,7 +136,12 @@ def main() -> None:
         for a in AOIS:
             if (PROCESSED / a / "water.tif").exists():
                 step(f"Карта акватории {a}", lambda a=a: aggregate.run(a))
+    step("Реестр данных → docs/datasets.md", datasets.main)
     print("\n" + write_summary())
+    from . import verify
+
+    # Манифест пишется заново: веса и предсказания только что пересчитаны; затем метрики сверяются с ними
+    step("sha256 и пересчёт метрик из сохранённых предсказаний", lambda: (verify.write_manifest(), verify.main()))
 
 
 if __name__ == "__main__":

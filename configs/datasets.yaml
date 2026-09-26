@@ -1,0 +1,246 @@
+# Реестр данных AquaFlow: все открытые наборы, которые использует сервис, их поля и условия использования.
+# Источник для GET /api/datasets, вкладки «Данные» в панели «Методика» и docs/datasets.md
+# (python -m pipeline.datasets пересобирает документ из этого файла).
+#
+# role: train — обучение модели; eval — только проверка; feature — признак модели; input — вход сервиса
+# (снимки, поля течений и ветра); display — только отображение.
+
+datasets:
+  - id: case_registry
+    name: Полевой реестр кейса (макромусор, S1–S4)
+    provider: организаторы кейса; сведён из четырёх открытых источников ниже
+    version: 935 строк, 56 полей, 318 событий
+    access: выдан с кейсом — data/field/raw/macroplastic_marine_samples.csv
+    local: data/field/raw/
+    license: по источникам — CC BY 4.0 (S1, S2, S4) и CC BY 3.0 (S3)
+    terms: использование и изменение с указанием авторов первоисточников; ссылки — в полях source_doi и provenance
+    role: [train, eval]
+    used_for: обучение и проверка моделей концентрации (профили A и B), слой полевых измерений на карте, реестр пар
+    code: pipeline/field.py, pipeline/measure.py
+    fields:
+      - {name: sample_id, type: строка, desc: "уникальный ключ записи MPL-0001…MPL-0935"}
+      - {name: event_id, type: строка, desc: "событие (трансекта, трал); строки одного события зависимы"}
+      - {name: source_id, type: строка, desc: "источник S1…S4"}
+      - {name: record_type, type: словарь, desc: "transect_density — плотность по полосе; item_observation — отдельный предмет"}
+      - {name: target_scope, type: словарь, desc: "совокупность: total_plastic, all_litter, категории, object_context — по ней отбираются профили"}
+      - {name: measurement_profile, type: словарь, desc: "протокол и порог размера: S2_visual_GT2, S4_visual_GT2_5 и др."}
+      - {name: "latitude, longitude, lat_start…lon_end", type: "°, WGS 84", desc: "положение и концы полосы учёта"}
+      - {name: "date_utc, time_start_utc, time_end_utc", type: "дата, время UTC", desc: "интервал наблюдения; дата без времени — целые сутки"}
+      - {name: items_count, type: шт., desc: "число предметов N — числитель C = N / A (только в целевом отборе, не признак)"}
+      - {name: "sampled_area_km2, transect_length_km, transect_width_m", type: "км², км, м", desc: "обследованная площадь A и размеры полосы"}
+      - {name: concentration_items_km2, type: шт./км², desc: "опубликованная плотность — целевая величина; пересчитывается как N / A, где N и A известны"}
+      - {name: "material, size_class, sampling_method", type: строка, desc: "материал, размерный класс, метод — подписи профиля"}
+      - {name: quality_flags, type: "коды через ;", desc: "ограничения записи; строки с source_total_vs_object_count_conflict исключены"}
+      - {name: "source_doi, source_license, provenance", type: строка, desc: "происхождение и лицензия записи"}
+    notes: >-
+      Запрещены как признаки (производные от ответа или недоступны при применении): концентрации, items_count,
+      parent_*, reported_*, density_numerator_items, волнение и судовой ветер — список forbidden_predictors в
+      configs/concentration.yaml, проверка — tests/test_leakage.py.
+
+  - id: s1_lebreton2018
+    name: "S1 · Большое тихоокеанское мусорное пятно (Lebreton et al., 2018)"
+    provider: The Ocean Cleanup; figshare
+    version: DOI 10.6084/m9.figshare.5873142
+    access: https://doi.org/10.6084/m9.figshare.5873142
+    license: CC BY 4.0
+    terms: использование с указанием авторов (Lebreton et al., 2018, Scientific Reports 8:4666)
+    role: [eval]
+    used_for: слой полевых измерений (профиль C — трал 5–50 см); дрейф без снимка от места измерения. Модель не обучалась
+    code: pipeline/field.py
+    fields:
+      - {name: "Sampling event ID", type: строка, desc: "идентификатор трала → event_id S1:<Sampling event ID>"}
+      - {name: "SamplingInformation, Concentration", type: "таблицы figshare", desc: "место и время тралов; плотность по размерным классам, шт./км² и г/км² — в реестре кейса уже сведены"}
+
+  - id: s2_pangaea_msm41
+    name: "S2 · Саргассово море, рейс MSM41 (Gutow et al., 2021)"
+    provider: PANGAEA
+    version: "PANGAEA 931833 (предметы), 931834 (трансекты), 931845 (сводная)"
+    access: https://doi.pangaea.de/10.1594/PANGAEA.931834
+    local: data/field/raw/pangaea_931834_transects.xlsx
+    license: CC BY 4.0
+    terms: использование с указанием авторов и DOI набора
+    role: [train, eval]
+    used_for: обучение и проверка профиля A; сегменты и время прерванных трансект T18, T22, T35, T49
+    code: pipeline/field.py
+    fields:
+      - {name: "Transect no.", type: номер, desc: "трансекта → S2:MSM41_litter-T<n>; строка на сегмент прерванной трансекты"}
+      - {name: "Date, Start Time, End time", type: "дата, время UTC", desc: "время сегмента"}
+      - {name: "Start Lat (N), Start Long (W), End Lat (N), End Long (W)", type: "°", desc: "концы сегмента"}
+      - {name: "Distance (km), Area (km2) covered", type: "км, км²", desc: "длина и площадь полосы 10 м"}
+      - {name: "Total no. of items, Items density (items km-2)", type: "шт., шт./км²", desc: "сверка N / A с реестром кейса"}
+      - {name: "Density of seaweeds clumps", type: "комков/км²", desc: "только контекст события; запрещён как признак"}
+
+  - id: s3_pangaea_he419
+    name: "S3 · Юго-восток Северного моря (Gutow et al., 2018)"
+    provider: PANGAEA
+    version: "PANGAEA 890781 (предметы), 890782 (трансекты)"
+    access: https://doi.pangaea.de/10.1594/PANGAEA.890782
+    license: CC BY 3.0
+    terms: использование с указанием авторов и DOI набора
+    role: [eval]
+    used_for: только проверка переноса профиля B на другое море; не обучался
+    code: pipeline/field.py, pipeline/concentration.py
+
+  - id: s4_doors3
+    name: "S4 · Чёрное море, рейс DOORS 3 (июнь 2024)"
+    provider: Институт океанологии БАН; Zenodo
+    version: DOI 10.5281/zenodo.15129753
+    access: https://zenodo.org/records/15129753
+    license: CC BY 4.0
+    terms: использование с указанием авторов и DOI набора
+    role: [train, eval]
+    used_for: обучение и проверка профиля B (весь плавающий мусор >2,5 см); пары со снимками Sentinel-2
+    code: pipeline/field.py, pipeline/pairs.py
+
+  - id: marida
+    name: MARIDA — Marine Debris Archive v1.0.0
+    provider: Kikaki et al., 2022 (PLoS ONE 17(1) e0262247); Zenodo
+    version: DOI 10.5281/zenodo.5151941
+    access: https://zenodo.org/records/5151941
+    local: "data/raw/marida (не в репозитории); списки разбиения — data/splits/marida/"
+    license: CC BY 4.0
+    terms: использование с указанием авторов статьи и DOI набора
+    role: [train, eval]
+    used_for: обучение детектора (train), ранняя остановка и пороги базовых (val), итоговые метрики (test)
+    code: pipeline/train.py, pipeline/eval_detector.py
+    fields:
+      - {name: "S2_<scene>_<n>.tif", type: "отражение, 11 каналов", desc: "B01–B12 без B09 и B10, 256×256 пикс. по 10 м, ACOLITE"}
+      - {name: "S2_<scene>_<n>_cl.tif", type: "класс 0–15", desc: "0 — не размечено (игнорируется), 1 — Marine Debris (положительный класс), 2–15 — фон"}
+      - {name: "S2_<scene>_<n>_conf.tif", type: "1–3", desc: "уверенность разметки (в обучении не используется)"}
+      - {name: "splits/{train,val,test}_X.txt", type: список патчей, desc: "официальное разбиение: 694 / 328 / 359 патчей"}
+
+  - id: mados
+    name: MADOS — Marine Debris and Oil Spill
+    provider: Kikaki et al., 2024 (ISPRS J. Photogramm. Remote Sens.); Zenodo
+    version: DOI 10.5281/zenodo.10664073
+    access: https://zenodo.org/records/10664073
+    local: data/raw/MADOS.zip (не в репозитории, ~4 ГБ)
+    license: CC BY 4.0
+    terms: использование с указанием авторов статьи и DOI набора
+    role: [eval]
+    used_for: проверка детектора на фоне, которого нет в MARIDA (нефть, слизь, медузы, платформы); в модель сервиса не входит
+    code: pipeline/mados.py, pipeline/eval_detector_mados.py
+    fields:
+      - {name: "<scene>_L2R_rhorc_<λ>_<n>.tif", type: "отражение по каналам 10/20/60 м", desc: "патчи 240×240"}
+      - {name: "<scene>_L2R_cl_<n>.tif", type: "класс 0–15", desc: "15 классов, в том числе Oil Spill, Sea snot, Jellyfish, Oil Platform"}
+      - {name: "splits/{train,val,test}_X.txt", type: список патчей, desc: "разбиение авторов"}
+
+  - id: sentinel2_l2a
+    name: Sentinel-2 L2A (Microsoft Planetary Computer)
+    provider: ESA / Copernicus; каталог STAC Microsoft Planetary Computer
+    version: коллекция sentinel-2-l2a, обработка Sen2Cor
+    access: https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a
+    local: "data/processed/<aoi>/<date>/ (не в репозитории, ~17 ГБ); в репозитории — метаданные сцен и готовые карты data/web"
+    license: Условия Copernicus Sentinel Data (свободный полный открытый доступ)
+    terms: "использование, копирование и изменение бесплатно; указывать «Contains modified Copernicus Sentinel data <год>»"
+    role: [input, eval]
+    used_for: детекция скоплений на акваториях, маска качества, реестр пар «событие ↔ снимок», подложка сцены
+    code: pipeline/s2.py, pipeline/detect.py, pipeline/pairs.py
+    fields:
+      - {name: "B01…B12 (без B09, B10)", type: "отражение = (DN + сдвиг) / 10 000", desc: "сдвиг −1000 для обработки 04.00 и новее (с 25.01.2022)"}
+      - {name: SCL, type: "класс сцены 0–11", desc: "облака, тени, вода, снег — маска пригодных пикселей"}
+      - {name: "datetime, s2:mgrs_tile, eo:cloud_cover, s2:processing_baseline", type: метаданные STAC, desc: "время пролёта, тайл, облачность, версия обработки"}
+
+  - id: landsat_c2_l2
+    name: Landsat Collection 2 Level-2 (Microsoft Planetary Computer)
+    provider: USGS
+    version: коллекция landsat-c2-l2
+    access: https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2
+    license: общественное достояние США (USGS)
+    terms: без ограничений; просьба указывать «Landsat imagery courtesy of the U.S. Geological Survey»
+    role: [display]
+    used_for: учёт в реестре пар и просмотр сцены из карточки события там, где Sentinel-2 нет (S2, S3 2014). Детектор не применяется — нет красного края
+    code: pipeline/pairs.py, backend/case_api.py
+    fields:
+      - {name: "red, green, blue", type: отражение, desc: "естественные цвета для просмотра"}
+
+  - id: era5_openmeteo
+    name: ERA5, ветер 10 м (через Open-Meteo Historical Weather API)
+    provider: ECMWF / Copernicus Climate Change Service; Open-Meteo
+    version: ERA5 hourly, 0,25°
+    access: https://open-meteo.com/en/docs/historical-weather-api
+    local: data/field/cache_era5.json (кеш признака), data/processed/<aoi>/<date>/met.npz (кеш дрейфа)
+    license: Open-Meteo — CC BY 4.0; ERA5 — лицензия Copernicus
+    terms: указывать Open-Meteo и «Copernicus Climate Change Service information <год>»
+    role: [feature, input]
+    used_for: признак wind24_ms (кандидат), статус «шторм» у снимка, дрейфовый буфер реестра пар, ветер в прогнозе дрейфа
+    code: pipeline/covariates.py, pipeline/aggregate.py, pipeline/drift.py
+    fields:
+      - {name: wind_speed_10m, type: м/с, desc: "скорость ветра на 10 м, ежечасно"}
+      - {name: wind_direction_10m, type: "°, откуда дует", desc: "направление ветра"}
+
+  - id: openmeteo_forecast
+    name: Прогноз ветра Open-Meteo (Forecast API)
+    provider: Open-Meteo (модели национальных метеослужб)
+    access: https://open-meteo.com/en/docs
+    license: CC BY 4.0
+    terms: указывать Open-Meteo
+    role: [input]
+    used_for: ветер в дрейфе по свежим снимкам, пока за эти дни нет ERA5 (последние 6 суток)
+    code: pipeline/drift.py
+    fields:
+      - {name: "wind_speed_10m, wind_direction_10m", type: "м/с, °", desc: "как у ERA5"}
+
+  - id: smoc_openmeteo
+    name: "Течения Meteo-France SMOC (GLOBAL_ANALYSISFORECAST_PHY_001_024) через Open-Meteo Marine API"
+    provider: Copernicus Marine Service; Open-Meteo
+    version: 1/12°, ежечасно, с 2022 г.
+    access: https://open-meteo.com/en/docs/marine-weather-api
+    local: data/processed/<aoi>/<date>/met.npz
+    license: Open-Meteo — CC BY 4.0; данные — лицензия Copernicus Marine Service
+    terms: указывать Open-Meteo и E.U. Copernicus Marine Service Information
+    role: [input]
+    used_for: прогноз дрейфа на 72 ч от снимка, зоны схождения, маршрут судна, проверка дрейфа
+    code: pipeline/drift.py, pipeline/route.py
+    fields:
+      - {name: ocean_current_velocity, type: км/ч, desc: "суммарная поверхностная скорость: течение + прилив + стоксов дрейф"}
+      - {name: ocean_current_direction, type: "°, куда", desc: "направление течения"}
+
+  - id: cmems_reanalysis
+    name: Реанализы Copernicus Marine — течения, волны, ветер
+    provider: Copernicus Marine Service
+    version: "GLORYS12 (GLOBAL_MULTIYEAR_PHY_001_030), NWSHELF_MULTIYEAR_PHY_004_009, GLOBAL_MULTIYEAR_WAV_001_032, WIND_GLO_PHY_L4_MY_012_006"
+    access: https://data.marine.copernicus.eu (бесплатный аккаунт)
+    local: data/cmems/*.npz (кеш)
+    license: Copernicus Marine Service licence (свободное использование)
+    terms: указывать «E.U. Copernicus Marine Service Information» и DOI продукта
+    role: [input]
+    used_for: дрейф без снимка от места полевого измерения (S1–S3, 2014–2016 гг.)
+    code: pipeline/cmems.py
+    fields:
+      - {name: "uo, vo", type: м/с, desc: "течение: GLORYS12 1/12° среднесуточное; на шельфе Северного моря — NWS ~7 км ежечасно с приливом"}
+      - {name: "VSDX, VSDY", type: м/с, desc: "стоксов дрейф волн, 0,2°, раз в 3 ч"}
+      - {name: "eastward_wind, northward_wind", type: м/с, desc: "ветер 10 м, L4, 0,125° (до 2007 г. 0,25°), ежечасно"}
+
+  - id: global_land_mask
+    name: global-land-mask (по данным GLOBE, ~1 км)
+    provider: T. Karin; NOAA GLOBE
+    access: https://github.com/toddkarin/global-land-mask
+    license: MIT (пакет); GLOBE — открытые данные NOAA
+    terms: сохранять уведомление MIT
+    role: [feature, input]
+    used_for: расстояние до берега — признак профиля B; суша для частиц дрейфа за краем снимка
+    code: pipeline/covariates.py, pipeline/drift.py
+    fields:
+      - {name: is_land, type: логический, desc: "суша / море на сетке ~1 км"}
+
+  - id: esri_basemaps
+    name: Подложки Esri (World Imagery, Light/Dark Gray Canvas)
+    provider: Esri
+    access: https://server.arcgisonline.com/ArcGIS/rest/services/
+    license: условия использования Esri
+    terms: только отображение; атрибуция на карте
+    role: [display]
+    used_for: подложка карты
+    code: frontend/src/legacy.ts
+
+  - id: review_set
+    name: Набор для ручной разметки детекций (свой)
+    provider: команда AquaFlow
+    access: python -m pipeline.review sample
+    local: data/eval/review/
+    license: как у снимков Sentinel-2 (производные данные Copernicus)
+    terms: "«Contains modified Copernicus Sentinel data»"
+    role: [eval]
+    used_for: будущая локальная точность детектора (120 зон, 60 контрольных точек); пока не размечен, в метрики не входит
+    code: pipeline/review.py

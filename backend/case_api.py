@@ -17,10 +17,10 @@ import numpy as np
 from fastapi import APIRouter, HTTPException, Path, Query
 from fastapi.responses import Response
 
-from backend.schemas import (DATE_RE, PROFILE_RE, AoiPath, AoiQuery, ConcentrationLayerOut, DatePath, DateQuery,
-                             FeatureCollection, FieldEventOut, FieldSourceOut, GeoJSONResponse, HexEstimateOut,
-                             MetricsOut, PairsOut, ProfileOut, ProfileQuery, QueryIdPath, QueryIn, RerunOut,
-                             SavedQueryOut, Tag, ZonesOut, errors)
+from backend.schemas import (DATE_RE, PROFILE_RE, AoiPath, AoiQuery, ConcentrationLayerOut, DatasetOut, DatePath,
+                             DateQuery, FeatureCollection, FieldEventOut, FieldSourceOut, FusionOut, GeoJSONResponse,
+                             HexEstimateOut, MetricsOut, PairsOut, ProfileOut, ProfileQuery, QueryIdPath, QueryIn,
+                             RerunOut, SavedQueryOut, SeparationOut, Tag, ZonesOut, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
 from pipeline.config import AOIS, CACHE, DATA, FIELD_SOURCES, MODELS, ROOT, cached
@@ -472,6 +472,10 @@ def hex_estimate(aoi: AoiPath, date: DatePath, profile: ProfileQuery = "B",
     """Концентрация профиля в центре гекса на момент снимка — с 80% и 95% интервалами, статусом и причинами
     статуса (далеко от полевых данных, другой сезон, признак вне диапазона обучения), признаками модели и
     статусом детекции того же гекса. Считается на лету той же моделью, что и слой концентрации.
+
+    `calc` — тот же расчёт по шагам: формула модели с подставленными признаками и коэффициентами.
+    `fusion` — сведение с полевыми измерениями рядом (как `GET /api/fusion`): вес модели и каждого измерения
+    по расстоянию, давности и точности, сведённое значение с интервалами.
     """
     from pipeline import concentration
 
@@ -493,7 +497,78 @@ def hex_estimate(aoi: AoiPath, date: DatePath, profile: ProfileQuery = "B",
             "model_version": r["model_version"], "model_type": r["model_type"],
             "detection_status": s["status_codes"][str(s["status"][di][i])],
             "detection_status_ru": ST.DETECTION[s["status_codes"][str(s["status"][di][i])]],
-            "cover_m2_km2": s["cover"][di][i], "valid_frac": s["valid"][di][i]}
+            "cover_m2_km2": s["cover"][di][i], "valid_frac": s["valid"][di][i],
+            "calc": concentration.calc_steps(profile, r["features"]) if val("value") is not None else [],
+            "fusion": _fuse(profile, h["lon"], h["lat"], s["scenes"][di]["datetime"], r["value"][0])}
+
+
+def _fuse(profile: str, lon: float, lat: float, t: str, value: float) -> dict | None:
+    """Сведение с полевыми измерениями; None — концентрация недоступна или параметры сведения не построены."""
+    from pipeline import fusion
+
+    if value is None or np.isnan(value):
+        return None
+    try:
+        return fusion.fuse(profile, float(lon), float(lat), t, float(value))
+    except FileNotFoundError:
+        return None
+
+
+@router.get("/api/fusion", tags=[Tag.CONCENTRATION], summary="Сведение модели и полевых измерений в точке",
+            response_model=FusionOut, responses=errors(404, 422))
+def fusion_at(lon: float = Query(ge=-180, le=180, description="Долгота точки", examples=[41.6]),
+              lat: float = Query(ge=-90, le=90, description="Широта точки", examples=[41.62]),
+              t: datetime = Query(description="Момент оценки, ISO 8601; без часового пояса — UTC",
+                                  examples=["2024-06-05T08:30:00Z"]),
+              profile: ProfileQuery = "B"):
+    """Какому источнику верить в этой точке и в этот момент: модели профиля или полевым измерениям рядом.
+
+    Метод — регрессионный кригинг остатков модели в пространстве-времени: измерение получает тем больший вес,
+    чем оно ближе (`distance_km`), свежее (`age_days`) и точнее (известен счётный шум N / A). Сутки давности
+    весят как `v_km_day` км расстояния — скорость дрейфа пятна. `same_patch` — точка внутри дрейфового буфера
+    измерения: снимок и судовой учёт описывают одно пятно. Без измерений рядом ответ совпадает с моделью.
+    Спутниковые детекции в число шт./км² не входят. 404 — профиль к точке не применим (другой бассейн)."""
+    from pipeline import concentration
+
+    _profile(profile)
+    t = (t.replace(tzinfo=timezone.utc) if t.tzinfo is None else t.astimezone(timezone.utc)).replace(tzinfo=None)
+    r = concentration.predict(profile, [lon], [lat], [t.isoformat()])
+    out = _fuse(profile, lon, lat, t.isoformat(), float(r["value"][0]))
+    if out is None:
+        raise HTTPException(404, f"концентрация профиля {profile} в этой точке недоступна: "
+                                 + "; ".join(r["reasons"][0] or ["нет параметров сведения"]))
+    return out
+
+
+@router.get("/api/aois/{aoi}/{date}/separation", tags=[Tag.DETECTION],
+            summary="Чем мусор отличён от похожих объектов на снимке", response_model=SeparationOut,
+            responses=errors(404, 422))
+def separation(aoi: AoiPath, date: DatePath):
+    """Как детектор на этом снимке отделил плавающий мусор от пены, волн, судов, водорослей, облаков и блика.
+
+    `model_classes` — пиксели с аномалией относительно воды по классу, который выбрала модель (мусор, органика и
+    водоросли, суда, пена и волны, облака). `candidates` — пиксели с P(мусор) ≥ порога; `rejected` — сколько
+    из них отбраковано и почему (каждый — по первой сработавшей причине: постоянный объект, судно и кильватер,
+    лёд, край облака, тест на пену, одиночный пиксель, CFAR против блика и ряби, шторм). `kept` — итоговые
+    детекции, столько же, сколько `n_det` снимка."""
+    _aoi_date(aoi, date)
+    doc = _read(WEB / aoi / "separation.json")
+    st = doc["by_date"].get(date)
+    if st is None:
+        raise HTTPException(404, f"нет разбора снимка {aoi} на {date}")
+    return {"aoi": aoi, "date": date, "unit": doc["unit"], **st, "model_classes_ru": doc["model_classes"],
+            "reasons_ru": doc["reasons"]}
+
+
+@router.get("/api/datasets", tags=[Tag.SERVICE], summary="Реестр данных: наборы, поля, лицензии",
+            response_model=list[DatasetOut])
+def datasets():
+    """Все открытые наборы данных сервиса: поставщик, версия и DOI, доступ, лицензия и условия, роль (обучение,
+    проверка, признак, вход, отображение), зачем используется, код и поля, которые мы берём. Источник —
+    configs/datasets.yaml; тот же реестр — docs/datasets.md."""
+    from pipeline.datasets import load
+
+    return load()
 
 
 def _zone_row(z: dict, profile: str, p: dict) -> dict:
@@ -672,6 +747,9 @@ def metrics():
                       ("review", EVAL / "review" / "score.json")):
         if path.exists():
             out[key] = _read(path)
+    fus = {pid: _read(EVAL / "fusion" / f"{pid}_metrics.json") for pid in _profiles()
+           if (EVAL / "fusion" / f"{pid}_metrics.json").exists()}
+    out["fusion"] = fus or None
     out["validated_where"] = [
         {"claim": "Детектор находит скопления плавающего мусора",
          "field": "—",
@@ -679,6 +757,8 @@ def metrics():
          "pairs": "качественно (фрагменты пар S4)"},
         {"claim": "Концентрация профиля, шт./км²",
          "field": "групповая CV + отложенная выборка", "satellite_labels": "—", "pairs": "—"},
+        {"claim": "Сведение модели с полевыми измерениями рядом",
+         "field": "кросс-валидация кригинга + отложенная выборка", "satellite_labels": "—", "pairs": "—"},
         {"claim": "Перенос числа на снимок",
          "field": "—", "satellite_labels": "—", "pairs": "исследование на принятых парах S4 (время наблюдения неизвестно)"},
     ]

@@ -467,6 +467,7 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
           <div className="profile-control">
             <ProfilePicker />
             <div id="profile-note" className="muted small" />
+            <div id="target-quantity" className="target-quantity" />
           </div>
           <div className="chart-box timeline-chart"><canvas id="timeline" /></div>
           <div id="scene-info" className="scene-info muted small" />
@@ -484,6 +485,15 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
           <div className="kpis" id="kpis" />
           <div className="subhead">Приоритетные зоны</div>
           <ol id="hotlist" className="hotlist" />
+          <div className="drift-cta">
+            <div>
+              <strong>Прогноз дрейфа на 72 часа</strong>
+              <span>Куда течения и ветер унесут найденный мусор: ансамбль частиц, выброс на берег, поминутная анимация</span>
+            </div>
+            <button type="button" id="drift-cta" data-tooltip="Рассчитать и показать прогноз дрейфа на карте"><Waves size={15} />Рассчитать</button>
+          </div>
+          <div className="subhead">Мусор, а не пена, волны или суда</div>
+          <div id="separation" className="separation" />
           <div className="filter-block">
             <div className="subhead">Фильтр детекции</div>
             <div className="status-filter" id="filter-detection">

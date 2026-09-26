@@ -180,6 +180,108 @@ def quality_png(q: np.ndarray, path) -> None:
     Image.fromarray(lut[q[::2, ::2]]).save(path, optimize=True)
 
 
+def static_objects(src_dir, ds: list[str], water: np.ndarray) -> np.ndarray:
+    """Постоянные объекты (причалы, буи, садки, стоящие суда): срабатывают на многих датах ряда."""
+    hits = np.zeros(water.shape, np.uint16)
+    seen = np.zeros(water.shape, np.uint16)
+    for d in ds:
+        with rasterio.open(src_dir / d / "det.tif") as s:
+            P, frac, G, valid, flags = s.read()
+        valid = valid.astype(bool) & ~binary_dilation(ice_mask(src_dir, d), iterations=30)
+        hits += ((P >= P_DET * 255) | (G == SHIP)) & valid
+        seen += valid
+    static = (hits >= 3) & (hits >= 0.2 * np.maximum(seen, 1))
+    return binary_dilation(static, iterations=1)
+
+
+def scene_masks(src_dir, d: str, water: np.ndarray, static: np.ndarray) -> dict | None:
+    """Кандидаты в мусор и все маски отбраковки на снимке; None — видимой воды меньше min_scene_valid."""
+    with rasterio.open(src_dir / d / "det.tif") as s:
+        P8, frac8, G, valid, flags = s.read()
+    ice = ice_mask(src_dir, d)
+    ice_frac = float((ice & water).sum() / max(water.sum(), 1))
+    valid = valid.astype(bool) & ~binary_dilation(ice, iterations=5)
+    if valid.sum() < DCFG["min_scene_valid"] * water.sum():
+        return None
+    P = P8 / 255.0
+    # Вокруг льдин (300 м) детекции не считаем: обломки льда и шуга похожи на мусор
+    # Кильватерные следы тянутся за судами на 1–3 км: детекции рядом с судами не считаем
+    ships = (G == SHIP) & valid & ~static
+    near_ship = binary_dilation(ships, iterations=40) if ships.any() else ships
+    ice_zone = binary_dilation(ice, iterations=30)
+    cloud = cloud_zone(src_dir, d)
+    cand = (P >= P_DET) & valid
+    det = cand & (flags == ALL_FLAGS) & ~static & ~near_ship & ~ice_zone & ~cloud
+    q = quality_codes(src_dir, d, water, ice_zone, static, near_ship)
+    glint_px = (q == 6) & water
+    return {"P": P, "frac": frac8 / 255.0, "G": G, "valid": valid, "flags": flags, "ice_frac": ice_frac,
+            "static": static, "near_ship": near_ship, "ice_zone": ice_zone, "cloud": cloud, "cand": cand, "det": det,
+            "q": q, "glint_px": glint_px,
+            "glinty": float(glint_px.sum() / max(water.sum(), 1)) > DCFG["glint_scene_frac"]}
+
+
+# Отбраковка кандидатов в мусор: причина — первая сработавшая по порядку. Подписи — для API и интерфейса
+REJECT_REASONS = [
+    ("static", "постоянный объект: причал, буй, садок, стоящее судно (≥3 снимков ряда)"),
+    ("ship", "судно и кильватерный след: ближе 400 м к судну"),
+    ("ice", "лёд и шуга: ближе 300 м ко льду"),
+    ("cloud", "край облака или тень: ближе 100 м"),
+    ("foam", "пена и барашки: в видимом диапазоне ярче, чем в NIR"),
+    ("isolated", "одиночный пиксель: рябь, шум"),
+    ("cfar", "блик и рябь: аномалия NIR слабее 5σ локального шума (CFAR)"),
+    ("small", "шторм, лёд или сильный блик на сцене: оставлены только скопления от 4 пикселей"),
+]
+# Классы модели для пикселей с аномалией относительно воды (побеждает класс с наибольшей вероятностью)
+MODEL_CLASSES = {
+    "debris": "плавающий мусор", "organic": "водоросли, саргассум, плавник и органика",
+    "ship": "суда", "foam": "пена, волны, кильватер", "cloud": "облака и тени",
+}
+
+
+def separation_stats(m: dict, det: np.ndarray, water: np.ndarray) -> dict:
+    """Чем снимок отличает мусор от похожих объектов: классы модели для аномальных пикселей и отбраковка
+    кандидатов фильтрами (каждый кандидат — одной, первой сработавшей причине). kept — итоговые детекции."""
+    valid, G, flags = m["valid"], m["G"], m["flags"]
+    classes = {k: int(((G == GROUPS.index(k)) & valid).sum()) for k in MODEL_CLASSES}
+    left = m["cand"].copy()
+    masks = {"static": m["static"], "ship": m["near_ship"], "ice": m["ice_zone"], "cloud": m["cloud"],
+             "foam": (flags & 1) == 0, "isolated": (flags & 2) == 0, "cfar": (flags & 4) == 0}
+    rejected = {}
+    for key, _ in REJECT_REASONS[:-1]:
+        hit = left & masks[key]
+        rejected[key] = int(hit.sum())
+        left &= ~hit
+    rejected["small"] = int((left & ~det).sum())
+    return {"valid_px": int(valid.sum()), "water_px": int(water.sum()),
+            "glint_frac": round(float(m["glint_px"].sum() / max(water.sum(), 1)), 4),
+            "model_classes": classes, "candidates": int(m["cand"].sum()), "rejected": rejected,
+            "kept": int(det.sum())}
+
+
+def write_separation(out_dir, stats: dict) -> None:
+    doc = {"unit": "пиксели 10 м", "model_classes": MODEL_CLASSES, "reasons": dict(REJECT_REASONS),
+           "dates": sorted(stats), "by_date": {d: stats[d] for d in sorted(stats)}}
+    (out_dir / "separation.json").write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+
+
+def separation(aoi_id: str) -> dict:
+    """Только статистика различения объектов по готовым det.tif — без пересборки остальных файлов карты."""
+    src_dir = PROCESSED / aoi_id
+    series = json.loads((WEB / aoi_id / "series.json").read_text(encoding="utf-8"))
+    water = load_water(aoi_id)
+    ds = [d for d in dates(aoi_id) if (src_dir / d / "det.json").exists()]
+    static = static_objects(src_dir, ds, water)
+    stats = {}
+    for d, sc in zip(series["dates"], series["scenes"]):
+        m = scene_masks(src_dir, d, water, static)
+        det = drop_small(m["det"], 4) if sc.get("storm") else m["det"]  # шторм, лёд или блик — как в run
+        stats[d] = separation_stats(m, det, water)
+        if stats[d]["kept"] != sc["n_det"]:
+            raise RuntimeError(f"{aoi_id} {d}: детекций {stats[d]['kept']}, в series.json {sc['n_det']}")
+    write_separation(WEB / aoi_id, stats)
+    return stats
+
+
 def zones(det: np.ndarray, P: np.ndarray, frac: np.ndarray, prof, merge_px: int) -> list[dict]:
     """Зоны вероятного скопления: связные группы детекций (ближе merge_px пикселей — одна зона)."""
     from pyproj import Transformer
@@ -286,15 +388,9 @@ def run(aoi_id: str) -> None:
                 "dist_coast_km": covariates.dist_coast_km(hex_ll[:, 0], hex_ll[:, 1])}
 
     # Проход 1: постоянные объекты (причалы, буи, садки, стоящие суда) — срабатывают на многих датах
-    hits = np.zeros(water.shape, np.uint16)
-    seen = np.zeros(water.shape, np.uint16)
+    static = static_objects(src_dir, ds, water)
     scenes = {}
     for d in ds:
-        with rasterio.open(src_dir / d / "det.tif") as s:
-            P, frac, G, valid, flags = s.read()
-        valid = valid.astype(bool) & ~binary_dilation(ice_mask(src_dir, d), iterations=30)
-        hits += ((P >= P_DET * 255) | (G == SHIP)) & valid
-        seen += valid
         det_json = src_dir / d / "det.json"
         sc = json.loads(det_json.read_text(encoding="utf-8"))
         meta = json.loads((src_dir / d / "meta.json").read_text(encoding="utf-8"))
@@ -304,41 +400,27 @@ def run(aoi_id: str) -> None:
             sc["wind_max"] = scene_wind_max(aoi_id, sc)
             det_json.write_text(json.dumps(sc), encoding="utf-8")
         scenes[d] = sc
-    static = (hits >= 3) & (hits >= 0.2 * np.maximum(seen, 1))
-    static = binary_dilation(static, iterations=1)
 
     # Проход 2: итоговые детекции, зоны, маска качества и метрики гексов по датам
     good_dates, cover_t, ndet_t, valid_t, storm_t, status_t = [], [], [], [], [], []
     conc_t = {pid: {"value": [], "lo80": [], "hi80": [], "status": []} for pid in ui_profiles()}
     conc_meta: dict = {}
+    sep = {}
     for d in ds:
-        with rasterio.open(src_dir / d / "det.tif") as s:
-            P8, frac8, G, valid, flags = s.read()
-        ice = ice_mask(src_dir, d)
-        ice_frac = float((ice & water).sum() / max(water.sum(), 1))
-        valid = valid.astype(bool) & ~binary_dilation(ice, iterations=5)
-        if valid.sum() < DCFG["min_scene_valid"] * water.sum():
+        m = scene_masks(src_dir, d, water, static)
+        if m is None:
             continue  # облака или сплошной лёд
-        P = P8 / 255.0
-        frac = frac8 / 255.0
-        # Вокруг льдин (300 м) детекции не считаем: обломки льда и шуга похожи на мусор
-        # Кильватерные следы тянутся за судами на 1–3 км: детекции рядом с судами не считаем
-        ships = (G == SHIP) & valid & ~static
-        near_ship = binary_dilation(ships, iterations=40) if ships.any() else ships
-        ice_zone = binary_dilation(ice, iterations=30)
-        det = ((P >= P_DET) & valid & (flags == ALL_FLAGS) & ~static & ~near_ship & ~ice_zone
-               & ~cloud_zone(src_dir, d))
+        P, frac, valid, q, glint_px, glinty = m["P"], m["frac"], m["valid"], m["q"], m["glint_px"], m["glinty"]
+        ice_frac, det = m["ice_frac"], m["det"]
         sc = scenes[d]
         wind = sc.get("wind_max") or sc.get("wind") or 0.0
         storm = wind >= STORM_WIND
         iced = ice_frac > ICE_FRAC
         # Сильный блик: CFAR поднимает порог, мелкие детекции ненадёжны, а отсутствие мусора не подтверждается
-        q = quality_codes(src_dir, d, water, ice_zone, static, near_ship)
-        glint_px = (q == 6) & water
-        glinty = float(glint_px.sum() / max(water.sum(), 1)) > DCFG["glint_scene_frac"]
         if storm or iced or glinty:
             det = drop_small(det, 4)
         unreliable = storm or iced or glinty  # дальше «ненадёжная сцена»: исключается из статистики по времени
+        sep[d] = separation_stats(m, det, water)
         vpx = np.bincount(flat, weights=valid[water], minlength=n_hex)
         nd = np.bincount(flat, weights=det[water], minlength=n_hex)
         area = np.bincount(flat, weights=(frac * 100 * det)[water], minlength=n_hex)
@@ -470,6 +552,7 @@ def run(aoi_id: str) -> None:
         "detector": {"p_det": P_DET, "config": run_meta("detector.yaml")["configs"]},
     }
     (out_dir / "series.json").write_text(json.dumps(series), encoding="utf-8")
+    write_separation(out_dir, {d: sep[d] for d in good_dates})
     for pid, v in conc_t.items():
         st_arr = np.asarray(v["status"], int).reshape(len(v["status"]), -1)
         available = bool((st_arr != ST.CONCENTRATION_CODE[ST.UNAVAILABLE]).any())
@@ -487,5 +570,11 @@ def run(aoi_id: str) -> None:
 
 
 if __name__ == "__main__":
-    for a in sys.argv[1:] or list(AOIS):
-        run(a)
+    # --separation — только статистика различения объектов (separation.json) по готовым картам
+    only_sep = "--separation" in sys.argv
+    for a in [x for x in sys.argv[1:] if not x.startswith("-")] or list(AOIS):
+        if not only_sep:
+            run(a)
+        elif (WEB / a / "series.json").exists():
+            separation(a)
+            print(f"{a}: separation.json", flush=True)

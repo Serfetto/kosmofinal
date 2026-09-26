@@ -363,6 +363,41 @@ def predict(profile: str, lon, lat, t_ref, features: dict | None = None) -> dict
             "model_type": j["serve"]["type"], "features": f}
 
 
+def calc_steps(profile: str, features: dict, i: int = 0) -> list[dict]:
+    """Расчёт оценки в точке по шагам: формула модели сервиса с подставленными числами — для карточки гекса.
+
+    features — признаки из predict (массивы), i — индекс точки. Каждый шаг: {label, formula}.
+    """
+    j = load_model(profile)
+    s = j["serve"]
+    if s["type"] not in ("nb_glm", "loglinear_ridge"):
+        return []
+    f = {k: float(np.atleast_1d(v)[i]) for k, v in features.items()}
+    fmt = lambda v, d=3: f"{v:.{d}f}".replace(".", ",").replace("-", "−")  # noqa: E731
+    out, eta, terms = [], s["beta"][0], [fmt(s["beta"][0])]
+    if "dist_coast_km" in f and "log_dist_coast_km" in s["features"]:
+        out.append({"label": "Расстояние до берега", "formula": f"d = {fmt(f['dist_coast_km'], 1)} км"})
+    for k, b, mu, sd in zip(s["features"], s["beta"][1:], s["mu"], s["sd"]):
+        z = (f[k] - mu) / sd
+        src = f"ln(1 + {fmt(f['dist_coast_km'], 1)})" if k == "log_dist_coast_km" else fmt(f[k], 4)
+        out.append({"label": f"Признак {k}", "formula": f"z = ({src} − {fmt(mu)}) / {fmt(sd)} = {fmt(z)}"})
+        eta += b * z
+        terms.append(f"{'−' if b < 0 else '+'} {fmt(abs(b))}·{fmt(z) if z >= 0 else '(' + fmt(z) + ')'}")
+    if s["type"] == "nb_glm":
+        c = float(np.exp(eta))
+        out.append({"label": "Линейный предиктор", "formula": f"ln Ĉ = {' '.join(terms)} = {fmt(eta)}"})
+        out.append({"label": "Оценка", "formula": f"Ĉ = e^{fmt(eta)} = {fmt(c, 1)} шт./км²"})
+    else:
+        c = max(float(np.exp(eta)) - EPS, 0.0)
+        out.append({"label": "Линейный предиктор", "formula": f"ln(Ĉ + 1) = {' '.join(terms)} = {fmt(eta)}"})
+        out.append({"label": "Оценка", "formula": f"Ĉ = e^{fmt(eta)} − 1 = {fmt(c, 1)} шт./км²"})
+    q = j["interval_log_quantiles"]["0.8"]
+    lo, hi = apply_interval(np.array([c]), q)
+    out.append({"label": "80%-интервал", "formula": f"[(Ĉ + 1)·e^({fmt(q[0], 2)}) − 1 ; (Ĉ + 1)·e^{fmt(q[1], 2)} − 1] "
+                                                   f"= [{fmt(float(lo[0]), 0)} ; {fmt(float(hi[0]), 0)}] шт./км²"})
+    return out
+
+
 def _month(t) -> int:
     return covariates._parse(t).month if not isinstance(t, (int, np.integer)) else int(t)
 

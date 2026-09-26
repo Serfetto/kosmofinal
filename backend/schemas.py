@@ -251,6 +251,10 @@ class HexEstimateOut(BaseModel):
     detection_status_ru: str
     cover_m2_km2: float = Field(description="Покрытие мусором по детектору, м²/км² — в шт./км² не переводится")
     valid_frac: float = Field(description="Доля воды гекса, пригодной для анализа")
+    calc: list[dict[str, str]] = Field(default_factory=list, description="Расчёт по шагам: формула модели "
+                                                                   "с подставленными признаками и коэффициентами")
+    fusion: "FusionOut | None" = Field(None, description="Сведение модели с полевыми измерениями рядом; null — "
+                                                         "концентрация недоступна")
 
 
 # ---------- снимок на дату: файлы data/web (только документация) ----------
@@ -499,6 +503,85 @@ class RerunOut(BaseModel):
     current_versions: dict[str, Any] = Field(description="Версии сейчас — при `match: false` показывают, что изменилось")
 
 
+class FusionEvidence(BaseModel):
+    event_id: str = Field(description="Полевое измерение — `event_id` из `GET /api/field`")
+    date_utc: str = Field(description="Дата измерения")
+    conc_items_km2: float = Field(description="Измерено: C = N / A, шт./км²")
+    distance_km: float = Field(description="Расстояние от точки оценки, км")
+    age_days: float = Field(description="Давность относительно момента оценки, сут.")
+    st_distance_km: float = Field(description="Пространственно-временное расстояние h = √(d² + (v·Δt)²), км")
+    weight: float = Field(description="Вес измерения в сведённой оценке (кригинг)")
+    model_factor: float = Field(description="Измерено / модель в месте измерения: >1 — модель там занижает")
+    model_at_event: float = Field(description="Что модель даёт в месте и в момент измерения, шт./км²")
+    counting_noise: bool = Field(description="Известен счётный шум (N и A): точность измерения учтена в весе")
+    n_items: float | None = Field(description="Число предметов N; null — опубликована только плотность")
+    drift_buffer_km: float = Field(description="R = r_следа + Δt·v: насколько могло сместиться пятно, км")
+    same_patch: bool = Field(description="Точка внутри дрейфового буфера — снимок и измерение описывают одно пятно")
+
+
+class FusedValue(BaseModel):
+    value: float = Field(description="Сведённая концентрация, шт./км²")
+    lo80: float
+    hi80: float
+    lo95: float
+    hi95: float
+
+
+class FusionOut(BaseModel):
+    profile: str
+    method: str = Field(description="Название метода")
+    version: str = Field(description="Версия параметров сведения")
+    model: dict[str, float] = Field(description="Оценка модели `value`, шт./км², и её вес `weight` (1 − Σ весов измерений)")
+    fused: FusedValue = Field(description="Сведённая оценка с интервалами")
+    field_weight: float = Field(description="Суммарный вес полевых измерений, 0–1")
+    variance_reduction: float = Field(description="На сколько измерения сузили дисперсию оценки, 0–1")
+    evidence: list[FusionEvidence] = Field(description="Измерения с заметным весом, по убыванию веса")
+    n_candidates: int = Field(description="Измерений, попавших в систему кригинга")
+    params: dict[str, float] = Field(description="Параметры: psill s, nugget τ², range_km ρ, v_km_day v")
+    unit: str = Field(description="шт./км²")
+
+
+class SeparationOut(BaseModel):
+    aoi: str
+    date: str
+    unit: str = Field(description="пиксели 10 м")
+    valid_px: int = Field(description="Пригодных пикселей воды")
+    water_px: int = Field(description="Пикселей в маске воды")
+    glint_frac: float = Field(description="Доля воды под сильным бликом")
+    model_classes: dict[str, int] = Field(description="Аномальные пиксели по классам модели: debris, organic, ship, "
+                                                      "foam, cloud")
+    model_classes_ru: dict[str, str] = Field(description="Подписи классов")
+    candidates: int = Field(description="Кандидатов в мусор: P ≥ порога")
+    rejected: dict[str, int] = Field(description="Отбраковано кандидатов по причинам (первая сработавшая)")
+    reasons_ru: dict[str, str] = Field(description="Подписи причин")
+    kept: int = Field(description="Итоговых детекций — столько же, сколько `n_det` снимка")
+
+
+class MethodologyOut(BaseModel):
+    target: list[dict[str, Any]] = Field(description="Целевая величина по профилям: что, единица, размер, метод")
+    steps: list[dict[str, Any]] = Field(description="Шаги расчёта: метод, формулы с текущими коэффициентами, код")
+    objects: list[dict[str, Any]] = Field(description="Объекты, которые можно спутать с мусором: как отделяем, "
+                                                      "доля ошибок на MARIDA test и MADOS, статус")
+    fusion_rules: list[dict[str, str]] = Field(description="Как разбираются расхождения источников")
+    fusion_eval: dict[str, Any] = Field(description="Проверка сведения на отложенной выборке по профилям")
+
+
+class DatasetOut(BaseModel):
+    id: str
+    name: str
+    provider: str | None = None
+    version: str | None = None
+    access: str | None = None
+    local: str | None = None
+    license: str
+    terms: str | None = None
+    role: list[str] = Field(description="train, eval, feature, input, display")
+    used_for: str | None = None
+    code: str | None = None
+    fields: list[dict[str, str]] = Field(default_factory=list, description="Поля, которые использует сервис")
+    notes: str | None = None
+
+
 class MetricsOut(BaseModel):
     detector: dict[str, Any] | None = Field(description="Детектор на тесте MARIDA: P/R/F1/IoU по методам и порогам")
     concentration: dict[str, Any] = Field(description="Модели концентрации по профилям: групповая CV, отложенная "
@@ -511,4 +594,9 @@ class MetricsOut(BaseModel):
     detector_mados: dict[str, Any] | None = Field(None, description="Детектор на новых сценах MADOS test: P/R/F1 и "
                                                                "ложные срабатывания на нефти, слизи, медузах, платформах")
     review: dict[str, Any] | None = Field(None, description="Ручная проверка фрагментов с детекциями")
+    fusion: dict[str, Any] | None = Field(None, description="Сведение модели с полевыми измерениями: вариограмма и "
+                                                         "проверка на отложенной выборке по профилям")
     validated_where: list[dict[str, str]] = Field(description="Что чем подтверждено: утверждение → данные проверки")
+
+
+HexEstimateOut.model_rebuild()

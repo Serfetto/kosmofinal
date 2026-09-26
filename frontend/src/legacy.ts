@@ -35,6 +35,7 @@ const S = {
   filters: { det: new Set(['detected', 'not_detected', 'insufficient_data']), conc: new Set(['model_estimate', 'research_estimate', 'unavailable']) },
   drift: null, accum: null, sel: null, cmp: { A: null, B: null }, drawing: null, draft: [],
   route: null, markers: [], stopMarkers: [], charts: {}, tool: null, anim: null,
+  sep: null, method: null, datasets: null, aboutTab: 'method',
 };
 
 async function request(url, opts) {
@@ -420,10 +421,15 @@ function renderProfiles() {
   $('#profile').value = S.profile;
   window.dispatchEvent(new Event('aquaflow-profile-sync'));
 }
+// Размерный класс профиля одной строкой — из подписи («≳2,5 см» → «2,5 см»)
+const sizeShort = (p) => (p.label || '').match(/[≳>]\s?([\d,]+\s?см)/)?.[1] || p.size_class || '';
 function renderProfileNote() {
   const p = profileInfo();
   const avail = S.aoi?.concentration?.[S.profile];
   const na = !S.conc || !S.conc.available;
+  $('#target-quantity').innerHTML = `<span class="tq-symbol">C</span><span><b>Целевая величина, ${esc(p.unit || 'шт./км²')}</b>` +
+    `число плавающих предметов крупнее <b>${esc(sizeShort(p))}</b> (${esc(p.material || '')}) на 1 км² морской поверхности. ` +
+    `Эталон — судовой учёт в полосе: C = N / A.</span>`;
   $('#profile-note').innerHTML = `${esc(p.material || '')}; ${esc(p.size_class || '')}; ${esc(p.method || '')}.` +
     `<br>Модель: ${esc(p.model_type || '–')} · обучение ${p.n_train ?? '–'} событий, отложено ${p.n_holdout ?? '–'}.` +
     (na ? `<br><span style="color:#fbbf24">Концентрация недоступна для этой акватории: ${esc(avail?.reason || S.conc?.reason || 'профиль не применим')}.</span>` : '');
@@ -471,6 +477,8 @@ async function setDate(i) {
   setFlowSource(`/api/aois/${S.aoi.id}/${d}/flow?hours=72`, S.aoi.tz);
   if (S.mode === 'forecast' || S.mode === 'accum') setMode('conc');
   try { S.zones = await api(`/api/aois/${S.aoi.id}/${d}/zones`); } catch { S.zones = EMPTY; }
+  try { S.sep = await api(`/api/aois/${S.aoi.id}/${d}/separation`); } catch { S.sep = null; }
+  renderSeparation();
   paintZones();
   paintHexes();
   renderKpis();
@@ -820,6 +828,72 @@ function renderKpis() {
   $$('#hotlist li[data-z]').forEach((li) => li.onclick = () => openZone(li.dataset.z, true));
 }
 
+// ---------- различение объектов: чем снимок отделил мусор от пены, волн, судов, водорослей и блика ----------
+
+const SEP_ORDER = ['foam', 'cfar', 'isolated', 'ship', 'static', 'cloud', 'ice', 'small'];
+const SEP_SHORT = { foam: 'пена, барашки', cfar: 'блик и рябь (CFAR)', isolated: 'одиночный шум', ship: 'суда, кильватер',
+  static: 'постоянные объекты', cloud: 'края облаков', ice: 'лёд', small: 'шторм/блик: мелкие' };
+const CLASS_SHORT = { organic: 'водоросли, органика', foam: 'пена, волны', ship: 'суда', cloud: 'облака' };
+
+function renderSeparation() {
+  const box = $('#separation');
+  if (!box) return;
+  const s = S.sep;
+  if (!s) { box.innerHTML = '<p class="muted small">Разбор снимка недоступен.</p>'; return; }
+  const rej = SEP_ORDER.filter((k) => s.rejected[k] > 0).map((k) => [k, s.rejected[k]]);
+  const max = Math.max(1, s.kept, ...rej.map(([, v]) => v));
+  const bar = (label, v, cls, title) => `<div class="sep-row ${cls}" title="${esc(title)}"><span>${esc(label)}</span>` +
+    `<i style="width:${Math.max(2, (100 * v) / max)}%"></i><b>${nf(v, 0)}</b></div>`;
+  const other = Object.entries(CLASS_SHORT).filter(([k]) => s.model_classes[k] > 0)
+    .map(([k, v]) => `${v} — ${nf(s.model_classes[k], 0)}`).join(' · ');
+  box.innerHTML = `<p class="small muted">Пиксели с P(мусор) ≥ порога — ${nf(s.candidates, 0)}. Каждый проверяется фильтрами; причина — первая сработавшая.</p>` +
+    rej.map(([k, v]) => bar(SEP_SHORT[k], v, 'is-rejected', s.reasons_ru[k])).join('') +
+    bar('осталось: мусор', s.kept, 'is-kept', 'итоговые детекции — они и образуют зоны') +
+    (other ? `<p class="small muted sep-note">Ещё модель сама отнесла аномальные пиксели к другим классам: ${esc(other)}.</p>` : '') +
+    `<p class="small muted sep-note">Блик на ${nf(s.glint_frac * 100, 0)}% воды. Слизь, медуз и плавник детектор от мусора не отличает — см. «Методика».</p>`;
+}
+
+// Зона детекции: все её пиксели прошли фильтры — это и есть ответ «почему не пена, не волна, не судно»
+function zoneChecklist(z) {
+  const s = S.sep, sc = S.series.scenes[S.di];
+  const n = (k) => (s ? ` <span class="muted">(на снимке отсеяно ${nf(s.rejected[k], 0)})</span>` : '');
+  const items = [
+    ['ok', `Не пена и не барашки: аномалия в NIR сильнее, чем в синем канале${n('foam')}`],
+    ['ok', `Не рябь и не блик: аномалия NIR ≥ 5σ локального шума (CFAR)${n('cfar')}`],
+    ['ok', `Не судно и не кильватер: дальше 400 м от судов, не постоянный объект${s ? ` <span class="muted">(отсеяно ${nf(s.rejected.ship + s.rejected.static, 0)})</span>` : ''}`],
+    ['ok', `Не водоросли: модель отдала пикселям класс «мусор», а не «органика» (P = ${nf(z.p_mean, 2)}…${nf(z.p_max, 2)})`],
+    ['ok', `Не край облака: дальше 100 м от облаков и теней${n('cloud')}`],
+    [sc.storm ? 'warn' : 'ok', sc.storm ? `Сцена ненадёжна (${esc(sc.reason || 'шторм, блик')}): оставлены только скопления от 4 пикселей` : `Море ${esc(z.sea)}, ветер ${nf(z.wind_ms)} м/с — барашков нет`],
+    ['warn', 'Слизь, медузы, плавник и нефтяные эмульсии спектрально похожи на мусор — подтвердите судном или дроном'],
+  ];
+  return `<ul class="checklist">${items.map(([c, t]) => `<li class="${c}">${t}</li>`).join('')}</ul>`;
+}
+
+// ---------- сведение источников: модель + полевые измерения по расстоянию, давности и точности ----------
+
+function fusionHtml(f) {
+  if (!f) return '<p class="small muted">Сведение недоступно: концентрация профиля здесь не считается.</p>';
+  const ev = f.evidence, fx = f.fused, pr = f.params;
+  const segs = [`<span class="t-model" style="width:${100 * f.model.weight}%" title="Модель: ${nf(100 * f.model.weight, 0)}%"></span>`]
+    .concat(ev.map((e, k) => `<span class="t-field t${k % 4}" style="width:${100 * e.weight}%" title="${esc(e.event_id)}: ${nf(100 * e.weight, 0)}%"></span>`));
+  const rows = ev.map((e) => `<tr><td><a href="#" data-ev="${esc(e.event_id)}">${esc(e.event_id.replace(/^S\d:(DOORS3:|MSM41_litter-)?/, ''))}</a>` +
+    `${e.same_patch ? '<br><span class="badge model_estimate">то же пятно</span>' : ''}</td>` +
+    `<td>${nf(e.conc_items_km2, 0)}<br><span class="muted">модель там ${nf(e.model_at_event, 0)}</span></td>` +
+    `<td>${nf(e.distance_km, 1)} км<br><span class="muted">${nf(e.age_days, 1)} сут.</span></td><td><b>${nf(100 * e.weight, 0)}%</b></td></tr>`).join('');
+  return `<div class="fusion-box">
+    <div class="fusion-head"><span>Сведённая оценка</span><b>${nf(fx.value, 0)}<small> шт./км²</small></b><em>80%: ${nf(fx.lo80, 0)}–${nf(fx.hi80, 0)}</em></div>
+    <div class="trust-bar">${segs.join('')}</div>
+    <div class="trust-legend"><span><i class="t-model"></i>модель ${nf(100 * f.model.weight, 0)}% (${nf(f.model.value, 0)} шт./км²)</span><span><i class="t-field t0"></i>полевые измерения ${nf(100 * f.field_weight, 0)}%</span></div>
+    ${ev.length ? `<table class="card-table fusion-table"><tr><th>Измерение</th><th>Измерено</th><th>Где, когда</th><th>Вес</th></tr>${rows}</table>
+      <p class="small muted">Неопределённость снижена на ${nf(100 * f.variance_reduction, 0)}%. Если модель ошиблась в месте измерения («модель там»), кригинг переносит эту поправку сюда с весом измерения.</p>`
+      : `<p class="small muted">Свежих измерений профиля рядом нет — доверяем модели. Вес измерения падает вдвое примерно за ${nf(pr.range_km * Math.LN2, 0)} км пространственно-временного расстояния.</p>`}
+    <p class="small muted">${esc(f.method)}: вес тем больше, чем измерение ближе, свежее и точнее; сутки давности ≈ ${nf(pr.v_km_day, 0)} км (скорость дрейфа пятна). Спутниковые детекции в шт./км² не входят.</p>
+  </div>`;
+}
+function bindFusionLinks(root) {
+  root.querySelectorAll('a[data-ev]').forEach((a) => (a.onclick = (e) => { e.preventDefault(); openField(a.dataset.ev, true); }));
+}
+
 const TOOL_TITLE = { card: 'Карточка', field: 'Данные кейса: S1–S4', hex: 'Участок акватории', compare: 'Сравнение участков', drift: 'Прогноз распространения', route: 'План обследования', about: 'О методе' };
 function openTool(t, title) {
   if (S.tool === t && !$('#panel').hidden && !title) { closePanel(); return; }
@@ -871,15 +945,25 @@ function openZone(zoneId, fly = false) {
       ['Видно воды на сцене', `${nf(z.valid_frac_scene * 100, 0)}%`],
       ['Ветер ERA5 / море', `${nf(z.wind_ms)} м/с · ${esc(z.sea)}`],
     ])}
+    <h3>Почему это мусор, а не пена, волна, судно или водоросли</h3>
+    ${zoneChecklist(z)}
     <h3>Ближайшее полевое измерение</h3>
     ${z.field_event_id ? kv([
       ['Событие', `<a href="#" data-ev="${esc(z.field_event_id)}">${esc(z.field_event_id)}</a> (профиль ${esc(z.field_profile)})`],
       ['Расстояние / разница дат', `${nf(z.field_distance_km, 0)} км · ${nf(z.field_date_gap_days, 0)} сут.`],
       ['Измерено', `${nf(z.field_conc_items_km2, 1)} шт./км² · ${ruDate(z.field_date)}`],
     ]) : '<p>нет</p>'}
+    <h3>Сведение модели и полевых измерений</h3>
+    <div id="zone-fusion"><p class="small muted">Считаем веса источников…</p></div>
     <p class="small">Модель: ${esc(z[`conc_${P}_model`] || '–')}. Концентрация взята из модели по полевым данным профиля и не выводится из площади маски.</p>
     <div class="export-grid"><button id="card-exp-geojson">Зоны даты · GeoJSON</button><button id="card-exp-csv">Зоны даты · CSV</button></div>`;
   $$('#card-body a[data-ev]').forEach((a) => a.onclick = (ev) => { ev.preventDefault(); openField(a.dataset.ev, true); });
+  if (c != null) {
+    api(`/api/fusion?${new URLSearchParams({ lon: z.lon, lat: z.lat, t: z.scene_datetime_utc, profile: P })}`)
+      .then((f) => { const box = $('#zone-fusion'); if (box && S.selZone === zoneId) { box.innerHTML = fusionHtml(f); bindFusionLinks(box); } })
+      .catch((err) => { const box = $('#zone-fusion'); if (box) box.innerHTML = `<p class="small muted">Сведение недоступно: ${esc(err.message)}</p>`; });
+  } else $('#zone-fusion').innerHTML = fusionHtml(null);
+  S.selZone = zoneId;
   $('#card-exp-geojson').onclick = () => exportLayer('zones', 'geojson');
   $('#card-exp-csv').onclick = () => exportLayer('zones', 'csv');
   map.getSource('sel').setData({ type: 'FeatureCollection', features: [f] });
@@ -949,6 +1033,7 @@ async function renderHexPanel() {
     [`${nf(p.water_km2, 2)} · ${nf(p.dist_coast_km, 1)}`, 'км² воды · км до берега'],
   ].map(([b, t]) => `<div class="kpi"><b>${b}</b><span>${t}</span></div>`).join('');
   $('#hex-conc').innerHTML = '<p class="muted small">Загрузка оценки…</p>';
+  $('#hex-calc').innerHTML = ''; $('#hex-fusion').innerHTML = '';
   const data = s.dates.map((d, j) => (s.valid[j][i] >= 0.5 ? s.cover[j][i] : null));
   S.charts.hex?.destroy();
   S.charts.hex = new Chart($('#hex-chart'), {
@@ -972,7 +1057,14 @@ async function renderHexPanel() {
         : `<p class="small">C ≈ <b>${nf(r.conc_items_km2, 0)}</b> шт./км²; 80%: ${nf(r.lo80, 0)}–${nf(r.hi80, 0)}; 95%: ${nf(r.lo95, 0)}–${nf(r.hi95, 0)}. Модель ${esc(r.model_type)} (${esc(r.model_version)}).</p>`) +
       (r.reasons.length ? `<ul class="reasons">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '') +
       `<p class="small muted">Признаки: ${Object.entries(r.features).map(([k, v]) => `${k} = ${nf(v, 2)}`).join('; ')}. Ближайшее полевое измерение: ${nf(r.nearest_field_km, 0)} км.</p>`;
-  } catch (err) { $('#hex-conc').innerHTML = `<p class="small">Оценка недоступна: ${esc(err.message)}</p>`; }
+    $('#hex-calc').innerHTML = r.calc.length ? `<div class="subhead">Расчёт по шагам · ${esc(r.model_type)}</div><ol class="calc-steps">${r.calc
+      .map((c) => `<li><span>${esc(c.label)}</span><code>${esc(c.formula)}</code></li>`).join('')}</ol>` : '';
+    $('#hex-fusion').innerHTML = `<div class="subhead">Сведение с полевыми измерениями</div>${fusionHtml(r.fusion)}`;
+    bindFusionLinks($('#hex-fusion'));
+  } catch (err) {
+    $('#hex-conc').innerHTML = `<p class="small">Оценка недоступна: ${esc(err.message)}</p>`;
+    $('#hex-calc').innerHTML = ''; $('#hex-fusion').innerHTML = '';
+  }
 }
 
 // Ансамбль траекторий из одной точки на карте; возвращает смещение центра ансамбля за горизонт, км
@@ -1505,10 +1597,57 @@ async function toggleFullscreen(trigger = $('#map-fullscreen')) {
 
 let metrics = null;
 const pct = (v) => nf(v * 100, 1);
-async function renderAbout() {
-  const trigger = $('#tools button[data-tool="about"]');
-  const render = async () => {
-  if (!metrics) { try { metrics = await api('/api/metrics'); } catch { metrics = null; } }
+const ROLE_RU = { train: 'обучение', eval: 'проверка', feature: 'признак', input: 'вход сервиса', display: 'отображение' };
+const STATUS_CLS = { 'различаем': 'model_estimate', 'частично': 'research_estimate', 'не выделяем': 'unavailable', 'не различаем': 'unavailable' };
+
+// Вкладка «Методика»: целевая величина, формулы с коэффициентами моделей, различение объектов, сведение источников
+function methodHtml(m) {
+  const target = m.target.map((t) => `<div class="tq-card${t.profile === S.profile ? ' is-current' : ''}">
+    <div class="tq-card-head"><span class="profile-option-code">${esc(t.profile)}</span><b>${esc(t.quantity)}</b></div>
+    <p><b>C, ${esc(t.unit)}</b> — ${esc(t.definition)}.</p>
+    <p class="small muted">Размер: ${esc(t.size_class)} · метод: ${esc(t.method)}</p></div>`).join('');
+  const steps = m.steps.map((s, k) => `<section class="method-step">
+    <h4><span>${k + 1}</span>${esc(s.title)}</h4>
+    <p class="method-name">Метод: ${esc(s.method)}</p>
+    <div class="formula">${s.formula.map((f) => `<div>${esc(f)}</div>`).join('')}</div>
+    <p class="small muted">${esc(s.legend)}</p>
+    <p class="code-ref">${esc(s.code)}${s.model_version ? ` · ${esc(s.model_version)}` : ''}</p></section>`).join('');
+  const objects = m.objects.map((o) => `<tr><td><b>${esc(o.object)}</b><br><span class="small muted">${esc(o.how)}</span>${o.note ? `<br><span class="small">${esc(o.note)}</span>` : ''}</td>` +
+    `<td>${o.marida_fp == null ? '—' : `${pct(o.marida_fp)}%`}</td><td>${o.mados_fp == null ? '—' : `${pct(o.mados_fp)}%`}</td>` +
+    `<td>${badge(STATUS_CLS[o.status] || '', o.status)}</td></tr>`).join('');
+  const rules = m.fusion_rules.map((r) => `<li><b>${esc(r.case)}.</b> ${esc(r.rule)}</li>`).join('');
+  const fe = Object.entries(m.fusion_eval || {}).map(([pid, e]) => {
+    const n = e.scenarios.nearby, i = e.scenarios.isolated;
+    return `<tr><td>${pid} (${e.n_holdout})</td><td>${nf(e.model.mae, 1)}<br><span class="muted">${nf(e.model.mae_log, 2)}</span></td>` +
+      `<td>${nf(n.mae, 1)}<br><span class="muted">${nf(n.mae_log, 2)}</span></td><td>${nf(i.mae, 1)}<br><span class="muted">${nf(i.mae_log, 2)}</span></td>` +
+      `<td>${nf(100 * (1 - e.variogram.loo_mse / e.variogram.loo_mse_no_neighbours), 0)}%</td></tr>`;
+  }).join('');
+  return `<div class="about">
+    <h3>Целевая величина</h3>${target}
+    <p class="small">Три величины на карте не смешиваются: <b>полевое измерение</b> (C = N / A по полосе учёта, эталон), <b>модельная оценка</b> C в шт./км² (модель профиля по полевым данным) и <b>зона детекции</b> со снимка (площадь в м² — «где искать», в шт./км² не переводится).</p>
+    <h3>Методы и формулы</h3>
+    <p class="small muted">Коэффициенты подставлены из моделей, которые сейчас работают в сервисе. Расчёт конкретного гекса по этим формулам — в карточке гекса («Расчёт по шагам»).</p>
+    ${steps}
+    <h3>Мусор, а не пена, волны, суда, водоросли или блик</h3>
+    <p class="small muted">Доля пикселей класса, которые основной алгоритм (как в сервисе) принял за мусор: MARIDA test и новые сцены MADOS test. Разбор конкретного снимка — в «Сводке», конкретной зоны — в её карточке.</p>
+    <table class="card-table objects-table"><tr><th>Объект и как отделяем</th><th>MARIDA</th><th>MADOS</th><th>Итог</th></tr>${objects}</table>
+    <h3>Противоречивые источники и неопределённость</h3>
+    <ul class="rules">${rules}</ul>
+    ${fe ? `<p class="small muted">Проверка сведения на отложенной выборке: MAE, шт./км² (под ней — средняя ошибка ln(C + 1)). «Соседи есть» — доступны прочие измерения, включая тот же рейс; «соседей нет» — измерения той же группы исключены. Последний столбец — снижение ошибки кригинга на обучающей части (кросс-валидация).</p>
+      <table class="card-table"><tr><th>Профиль (событий)</th><th>Модель</th><th>Соседи есть</th><th>Соседей нет</th><th>CV</th></tr>${fe}</table>
+      <p class="small muted">Выборки малы (${Object.values(m.fusion_eval).map((e) => e.n_holdout).join(' и ')} событий), поэтому выводы осторожные: ${Object.entries(m.fusion_eval).map(([pid, e]) =>
+        `профиль ${pid} — MAE ${nf(e.model.mae, 0)} → ${nf(e.scenarios.nearby.mae, 0)} при измерениях рядом`).join('; ')}. Где сведение не помогает, ошибка модели сравнима со счётным шумом трансект.</p>` : ''}
+    <h3>Ограничения и допущения</h3>
+    <ul>
+      <li>При 10 м видны скопления и полосы (от ~20–30% пикселя), а не отдельные предметы: рассеянный мусор из полевых учётов со спутника не виден, поэтому шт./км² даёт модель по полевым данным.</li>
+      <li>Профиль B — весь плавающий мусор &gt;2,5 см (не только пластик) по DOORS 2024 у берегов Болгарии, Турции и Грузии; у побережья РФ — исследовательская оценка.</li>
+      <li>Нефтяные плёнки и эмульсии сервис не выделяет, морскую слизь, медуз и плавник от мусора не отличает — нужна проверка судном или дроном.</li>
+      <li>Течения 1/12° не разрешают мелкие бухты и порты; для водохранилищ — только ветровой дрейф. Прогноз дрейфа справочный, не откалиброван.</li>
+    </ul></div>`;
+}
+
+// Вкладка «Проверка»: метрики детектора, моделей концентрации, пар, дрейфа и сведения
+function checksHtml(metrics) {
   const det = metrics?.detector, conc = metrics?.concentration || {}, pairs = metrics?.pairs;
   const detRows = det ? Object.entries(det.methods).map(([k, m]) =>
     `<tr><td>${esc(m.name)}</td><td>${nf(m.precision, 3)}</td><td>${nf(m.recall, 3)}</td><td>${nf(m.f1, 3)}<br><span class="small muted">${nf(m.ci95.f1[0], 2)}–${nf(m.ci95.f1[1], 2)}</span></td><td>${nf(m.iou, 3)}</td></tr>`).join('') : '';
@@ -1523,17 +1662,10 @@ async function renderAbout() {
       <p class="small">Обучение ${r.n_dev} событий, отложено ${r.n_holdout}, групп ${r.n_groups}. ★ – модель сервиса (минимум MAE на CV). Покрытие 80%-интервала на отложенной выборке: ${pct(r.holdout_interval_coverage['0.8'])}%.` +
       (r.poisson_floor_mae_dev ? ` Нижняя граница MAE из-за счётного шума: ${nf(r.poisson_floor_mae_dev, 1)} шт./км².` : '') + `</p>${tc}`;
   }).join('');
+  const fus = Object.entries(metrics?.fusion || {}).map(([pid, e]) => `<tr><td>${pid}</td><td>${nf(e.model.mae, 1)} · ${pct(e.model.cover80)}%</td>` +
+    `<td>${nf(e.scenarios.nearby.mae, 1)} · ${pct(e.scenarios.nearby.cover80)}%</td><td>${nf(e.scenarios.isolated.mae, 1)} · ${pct(e.scenarios.isolated.cover80)}%</td></tr>`).join('');
   const pf = metrics?.pair_features || [];
-  $('#about').innerHTML = `<div class="about">
-    <p>Сервис разделяет три величины: <b>зоны детекции</b> (где со снимка видны скопления), <b>полевые измерения</b> (C = N/A по полосе учёта) и <b>модельную концентрацию</b> в шт./км² для заявленного профиля. Площадь маски в число предметов не переводится.</p>
-    <h3>Как считается</h3>
-    <ol>
-      <li><b>Sentinel-2 L2A</b>, 11 каналов, 10 м. Облака и тени по SCL, постоянная маска воды, маска качества пикселя отдельно от решения «мусор / не мусор».</li>
-      <li><b>Нормализация фона</b>: из пикселя вычитается локальный спектр воды – так компенсируются блик, дымка и разница атмосферной коррекции.</li>
-      <li><b>Классификатор XGBoost</b> на MARIDA (спектр, FDI, FAI, NDVI, PI, текстура) и фильтры: пена, соседство, CFAR 5σ, постоянные объекты, кильватер, лёд, шторм ≥ 8 м/с.</li>
-      <li><b>Концентрация</b>: отдельная модель по полевым данным профиля; используются признаки, доступные при применении, групповая проверка, конформные интервалы и область применимости.</li>
-      <li><b>Прогноз</b> (дополнительная функция): лагранжев ансамбль, течения SMOC + 1–3% ветра, выброс на берег и маршрут обследования.</li>
-    </ol>
+  return `<div class="about">
     <h3>Детектор: MARIDA test (${det?.n_test_scenes ?? '–'} сцен, ${det?.n_test_patches ?? '–'} патчей)</h3>
     <table><tr><th>Метод</th><th>P</th><th>R</th><th>F1 (95% ДИ)</th><th>IoU</th></tr>${detRows}</table>
     <p class="small muted">Положительный класс: ${esc(det?.positive_class || '')}. Игнорируются: ${esc(det?.ignored || '')}. Порог основного P ≥ ${nf(det?.thresholds?.xgb, 2)} задан до проверки; пороги базовых подобраны на val.</p>
@@ -1549,6 +1681,8 @@ async function renderAbout() {
     <h3>Ложные срабатывания основного алгоритма на сложном фоне</h3>
     <table><tr><th>Класс фона</th><th>FP, пикс.</th><th>Всего</th><th>Доля</th></tr>${fpRows}</table>
     <h3>Концентрация, шт./км²</h3>${concBlocks}
+    ${fus ? `<h3>Сведение модели и полевых измерений (отложенная выборка)</h3>
+    <table><tr><th>Профиль</th><th>Модель: MAE · покрытие 80%</th><th>Соседи есть</th><th>Соседей нет</th></tr>${fus}</table>` : ''}
     <h3>Совместные пары «событие ↔ снимок»</h3>
     <p class="small">${pairs ? `Событий ${pairs.events}, кандидатов-сцен ${pairs.candidates}. Итог по событиям: ${Object.entries(pairs.events_by_outcome).map(([k, v]) => `${k} ${v}`).join(', ')}. Причины: ${Object.entries(pairs.rows_by_reason).map(([k, v]) => `${k} ${v}`).join(', ')}.` : 'реестр не построен'}</p>
     ${pf.length ? `<table><tr><th>Событие</th><th>Видно, пикс.</th><th>Детекций</th><th>Зон</th></tr>${pf.map((r) => `<tr><td>${esc(r.event_id)}</td><td>${nf(r.valid_px, 0)}</td><td>${nf(r.det_px, 0)}</td><td>${nf(r.n_zones, 0)}</td></tr>`).join('')}</table>` : ''}
@@ -1557,16 +1691,38 @@ async function renderAbout() {
     <p class="small">${metrics.drift_check.summary.n_pairs} пар соседних снимков: медианное расстояние от новых детекций до частиц прогноза ${nf(metrics.drift_check.summary.median_km_forecast, 1)} км, до исходного положения («пятно на месте») ${nf(metrics.drift_check.summary.median_km_persistence, 1)} км; прогноз лучше в ${metrics.drift_check.summary.pairs_forecast_better} парах. Прогноз справочный, пока не откалиброван.</p>` : ''}
     <h3>Что где проверено</h3>
     <table><tr><th>Вывод</th><th>Полевые</th><th>MARIDA</th><th>Пары</th></tr>${(metrics?.validated_where || []).map((r) => `<tr><td>${esc(r.claim)}</td><td>${esc(r.field)}</td><td>${esc(r.satellite_labels)}</td><td>${esc(r.pairs)}</td></tr>`).join('')}</table>
-    <h3>Ограничения</h3>
-    <ul>
-      <li>При разрешении 10 м видны скопления и полосы (от ~20–30% пикселя), а не отдельные предметы: рассеянный мусор из полевых учётов со спутника не виден.</li>
-      <li>Профиль B описывает весь плавающий мусор (не только пластик) по данным DOORS 2024 у берегов Болгарии, Турции и Грузии; для побережья РФ это исследовательская оценка.</li>
-      <li>Пластик, плавник и водоросли спектрально разделяются не полностью; результат нужно подтверждать судном или дроном.</li>
-      <li>Прогноз течений 1/12° не разрешает мелкие бухты и порты; для водохранилищ используется только ветровой дрейф.</li>
-    </ul></div>`;
-  };
+    </div>`;
+}
 
-  if (!metrics) return withButtonLoading(trigger, 'Загрузка…', render);
+// Вкладка «Данные»: реестр открытых наборов с полями и лицензиями
+function datasetsHtml(list) {
+  const link = (s) => (/^https?:\/\//.test(s || '') ? `<a href="${esc(s)}" target="_blank" rel="noopener">${esc(s)}</a>` : esc(s || '—'));
+  return `<div class="about"><p class="small muted">Все открытые наборы, которые использует сервис: условия, роль и поля. Тот же реестр — docs/datasets.md и <code>GET /api/datasets</code>.</p>
+    ${list.map((d) => `<section class="ds-card">
+      <h4>${esc(d.name)}</h4>
+      <p class="ds-roles">${d.role.map((r) => `<span class="badge">${esc(ROLE_RU[r] || r)}</span>`).join(' ')}</p>
+      ${kv([['Лицензия', `<b>${esc(d.license)}</b>${d.terms ? `<br><span class="small muted">${esc(d.terms)}</span>` : ''}`],
+        ['Поставщик', esc(d.provider || '—')], ['Версия', esc(d.version || '—')], ['Доступ', link(d.access)],
+        ['Зачем', esc(d.used_for || '—')], ['Код', `<span class="small">${esc(d.code || '—')}</span>`]])}
+      ${d.fields?.length ? `<details><summary>Поля (${d.fields.length})</summary><table class="card-table"><tr><th>Поле</th><th>Тип</th><th>Что это</th></tr>${d.fields
+        .map((f) => `<tr><td><code>${esc(f.name)}</code></td><td>${esc(f.type)}</td><td>${esc(f.desc)}</td></tr>`).join('')}</table></details>` : ''}
+      ${d.notes ? `<p class="small muted">${esc(d.notes)}</p>` : ''}
+    </section>`).join('')}</div>`;
+}
+
+async function renderAbout() {
+  const trigger = $('#tools button[data-tool="about"]');
+  const tab = S.aboutTab;
+  $$('.about-tabs button').forEach((b) => { b.classList.toggle('on', b.dataset.about === tab); b.setAttribute('aria-selected', String(b.dataset.about === tab)); });
+  const cached = tab === 'method' ? S.method : tab === 'checks' ? metrics : S.datasets;
+  const render = async () => {
+    try {
+      if (tab === 'method') { S.method = S.method || await api('/api/methodology'); $('#about').innerHTML = methodHtml(S.method); }
+      else if (tab === 'checks') { metrics = metrics || await api('/api/metrics'); $('#about').innerHTML = checksHtml(metrics); }
+      else { S.datasets = S.datasets || await api('/api/datasets'); $('#about').innerHTML = datasetsHtml(S.datasets); }
+    } catch (err) { $('#about').innerHTML = `<p class="small">Не удалось загрузить раздел: ${esc(err.message)}</p>`; }
+  };
+  if (!cached) return withButtonLoading(trigger, 'Загрузка…', render);
   return render();
 }
 
@@ -1592,6 +1748,13 @@ $('#draw-a').onclick = () => startDrawing('A');
 $('#draw-b').onclick = () => startDrawing('B');
 $('#draw-clear').onclick = clearCompare;
 $('#drift-run').onclick = runDrift;
+$('#drift-cta').onclick = async (e) => {
+  const btn = e.currentTarget;
+  if ($('#side')?.classList.contains('is-open')) document.querySelector('.sheet-close')?.click();
+  openTool('drift');
+  if (!S.drift) await runDrift(btn);
+};
+$$('.about-tabs button').forEach((b) => (b.onclick = () => { S.aboutTab = b.dataset.about; renderAbout(); }));
 $('#drift-play').onclick = playDrift;
 $('#drift-hour').oninput = (e) => { if (S.anim) playDrift(); showDriftHour(+e.target.value); };
 $('#route-run').onclick = runRoute;

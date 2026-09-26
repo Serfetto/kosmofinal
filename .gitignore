@@ -21,6 +21,8 @@ data/models/*
 !data/models/metrics.json
 !data/models/xgb.joblib
 !data/models/conc_*.json
+!data/models/fusion_*.json
+!data/models/MANIFEST.json
 !data/processed/
 data/processed/*/*
 !data/processed/*/water.tif

@@ -1,0 +1,115 @@
+{
+ "note": "sha256 весов, разбиений, эталонов и предсказаний; проверка — python -m pipeline.verify",
+ "files": {
+  "data/models/xgb.joblib": {
+   "sha256": "e290b1a1717c766b79d4be4c0784f496fc09afc98f93ee1c587e78e8b5c601d8",
+   "bytes": 15241171,
+   "role": "веса модели"
+  },
+  "data/models/conc_A.json": {
+   "sha256": "8163a65b3c3ed703150a3096459bc63ef6d73cd682b6313b8e66b84496d837ae",
+   "bytes": 9029,
+   "role": "веса модели"
+  },
+  "data/models/conc_B.json": {
+   "sha256": "bcbd50000c48fe7fa5d95dc0c2c3225e44d9c760e07da89509a64d5b88dd885e",
+   "bytes": 5165,
+   "role": "веса модели"
+  },
+  "data/models/fusion_A.json": {
+   "sha256": "6dab955a7cf2f0923444a54a5b94b5db6f826274af0a5bab94ed7246f953ab06",
+   "bytes": 25124,
+   "role": "веса модели"
+  },
+  "data/models/fusion_B.json": {
+   "sha256": "c1db5eb2924fb30150e3e88bfaf6577be23b1d6989050d1682a45db69a3010bf",
+   "bytes": 14119,
+   "role": "веса модели"
+  },
+  "data/splits/A.csv": {
+   "sha256": "498a6b19f45acbd1897e4ceed506ce0503c1c7c8c7dc02e50e3e098e42f77421",
+   "bytes": 7103,
+   "role": "разбиение"
+  },
+  "data/splits/B.csv": {
+   "sha256": "47036d2ae5598c331437affe330fc950d22bc06f6c39771f2df87e6ce3c74ba6",
+   "bytes": 3160,
+   "role": "разбиение"
+  },
+  "data/splits/A_links.csv": {
+   "sha256": "76a9dbed76c2d7a4b0caa94f0338f5f0f72a0a825d8ceb94ee7fecb3e288efe4",
+   "bytes": 2748,
+   "role": "разбиение"
+  },
+  "data/splits/B_links.csv": {
+   "sha256": "61f2098923fa39622da6f9554a67a6fa905f5e9e3fbe7b6dd1dc2ab87b5d0bbe",
+   "bytes": 4582,
+   "role": "разбиение"
+  },
+  "data/splits/marida/train_X.txt": {
+   "sha256": "a9e78f0d410010bca083589329da3d55221775938aa98be2c0ca1753c23422ff",
+   "bytes": 12181,
+   "role": "разбиение"
+  },
+  "data/splits/marida/val_X.txt": {
+   "sha256": "d5b4483ffdf28aa9aaa3dd49bcc8037ec59617e1985331e23ffb006d7b248ca7",
+   "bytes": 5792,
+   "role": "разбиение"
+  },
+  "data/splits/marida/test_X.txt": {
+   "sha256": "dd60f04ea8fba011c7b97c233a4e06fe8ee81fafa84916e2c324d27d68fd07ee",
+   "bytes": 6379,
+   "role": "разбиение"
+  },
+  "data/field/events.csv": {
+   "sha256": "7a64a9fc808aaee25aedb7718b9189c2bd6e9655e70634eb4bd09d17b2f3ee12",
+   "bytes": 151540,
+   "role": "полевой эталон"
+  },
+  "data/field/selection.csv": {
+   "sha256": "eb2cb3918929e049e62af1a77951d22fb8215cd15458e8c0848f4198794c4e59",
+   "bytes": 236488,
+   "role": "полевой эталон"
+  },
+  "data/registry/pairs.csv": {
+   "sha256": "852e2f61cb7b0b1ed690ecddb809fc67220519caf52d5b729b7945777643a0f5",
+   "bytes": 294209,
+   "role": "реестр пар"
+  },
+  "data/eval/detector/pred_test.npz": {
+   "sha256": "16797b28e4f530b2855737d91784ab74bb71e931987d1ad4170478550dfbf46b",
+   "bytes": 969259,
+   "role": "эталон/предсказания"
+  },
+  "data/eval/detector/ref_test.npz": {
+   "sha256": "b12555f9c65b4c11f479f9e58b95dd40115232d032559248b666c42bd3913669",
+   "bytes": 134031,
+   "role": "эталон/предсказания"
+  },
+  "data/eval/detector/metrics.json": {
+   "sha256": "cb05745cef481f81c979aa49c141fe07a87c90149e7b739e3d0bf9e47252263b",
+   "bytes": 10268,
+   "role": "эталон/предсказания"
+  },
+  "data/eval/concentration/A_predictions.csv": {
+   "sha256": "932ef150738d445a50afa72c841ea479cd20137d0ccfc1eb347fdaff81ecbbc5",
+   "bytes": 12855,
+   "role": "эталон/предсказания"
+  },
+  "data/eval/concentration/B_predictions.csv": {
+   "sha256": "adc7bcbcc7d845dea863dd5417b8658fffc96b2dee3b5f96bf2171874545488c",
+   "bytes": 5126,
+   "role": "эталон/предсказания"
+  },
+  "data/eval/fusion/A_predictions.csv": {
+   "sha256": "bae781a420132a1e9515990d70e4c26745b6fb4127b6449aea013104b4772fa3",
+   "bytes": 1857,
+   "role": "эталон/предсказания"
+  },
+  "data/eval/fusion/B_predictions.csv": {
+   "sha256": "37a9483534617395542f7a70e5060823cf6b18d4d875fdf4701921403a50129b",
+   "bytes": 1009,
+   "role": "эталон/предсказания"
+  }
+ }
+}

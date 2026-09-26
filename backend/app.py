@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pyproj import Transformer
 
 from backend.case_api import _aoi_date, router, versions
+from backend.methodology import router as methodology_router
 from backend.report import router as report_router
 from backend.schemas import (PATTERN_HINTS, AccumulationOut, AoiOut, AoiPath, DatePath, DriftAtOut, DriftOut,
                              DriftPointOut, FeatureCollection, FlowOut, GeoJSONResponse, HealthOut, HoursQuery, RasterGridOut, RouteOut,
@@ -75,7 +76,8 @@ TAGS = [
                                        "Copernicus Marine), зоны скопления, маршрут судна."},
     {"name": Tag.EXPORT, "description": "Файлы: GeoJSON, CSV и PDF-отчёт."},
     {"name": Tag.QUERIES, "description": "Сохранение выгрузки и проверка, что она воспроизводится побайтно (sha256)."},
-    {"name": Tag.METRICS, "description": "Результаты проверок детектора, моделей концентрации и прогноза дрейфа."},
+    {"name": Tag.METRICS, "description": "Результаты проверок детектора, моделей концентрации и прогноза дрейфа; "
+                                         "методика с формулами."},
 ]
 
 app = FastAPI(title="AquaFlow – мониторинг океанического пластика", version="1.0.0", description=DESCRIPTION,
@@ -453,6 +455,7 @@ def route(aoi: AoiPath, date: DatePath,
 # handled by StaticFiles and return 404 even though the routes are defined.
 app.include_router(router)
 app.include_router(report_router)
+app.include_router(methodology_router)
 
 app.mount("/data", StaticFiles(directory=WEB), name="data")
 app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True, check_dir=False), name="frontend")

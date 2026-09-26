@@ -3,8 +3,13 @@
 GET /api/report?aoi=&date=&profile= → report_<aoi>_<date>_<profile>.pdf
 
 Страница 1 — обзорная карта сцены: гексы с детекциями по классам покрытия, зоны, районы скопления.
-Страница 2 — фрагменты снимка по районам и таблица крупнейших зон с координатами и ориентирами.
-Строится из тех же файлов, что и карта (data/web, water.tif), без случайности.
+Страница 2 — фрагменты снимка по районам и таблица крупнейших зон с координатами и ориентирами (если зоны есть).
+Страница 3 — графики: динамика по всем снимкам акватории, распределение концентрации по гексам с полевыми
+измерениями, отбраковка похожих объектов (пена, блик, суда) и прогноз дрейфа на 72 ч.
+Дальше — методика: целевая величина, методы и формулы с коэффициентами моделей, различение объектов, сведение
+источников (из того же ответа, что панель «Методика», backend/methodology.py).
+Строится из тех же файлов, что и карта (data/web, water.tif). Прогноз дрейфа — детерминированный ансамбль (seed);
+без поля течений в кеше и без сети раздел дрейфа заменяется пояснением.
 """
 from __future__ import annotations
 
@@ -24,15 +29,17 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.collections import PolyCollection
 from matplotlib.colors import to_rgba
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 from matplotlib.patches import Circle, FancyBboxPatch, Rectangle
 from PIL import Image
 from pyproj import Transformer
 
 from backend.case_api import _aoi_date, _profile, _read
+from backend.methodology import methodology
 from backend.schemas import AoiQuery, DateQuery, ProfileQuery, Tag, errors
 from pipeline import status as ST
 from pipeline.aggregate import WEB
-from pipeline.config import AOIS, PROCESSED
+from pipeline.config import AOIS, DATA, PROCESSED
 
 router = APIRouter()
 
@@ -47,6 +54,8 @@ N_DISTRICTS, N_ROWS = 6, 12
 COMPASS = ["С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ"]
 CONC_SHORT = {ST.MODEL: "мод.", ST.RESEARCH: "иссл.", ST.UNAVAILABLE: ""}
 RC = {"pdf.fonttype": 42, "font.family": "DejaVu Sans", "axes.linewidth": 0.6}
+KICKER = "AQUAFLOW · ОТЧЁТ О ПЛАВАЮЩЕМ МУСОРЕ"
+DRIFT_COL = "#d61fa8"  # как частицы дрейфа на карте
 _lock = threading.Lock()  # matplotlib не потокобезопасен, а FastAPI вызывает обработчики из пула потоков
 
 
@@ -188,7 +197,10 @@ def _context(aoi: str, date: str, profile: str) -> dict:
     codes = s["status_codes"]
     status = [codes[str(v)] for v in s["status"][di]]
     t = datetime.fromisoformat(sc["datetime"]) + timedelta(hours=AOIS[aoi]["tz"])
+    sep = WEB / aoi / "separation.json"
+    sep = _read(sep)["by_date"].get(date) if sep.exists() else None
     return {"aoi": aoi, "a": AOIS[aoi], "date": date, "profile": profile, "prof": prof, "s": s, "di": di, "sc": sc,
+            "conc": conc, "sep": sep, "field": _field_in(aoi, profile),
             "grid": g, "zones": zones, "zc": zc, "zr": zr, "total": total, "districts": dist, "rows": rows,
             "status": status, "conc_median": float(np.median(vals)) if vals else None,
             "conc_model": conc.get("model_version") if conc else None, "local_time": t.strftime("%H:%M"),
@@ -286,7 +298,7 @@ def _header_full(p: Page, c: dict) -> float:
     a, sc = c["a"], c["sc"]
     head, sub = _title_parts(a["name"])
     y = MARGIN
-    p.text(MARGIN, y, "FLUX · ОТЧЁТ О ПЛАВАЮЩЕМ МУСОРЕ", 7.5, TIDE, "bold")
+    p.text(MARGIN, y, KICKER, 7.5, TIDE, "bold")
     p.text(PAGE_W - MARGIN, y, f"Профиль {c['profile']}: {c['prof']['label']}", 7, MUTED, ha="right")
     y += 0.24
     p.text(MARGIN, y, head, 18, INK, "bold")
@@ -578,7 +590,7 @@ def _page_details(c: dict) -> Page:
     p = Page()
     head, _ = _title_parts(c["a"]["name"])
     y = MARGIN
-    p.text(MARGIN, y, "FLUX · ОТЧЁТ О ПЛАВАЮЩЕМ МУСОРЕ", 7.5, TIDE, "bold")
+    p.text(MARGIN, y, KICKER, 7.5, TIDE, "bold")
     p.text(PAGE_W - MARGIN, y, f"{head} · {ru_date(c['date'])} · профиль {c['profile']}", 7, MUTED, ha="right")
     y += 0.36
     p.text(MARGIN, y, "Районы скопления", 12, INK, "bold")
@@ -624,6 +636,295 @@ def _page_details(c: dict) -> Page:
     return p
 
 
+def _field_in(aoi: str, profile: str) -> list[dict]:
+    """Полевые измерения профиля внутри рамки акватории — для графика концентрации."""
+    import pandas as pd
+
+    path = DATA / "field" / "events.csv"
+    if not path.exists():
+        return []
+    ev = pd.read_csv(path)
+    x0, y0, x1, y1 = AOIS[aoi]["bbox"]
+    ev = ev[(ev["profile"] == profile) & ev["lon"].between(x0, x1) & ev["lat"].between(y0, y1)]
+    return ev[["event_id", "date_utc", "conc_items_km2"]].to_dict("records")
+
+
+def _drift(c: dict, hours: int = 72, max_seeds: int = 300, n_ens: int = 4) -> dict | None:
+    """Прогноз дрейфа всех детекций (как `GET /api/aois/{aoi}/{date}/drift`); None — детекций нет или нет полей."""
+    import json
+
+    from pipeline.drift import simulate
+
+    pts = np.asarray(json.loads((WEB / c["aoi"] / c["date"] / "points.json").read_text(encoding="utf-8")),
+                     float).reshape(-1, 4)
+    if not len(pts):
+        return None
+    if len(pts) > max_seeds:
+        pts = pts[np.argsort(-pts[:, 2] * pts[:, 3])[:max_seeds]]
+    try:
+        res = simulate(c["aoi"], c["date"], pts[:, 0], pts[:, 1], hours=hours, n_ens=n_ens, seed=1)
+    except Exception as e:  # нет кеша полей и нет сети — отчёт всё равно собирается
+        return {"error": str(e)[:160]}
+    tr = res["track"].astype(float)
+    lat0 = np.radians(tr[:, 0, 1])
+    disp = {h: np.hypot((tr[:, h, 0] - tr[:, 0, 0]) * np.cos(lat0), tr[:, h, 1] - tr[:, 0, 1]) * 111.32
+            for h in (24, 48, hours)}
+    dx = float(np.mean((tr[:, -1, 0] - tr[:, 0, 0]) * np.cos(lat0)))
+    dy = float(np.mean(tr[:, -1, 1] - tr[:, 0, 1]))
+    return {"track": tr, "beached": res["beached"], "hours": hours, "disp": disp,
+            "heading": COMPASS[int((np.degrees(np.arctan2(dx, dy)) + 382.5) // 45) % 8],
+            "windage": res["windage"], "n": len(tr)}
+
+
+def _style(ax, title: str):
+    ax.set_title(title, fontsize=8, color=INK, loc="left", fontweight="bold", pad=6)
+    ax.tick_params(labelsize=6, colors=MUTED, length=2, width=0.5)
+    for k, sp in ax.spines.items():
+        sp.set_color(LINE)
+        sp.set_visible(k in ("left", "bottom"))
+    ax.grid(axis="y", color=LINE, lw=0.4)
+    ax.set_axisbelow(True)
+
+
+def _chart_series(p: Page, c: dict, y: float, h: float) -> float:
+    s, di = c["s"], c["di"]
+    x = np.arange(len(s["dates"]))
+    area = np.array([sc["area_m2"] for sc in s["scenes"]], float)
+    zones = np.array([sc.get("n_zones") or 0 for sc in s["scenes"]], float)
+    col = [TIDE if i == di else NODATA_COL if sc.get("storm") else "#9fcdc5" for i, sc in enumerate(s["scenes"])]
+    ax = p.axes(MARGIN + 0.5, y, CONTENT_W - 1.05, h)
+    ax.bar(x, area, color=col, width=0.72, zorder=2)
+    _style(ax, "Покрытие мусором по снимкам, м² (столбцы) и число зон (линия)")
+    ax2 = ax.twinx()
+    ax2.plot(x, zones, color=ZONE_COL, lw=0.9, marker="o", ms=2.2, zorder=3)
+    ax2.tick_params(labelsize=6, colors=ZONE_COL, length=2, width=0.5)
+    for sp in ax2.spines.values():
+        sp.set_visible(False)
+    ax2.set_ylim(bottom=0)
+    step = max(1, len(x) // 10)
+    ticks = sorted(set(range(0, len(x), step)) | {di})
+    ax.set_xticks(ticks, [ru_date(s["dates"][i])[:5] + "." + s["dates"][i][2:4] for i in ticks], rotation=0)
+    for t in ax.get_xticklabels():
+        if t.get_text().startswith(ru_date(s["dates"][di])[:5]):
+            t.set_color(TIDE)
+            t.set_fontweight("bold")
+    ax.set_xlim(-0.6, len(x) - 0.4)
+    return y + h + 0.42
+
+
+def _chart_conc(p: Page, c: dict, x0: float, y: float, w: float, h: float):
+    ax = p.axes(x0 + 0.42, y, w - 0.5, h)
+    conc, di, P = c["conc"], c["di"], c["profile"]
+    _style(ax, f"Концентрация по гексам, профиль {P}")
+    if not conc or not conc.get("available"):
+        ax.text(0.5, 0.5, f"концентрация профиля {P}\nв этой акватории недоступна", transform=ax.transAxes,
+                ha="center", va="center", fontsize=7, color=MUTED)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return
+    v = np.array([x for x in conc["value"][di] if x is not None], float)
+    lo = np.array([x for x in conc["lo80"][di] if x is not None], float)
+    hi = np.array([x for x in conc["hi80"][di] if x is not None], float)
+    edges = np.geomspace(max(1.0, min(v.min(), lo.min()) * 0.8), max(v.max(), hi.max()) * 1.2, 26)
+    ax.hist(v, bins=edges, color="#2f7fb8", alpha=0.85, zorder=2)
+    med = float(np.median(v))
+    ax.axvline(med, color=INK, lw=0.9, zorder=3)
+    ax.axvspan(float(np.median(lo)), float(np.median(hi)), color="#2f7fb8", alpha=0.12, zorder=1)
+    ax.set_xscale("log")
+    ax.set_xlabel("шт./км² (лог. шкала)", fontsize=6, color=MUTED)
+    ax.set_ylabel("гексов", fontsize=6, color=MUTED)
+    top = ax.get_ylim()[1]
+    ax.text(med, top * 0.97, f" медиана {nf(med, 0)}", fontsize=6, color=INK, va="top",
+            path_effects=_halo(1.6, "white"))
+    for f in c["field"]:
+        ax.plot(f["conc_items_km2"], top * 0.05, marker="v", ms=4.5, mfc="white", mec=ZONE_COL, mew=0.9, zorder=4)
+    if c["field"]:
+        ax.text(0.99, 0.62, f"▽ полевые измерения\nв акватории: {len(c['field'])}", transform=ax.transAxes,
+                fontsize=5.8, color=ZONE_COL, ha="right", va="top")
+    ax.text(0.02, 0.97, "полоса —\n80%-интервал\n(медиана\nпо гексам)", transform=ax.transAxes, fontsize=5.6,
+            color=MUTED, ha="left", va="top")
+
+
+SEP_LABELS = [("foam", "пена, барашки"), ("cfar", "блик, рябь (CFAR)"), ("isolated", "одиночный шум"),
+              ("ship", "суда, кильватер"), ("static", "постоянные объекты"), ("cloud", "края облаков"),
+              ("ice", "лёд"), ("small", "шторм/блик: мелкие")]
+
+
+def _chart_sep(p: Page, c: dict, x0: float, y: float, w: float, h: float):
+    ax = p.axes(x0 + 1.05, y, w - 1.1, h)
+    _style(ax, "Отбраковка похожих объектов, пикс.")
+    ax.grid(False)
+    st = c["sep"]
+    if not st:
+        ax.text(0.5, 0.5, "разбор снимка недоступен", transform=ax.transAxes, ha="center", va="center",
+                fontsize=7, color=MUTED)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return
+    rows = [(lab, st["rejected"].get(k, 0), LINE) for k, lab in SEP_LABELS if st["rejected"].get(k, 0)]
+    rows.append(("осталось: мусор", st["kept"], ZONE_COL))
+    yy = np.arange(len(rows))[::-1]
+    vals = [r[1] for r in rows]
+    ax.barh(yy, vals, color=[r[2] if r[2] != LINE else "#b9c4bf" for r in rows], height=0.62)
+    ax.set_yticks(yy, [r[0] for r in rows])
+    ax.set_xscale("symlog", linthresh=10)
+    for yv, v in zip(yy, vals):
+        ax.text(v, yv, f" {nf(v, 0)}", fontsize=6, color=INK, va="center")
+    ax.set_xlim(0, max(vals) * 6 if max(vals) else 10)
+    ax.set_xticks([])
+    ax.spines["bottom"].set_visible(False)
+
+
+def _chart_drift(p: Page, c: dict, y: float, h: float) -> float:
+    d = _drift(c)
+    p.text(MARGIN, y, "Прогноз дрейфа на 72 часа", 12, INK, "bold")
+    y += 0.24
+    if d is None:
+        return p.para(MARGIN, y, "На этот снимок детекций нет — переносить нечего.", CONTENT_W, 7.2)
+    if "error" in d:
+        return p.para(MARGIN, y, "Прогноз не рассчитан: поля течений и ветра для этой даты не в кеше, а сервис "
+                                 f"погоды недоступен ({d['error']}). В веб-карте прогноз — кнопка «Дрейф».",
+                      CONTENT_W, 7.2, WARN)
+    y = p.para(MARGIN, y, f"Лагранжев ансамбль: {d['n']} частиц (до 300 крупнейших детекций × 4), течения SMOC + "
+                          f"{nf(d['windage'] * 50, 0)}–{nf(d['windage'] * 150, 0)}% ветра ERA5, шаг 30 мин. Прогноз, "
+                          "не наблюдение: на парах соседних снимков у берега он пока не точнее «пятно на месте».",
+               CONTENT_W, 7.2)
+    g = c["grid"]
+    tr = d["track"]
+    w = CONTENT_W * 0.56
+    ax = p.axes(MARGIN, y + 0.05, w, h)
+    rgb = Image.open(WEB / c["aoi"] / c["date"] / "rgb.jpg").convert("RGB")
+    tw = int(w * 150)
+    if tw < rgb.width:
+        rgb = rgb.resize((tw, round(rgb.height * tw / rgb.width)), Image.LANCZOS)
+    ax.imshow(np.asarray(rgb), extent=(0, g.w, g.h, 0), interpolation="none", zorder=0, alpha=0.9)
+    cols = {}
+    for hh, a in ((0, 0.9), (24, 0.35), (48, 0.5), (d["hours"], 0.95)):
+        px, py = g.px(tr[:, hh, 0], tr[:, hh, 1])
+        cols[hh] = (px, py)
+        ax.scatter(px, py, s=3 if hh else 4, c=ZONE_COL if hh == 0 else DRIFT_COL, alpha=a, linewidths=0, zorder=3)
+    allx = np.concatenate([v[0] for v in cols.values()] + [np.array([0, g.w])])
+    ally = np.concatenate([v[1] for v in cols.values()] + [np.array([0, g.h])])
+    pad = 0.04 * max(np.ptp(allx), np.ptp(ally))
+    ax.set_xlim(allx.min() - pad, allx.max() + pad)
+    ax.set_ylim(ally.max() + pad, ally.min() - pad)
+    ax.set_aspect("equal", adjustable="datalim")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for sp in ax.spines.values():
+        sp.set_color(LINE)
+    mk = lambda col, a, lab: Line2D([], [], ls="", marker="o", ms=3.5, mfc=col, mec="none", alpha=a, label=lab)  # noqa: E731
+    ax.legend(handles=[mk(ZONE_COL, 0.9, "старт — детекции снимка"), mk(DRIFT_COL, 0.4, "+24 и +48 ч"),
+                       mk(DRIFT_COL, 0.95, f"+{d['hours']} ч")], loc="lower left", fontsize=5.8, framealpha=0.85,
+              borderpad=0.4, handletextpad=0.2, edgecolor=LINE)
+
+    x2 = MARGIN + w + 0.25
+    rows = [(f"+{hh} ч", f"{nf(float(np.median(d['disp'][hh])))} км", f"{nf(float(np.percentile(d['disp'][hh], 90)))} км")
+            for hh in (24, 48, d["hours"])]
+    ty = y + 0.1
+    p.text(x2, ty, "Смещение частиц", 8, INK, "bold")
+    ty += 0.22
+    for k, (a_, b_, c_) in enumerate([("Горизонт", "медиана", "90-й перц.")] + rows):
+        wgt = "bold" if k == 0 else "normal"
+        col = MUTED if k == 0 else INK
+        p.text(x2, ty, a_, 7, col, wgt)
+        p.text(x2 + 1.05, ty, b_, 7, col, wgt)
+        p.text(x2 + 1.9, ty, c_, 7, col, wgt)
+        ty += 0.2
+    ty += 0.1
+    ty = p.para(x2, ty, f"Преобладающий перенос — на {d['heading']}. Выброшено на берег за {d['hours']} ч: "
+                        f"{nf(100 * float(d['beached'].mean()), 0)}% частиц.", CONTENT_W - w - 0.25, 7.2, INK)
+    p.para(x2, ty + 0.05, "Куда отправить судно с поправкой на дрейф к моменту прибытия — инструмент «Маршрут» "
+                          "в веб-карте (выгрузка GPX).", CONTENT_W - w - 0.25, 6.8)
+    return y + 0.05 + h + 0.2
+
+
+def _page_charts(c: dict) -> Page:
+    p = Page()
+    head, _ = _title_parts(c["a"]["name"])
+    y = MARGIN
+    p.text(MARGIN, y, KICKER, 7.5, TIDE, "bold")
+    p.text(PAGE_W - MARGIN, y, f"{head} · {ru_date(c['date'])} · профиль {c['profile']}", 7, MUTED, ha="right")
+    y += 0.36
+    p.text(MARGIN, y, "Динамика, концентрация и отличие от похожих объектов", 12, INK, "bold")
+    y = p.para(MARGIN, y + 0.24, f"Все {len(c['s']['dates'])} снимков акватории: выбранная дата выделена, серые — "
+                                 "ненадёжные сцены (шторм, лёд, сильный блик), они не входят в тренды.", CONTENT_W, 7.2)
+    y = _chart_series(p, c, y + 0.12, 1.55)
+    half = (CONTENT_W - 0.3) / 2
+    _chart_conc(p, c, MARGIN, y, half, 1.9)
+    _chart_sep(p, c, MARGIN + half + 0.3, y, half, 1.9)
+    y += 1.9 + 0.35
+    y = p.para(MARGIN, y, "Концентрация — модель профиля по полевым данным в центре каждого гекса на момент снимка "
+                          "(не из площади маски). Справа — сколько кандидатов в мусор (P ≥ порога) снимок отбраковал "
+                          "как пену, блик и рябь, суда и кильватер, постоянные объекты, края облаков; осталось — "
+                          "итоговые детекции.", CONTENT_W, 6.8)
+    _chart_drift(p, c, y + 0.15, 3.3)
+    return p
+
+
+def _page_method(c: dict) -> list[Page]:
+    """Методика: те же целевая величина, формулы и правила, что в панели «Методика». Поток текста по страницам."""
+    m = methodology()
+    pages: list[Page] = []
+    state = {"y": PAGE_H}
+    bottom = PAGE_H - MARGIN - 0.35
+
+    def new_page():
+        p = Page()
+        head, _ = _title_parts(c["a"]["name"])
+        p.text(MARGIN, MARGIN, KICKER, 7.5, TIDE, "bold")
+        p.text(PAGE_W - MARGIN, MARGIN, f"{head} · {ru_date(c['date'])} · методика", 7, MUTED, ha="right")
+        pages.append(p)
+        state["y"] = MARGIN + 0.36
+
+    def need(h):
+        if state["y"] + h > bottom:
+            new_page()
+
+    def title(t):
+        state["y"] += 0.12
+        need(0.5)
+        pages[-1].text(MARGIN, state["y"], t, 12, INK, "bold")
+        state["y"] += 0.3
+
+    def para(t, size=7.2, color=MUTED, x=MARGIN, width=CONTENT_W - 0.2):
+        txt, n = _wrap(t, width, size)
+        need(n * size * 1.35 / 72 + 0.05)
+        state["y"] = pages[-1].para(x, state["y"], t, width, size, color)
+
+    def mono(t):
+        txt, n = _wrap(t, CONTENT_W - 0.2, 6.8)
+        need(n * 6.8 * 1.3 / 72 + 0.04)
+        pages[-1].text(MARGIN + 0.15, state["y"], txt, 6.8, INK, family="DejaVu Sans Mono", linespacing=1.3)
+        state["y"] += n * 6.8 * 1.3 / 72 + 0.04
+
+    new_page()
+    title("Методика и формулы")
+    for t in m["target"]:
+        para(f"Целевая величина, профиль {t['profile']}: C, {t['unit']} — {t['definition']}. Размер: {t['size_class']}. "
+             f"Метод полевого эталона: {t['method']}.", 7.6, INK)
+    para("Три величины не смешиваются: полевое измерение (C = N / A по полосе учёта), модельная оценка C в шт./км² и "
+         "зона детекции со снимка (площадь в м², в шт./км² не переводится).")
+    state["y"] += 0.08
+    for k, st in enumerate(m["steps"], 1):
+        need(0.55)
+        para(f"{k}. {st['title']} — {st['method']}", 7.6, INK)
+        for f in st["formula"]:
+            mono(f)
+        para(f"{st['legend']}. Код: {st['code']}.", 6.6)
+        state["y"] += 0.05
+    title("Мусор, а не пена, волны, суда, водоросли или блик")
+    para("Доля пикселей класса, которые основной алгоритм принял за мусор, на MARIDA test / новых сценах MADOS test.")
+    for o in m["objects"]:
+        a, b = ("—" if v is None else f"{nf(100 * v, 1)}%" for v in (o["marida_fp"], o["mados_fp"]))
+        note = f". {o['note'][:1].upper()}{o['note'][1:]}" if o["note"] else ""
+        para(f"{o['object']} — {o['status']} (MARIDA {a}, MADOS {b}): {o['how']}{note}.", 6.9, INK)
+    title("Противоречивые источники и неопределённость")
+    for r in m["fusion_rules"]:
+        para(f"{r['case']}. {r['rule']}.", 6.9, INK)
+    return pages
+
+
 def _footer(p: Page, c: dict, k: int, n: int):
     y = PAGE_H - MARGIN + 0.12
     ax = p.canvas(MARGIN, y - 0.1, CONTENT_W, 0.02)
@@ -636,7 +937,7 @@ def _footer(p: Page, c: dict, k: int, n: int):
 
 def figures(aoi: str, date: str, profile: str) -> list[Figure]:
     c = _context(aoi, date, profile)
-    pages = [_page_overview(c)] + ([_page_details(c)] if c["zones"] else [])
+    pages = [_page_overview(c)] + ([_page_details(c)] if c["zones"] else []) + [_page_charts(c)] + _page_method(c)
     for k, p in enumerate(pages, 1):
         _footer(p, c, k, len(pages))
     return [p.fig for p in pages]
@@ -654,7 +955,7 @@ def build_report(aoi: str, date: str, profile: str) -> bytes:
 
 
 @router.get("/api/report", tags=[Tag.EXPORT], summary="PDF-отчёт по снимку", response_class=Response, responses={
-    200: {"description": "PDF, A4, 1–2 страницы. Имя файла: `report_<aoi>_<date>_<profile>.pdf`",
+    200: {"description": "PDF, A4, 4–6 страниц. Имя файла: `report_<aoi>_<date>_<profile>.pdf`",
           "content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}}},
     **errors(404, 422)})
 def report(aoi: AoiQuery, date: DateQuery, profile: ProfileQuery = "B"):
@@ -664,7 +965,11 @@ def report(aoi: AoiQuery, date: DateQuery, profile: ProfileQuery = "B"):
     концентрация профиля), вывод «где больше всего мусора», обзорная карта с гексами по классам покрытия,
     зонами и районами скопления, таблица районов. Страница 2 (если есть зоны) — фрагменты снимка по районам и
     таблица крупнейших зон: координаты, ориентир (румб и расстояние от порта или устья), расстояние до берега,
-    покрытие, P и концентрация с интервалом. Сборка занимает несколько секунд; повторный запрос берётся из кеша.
+    покрытие, P и концентрация с интервалом. Страница графиков — динамика покрытия и числа зон по всем снимкам,
+    распределение концентрации по гексам с полевыми измерениями акватории, отбраковка похожих объектов (пена,
+    блик, суда, облака) и прогноз дрейфа на 72 ч с картой частиц и смещением на 24/48/72 ч. Последние страницы —
+    методика: целевая величина, формулы с коэффициентами моделей, различение объектов, сведение источников.
+    Сборка занимает несколько секунд; повторный запрос берётся из кеша.
     """
     _aoi_date(aoi, date)
     _profile(profile)

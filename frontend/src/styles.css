@@ -2987,3 +2987,205 @@ html[data-theme="light"] #tip {
   font-weight: 700;
 }
 @media (prefers-reduced-motion: reduce) { .zone-cluster { transition: none; } }
+
+/* ---------- Целевая величина в «Сводке» ---------- */
+.target-quantity {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid color-mix(in srgb, var(--theme-active) 40%, transparent);
+  border-radius: 12px;
+  background: var(--theme-accent-soft);
+  color: var(--theme-text-soft);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.target-quantity:empty { display: none; }
+.target-quantity b { color: var(--theme-text); }
+.target-quantity > span:last-child > b:first-child { display: block; margin-bottom: 2px; font-size: 11px; }
+.tq-symbol {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--theme-active);
+  color: var(--theme-active-text);
+  font: italic 700 16px/1 Georgia, "Times New Roman", serif;
+}
+
+/* ---------- Прогноз дрейфа — заметная кнопка в «Сводке» ---------- */
+.drift-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, #ff3fd0 45%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(110deg, rgba(255, 63, 208, .1), transparent 70%);
+}
+.drift-cta > div { min-width: 0; flex: 1; }
+.drift-cta strong { display: block; color: var(--theme-text); font-size: 12px; }
+.drift-cta span { display: block; margin-top: 3px; color: var(--theme-muted); font-size: 9.5px; line-height: 1.45; }
+.drift-cta button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #ff3fd0;
+  border-radius: 999px;
+  background: #ff3fd0;
+  color: #1c0617;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.drift-cta button:hover { filter: brightness(1.08); }
+
+/* ---------- Различение объектов: отбраковка кандидатов ---------- */
+.separation .sep-row {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr) 46px;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  color: var(--theme-text-soft);
+  font-size: 10px;
+}
+.separation .sep-row i { display: block; height: 8px; border-radius: 4px; background: var(--theme-border-strong); }
+.separation .sep-row.is-kept { color: var(--theme-text); font-weight: 700; }
+.separation .sep-row.is-kept i { background: #ff3b3b; }
+.separation .sep-row b { font-variant-numeric: tabular-nums; text-align: right; }
+.separation .sep-note { margin: 7px 0 0; }
+
+/* ---------- Карточка зоны: чек-лист «почему мусор» ---------- */
+.checklist { margin: 8px 0 0; padding: 0; list-style: none; }
+.checklist li {
+  position: relative;
+  margin: 0 0 6px;
+  padding-left: 22px;
+  color: var(--theme-text-soft);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.checklist li::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  content: "\2713";
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+}
+.checklist li.ok::before { background: var(--theme-accent-soft); color: var(--theme-active); }
+.checklist li.warn::before { background: rgba(251, 191, 36, .16); color: #d48628; content: "!"; }
+
+/* ---------- Сведение источников ---------- */
+.fusion-box {
+  margin-top: 8px;
+  padding: 12px 13px;
+  border: 1px solid var(--theme-border);
+  border-radius: 14px;
+  background: var(--theme-card);
+}
+.fusion-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.fusion-head span { width: 100%; color: var(--theme-muted); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.fusion-head b { color: var(--theme-text); font-size: 22px; letter-spacing: -.03em; }
+.fusion-head b small { color: var(--theme-muted); font-size: 10px; letter-spacing: 0; }
+.fusion-head em { color: var(--theme-muted); font-size: 10.5px; font-style: normal; }
+.trust-bar { display: flex; height: 10px; margin: 10px 0 6px; overflow: hidden; border-radius: 5px; background: var(--theme-control); }
+.trust-bar span { height: 100%; }
+.t-model { background: #6b7688; }
+.t-field.t0 { background: #0ea5a0; }
+.t-field.t1 { background: #22c3b8; }
+.t-field.t2 { background: #5eead4; }
+.t-field.t3 { background: #99f6e4; }
+.trust-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--theme-text-soft); font-size: 10px; }
+.trust-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 2px; vertical-align: -1px; }
+#panel .fusion-table { margin-top: 10px; font-size: 10.5px; }
+#panel .fusion-table th:nth-child(1) { width: 30%; }
+#panel .fusion-table th:nth-child(4) { width: 14%; }
+.fusion-box p { margin: 8px 0 0; }
+
+/* ---------- Карточка гекса: расчёт по шагам ---------- */
+.calc-box:empty { display: none; }
+.calc-steps { margin: 6px 0 0; padding: 0; list-style: none; counter-reset: calc; }
+.calc-steps li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  margin-bottom: 7px;
+  padding-left: 22px;
+  counter-increment: calc;
+}
+.calc-steps li::before {
+  position: absolute;
+  left: 0;
+  color: var(--theme-muted);
+  content: counter(calc);
+  font-size: 10px;
+  font-weight: 700;
+}
+.calc-steps span { color: var(--theme-muted); font-size: 9.5px; }
+.calc-steps code,
+.method-step .formula,
+.method-step .formula div {
+  color: var(--theme-text);
+  font-family: "JetBrains Mono", "Cascadia Mono", Consolas, "Courier New", monospace !important;
+  font-weight: 500;
+  white-space: pre-wrap;
+  font-size: 10.5px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Панель «Методика»: вкладки, формулы, реестр данных ---------- */
+.about-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+#panel .about-tabs button { min-height: 30px; padding: 5px 13px; border-radius: 999px; font-size: 10.5px; }
+html[data-theme] #panel .about-tabs button.on,
+html[data-theme] #panel .about-tabs button.on:hover { border-color: var(--theme-active); background: var(--theme-active); color: var(--theme-active-text); }
+.tq-card { margin: 8px 0; padding: 10px 12px; border: 1px solid var(--theme-border); border-radius: 12px; background: var(--theme-card); }
+.tq-card.is-current { border-color: color-mix(in srgb, var(--theme-active) 55%, transparent); background: var(--theme-accent-soft); }
+.tq-card-head { display: flex; align-items: center; gap: 8px; color: var(--theme-text); font-size: 12px; }
+.tq-card p { margin: 6px 0 0; }
+.method-step { margin: 10px 0; padding: 11px 12px; border: 1px solid var(--theme-border); border-radius: 12px; background: var(--theme-card); }
+.method-step h4 { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--theme-text); font-size: 12px; }
+.method-step h4 span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--theme-control);
+  color: var(--theme-muted);
+  font-size: 10px;
+}
+.method-step .method-name { margin: 6px 0 0; color: var(--theme-text-soft); font-size: 10.5px; }
+.method-step .formula {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--theme-active);
+  border-radius: 0 8px 8px 0;
+  background: var(--theme-control);
+}
+.method-step .formula div + div { margin-top: 3px; }
+.method-step p { margin: 4px 0 0; }
+.code-ref { color: var(--theme-faint); font-family: "Cascadia Mono", Consolas, monospace; font-size: 9px; }
+#panel .objects-table th:nth-child(1) { width: 52%; }
+#panel .objects-table td { font-size: 10.5px; }
+.about .rules li { margin-bottom: 6px; }
+.ds-card { margin: 10px 0; padding: 11px 12px; border: 1px solid var(--theme-border); border-radius: 12px; background: var(--theme-card); }
+.ds-card h4 { margin: 0; color: var(--theme-text); font-size: 12px; line-height: 1.35; }
+.ds-card .ds-roles { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0; }
+.ds-card details { margin-top: 8px; }
+.ds-card summary { color: var(--theme-text-soft); cursor: pointer; font-size: 10.5px; font-weight: 650; }
+.ds-card code { font-size: 9.5px; }

@@ -1,6 +1,7 @@
 """Проверка детектора на MARIDA: базовые и основной алгоритм на одной выборке.
 
-python -m pipeline.eval_detector            # → data/eval/detector/{metrics.json, errors.csv, pred_test.npz, gallery.png}
+python -m pipeline.eval_detector            # → data/eval/detector/{metrics.json, errors.csv, pred_test.npz, ref_test.npz,
+                                            #   gallery.png}, data/splits/marida/
 
 Положительный класс — MARIDA 1 «Marine Debris» (плавающий мусор любого материала, не только пластик).
 Подтверждённый фон — размеченные классы 2–15. Неразмеченные пиксели (0) в метриках игнорируются;
@@ -239,6 +240,12 @@ def main() -> None:
             w.writerow([p["pid"], p["scene"], p["method"], p["tp"], p["fp"], p["fn"], p["unlabeled_pos"],
                         p["n_debris"], MARIDA_CLASSES.get(top[0], "") if top[1] else ""])
     np.savez_compressed(OUT / "pred_test.npz", **{f"{m}/{k}": v for m, d in preds.items() for k, v in d.items()})
+    # Эталонная разметка MARIDA test и списки разбиения — чтобы метрики пересчитывались без MARIDA (pipeline.verify)
+    np.savez_compressed(OUT / "ref_test.npz", **{r["pid"]: r["cl"].astype(np.uint8) for r in test})
+    splits = DATA / "splits" / "marida"
+    splits.mkdir(parents=True, exist_ok=True)
+    for part in ("train", "val", "test"):
+        (splits / f"{part}_X.txt").write_bytes((MARIDA / "splits" / f"{part}_X.txt").read_bytes())
     gallery(test, [p for p in per if p["method"] == "xgb_filters"])
 
 
