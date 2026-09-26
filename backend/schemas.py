@@ -409,6 +409,33 @@ class DriftAtOut(DriftPointOut):
     sources: list[str] = Field(description="Откуда поля: течения, стоксов дрейф, ветер")
 
 
+class FlowField(BaseModel):
+    u: list[list[float | None]] = Field(description="[час][ячейка] → восточная составляющая, м/с; ячейки построчно "
+                                                    "с юга на север (`lats`), в строке с запада на восток (`lons`); "
+                                                    "null — суша")
+    v: list[list[float | None]] = Field(description="[час][ячейка] → северная составляющая, м/с")
+
+
+class WaterMaskOut(BaseModel):
+    lon0: float = Field(description="Долгота юго-западной клетки")
+    lat0: float = Field(description="Широта юго-западной клетки")
+    step: float = Field(description="Шаг клетки, градусы")
+    nx: int = Field(description="Клеток с запада на восток")
+    ny: int = Field(description="Клеток с юга на север")
+    bits: str = Field(description="«1» — вода, «0» — суша; nx × ny символов построчно с юга на север")
+
+
+class FlowOut(BaseModel):
+    t0: str = Field(description="Кадр 0 — момент съёмки (или старта дрейфа), ISO 8601 UTC; дальше кадры через 1 ч")
+    hours: int = Field(description="Последний кадр, ч от t0")
+    lons: list[float] = Field(description="Долготы узлов сетки, с запада на восток")
+    lats: list[float] = Field(description="Широты узлов сетки, с юга на север")
+    currents: FlowField | None = Field(description="Течения; null — внутренний водоём, течений нет")
+    wind: FlowField = Field(description="Ветер 10 м")
+    water: WaterMaskOut = Field(description="Маска воды: где рисовать течения")
+    sources: list[str] = Field(description="Откуда поля")
+
+
 class AccumulationOut(BaseModel):
     factor: dict[str, float] = Field(description="Ячейка H3 → во сколько раз частиц в ней через 72 ч больше, чем "
                                                  "в средней ячейке на старте. >1 — зона вероятного скопления")

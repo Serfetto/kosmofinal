@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from backend.app import app
 from pipeline.aggregate import WEB
+from pipeline.config import AOIS
 
 client = TestClient(app)
 AOI = "sochi"
@@ -217,6 +218,53 @@ def test_drift_without_credentials_is_503(monkeypatch):
     monkeypatch.setattr(pipeline.cmems, "cached", lambda path: path.with_name("no-such-cache.npz"))
     r = client.get("/api/drift?lon=-140&lat=32&t0=2015-07-27T15:34:00&hours=24&n=5")
     assert r.status_code == 503 and "Copernicus Marine" in r.json()["detail"] and r.headers["Retry-After"]
+
+
+def test_flow_for_map_animation(monkeypatch):
+    """Течения и ветер по часам для штрихов на карте: сетка, кадры, маска воды; у водохранилища течений нет."""
+    from datetime import datetime, timezone
+
+    import backend.app
+    import pipeline.drift
+
+    def met(aoi, date):
+        m = _uniform_met(sum(AOIS[aoi]["bbox"][::2]) / 2, sum(AOIS[aoi]["bbox"][1::2]) / 2,
+                         datetime.fromisoformat(date).replace(tzinfo=timezone.utc), 72)
+        m["wv"] = m["wv"] + 5.0
+        return m
+
+    monkeypatch.setattr(pipeline.drift, "fetch_met", met)
+    backend.app._flow_aoi.cache_clear()
+    try:
+        d = client.get(f"/api/aois/{AOI}/{_date()}/flow?hours=24").json()
+        nx, ny = len(d["lons"]), len(d["lats"])
+        assert nx <= 32 and ny <= 32 and d["hours"] == 24
+        assert len(d["currents"]["u"]) == len(d["wind"]["v"]) == 25 and len(d["currents"]["u"][0]) == nx * ny
+        assert set(d["currents"]["u"][0]) == {0.5} and set(d["wind"]["v"][12]) == {5.0}
+        w = d["water"]
+        at = lambda lon, lat: w["bits"][round((lat - w["lat0"]) / w["step"]) * w["nx"] + round((lon - w["lon0"]) / w["step"])]  # noqa: E731
+        assert len(w["bits"]) == w["nx"] * w["ny"] and at(39.60, 43.45) == "1" and at(39.95, 43.60) == "0"  # море / горы
+        inland = next(a for a, v in AOIS.items() if v["kind"] == "inland")
+        date = json.loads((WEB / inland / "series.json").read_text(encoding="utf-8"))["dates"][-1]
+        d = client.get(f"/api/aois/{inland}/{date}/flow?hours=6").json()
+        assert d["currents"] is None and len(d["wind"]["u"]) == 7
+    finally:
+        backend.app._flow_aoi.cache_clear()
+
+
+def test_flow_without_imagery(monkeypatch):
+    import backend.app
+    import pipeline.cmems
+
+    monkeypatch.setattr(pipeline.cmems, "fetch_met", _uniform_met)
+    backend.app._flow_at.cache_clear()
+    try:
+        d = client.get("/api/flow?lon=-140&lat=32&t0=2015-07-27T15:34:00&hours=24").json()
+        assert d["t0"].startswith("2015-07-27T15:34") and d["sources"] == ["течения: тест"]
+        assert len(d["lons"]) <= 32 and set(d["currents"]["u"][24]) == {0.5} and set(d["water"]["bits"]) == {"1"}
+        assert client.get("/api/flow?lon=-100&lat=40&t0=2015-07-27T15:34:00").status_code == 404  # на суше
+    finally:
+        backend.app._flow_at.cache_clear()
 
 
 def test_field_sources_cover_s1_to_s4():

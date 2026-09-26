@@ -232,6 +232,7 @@ Sentinel-2 L2A ──► s2.py ──► features.py (нормализация �
 | `GET /api/metrics` | детектор, концентрация, пары, таблица «что где проверено» |
 | `GET /api/aois/{aoi}/{date}/drift`, `drift_point`, `accumulation`, `route` | прогноз дрейфа, зоны схождения, маршрут (доп. функции) |
 | `GET /api/drift?lon=&lat=&t0=` | дрейф из любой морской точки без снимка: реанализы Copernicus Marine |
+| `GET /api/aois/{aoi}/{date}/flow`, `/api/flow` | течения и ветер по часам для анимации на карте (слои «Течения» и «Ветер») |
 
 ## Ограничения
 

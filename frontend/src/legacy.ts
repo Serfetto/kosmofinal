@@ -458,6 +458,7 @@ async function setDate(i) {
     `<br><span class="small">Сцена: ${esc(sc.scene_id || '')}</span>`;
   showScene(sceneUrls(d)).catch((err) => toast(`Не удалось загрузить снимок: ${err.message}`));
   clearDrift(); clearRoute(); S.accum = null;
+  setFlowSource(`/api/aois/${S.aoi.id}/${d}/flow?hours=72`, S.aoi.tz);
   if (S.mode === 'forecast' || S.mode === 'accum') setMode('conc');
   try { S.zones = await api(`/api/aois/${S.aoi.id}/${d}/zones`); } catch { S.zones = EMPTY; }
   paintZones();
@@ -948,6 +949,7 @@ async function fieldDrift(m, trigger) {
     try {
       const r = await api(`/api/drift?lon=${m.lon}&lat=${m.lat}&t0=${encodeURIComponent(t0)}&hours=72&n=40`);
       const km = showCone(r, m.lon, m.lat);
+      setFlowSource(`/api/flow?lon=${m.lon}&lat=${m.lat}&t0=${encodeURIComponent(t0)}&hours=72`, 0);
       const pts = r.tracks.flat();
       const xs = pts.map((c) => c[0]), ys = pts.map((c) => c[1]);
       map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: viewPadding(), maxZoom: 10 });
@@ -1064,8 +1066,194 @@ function renderCompare() {
   });
 }
 
+// ---------- течения и ветер: бегущие штрихи поверх карты ----------
+// Поля те же, по которым считается дрейф: в акватории — Open-Meteo, у полевого события без снимка — реанализ
+// Copernicus Marine. Штрих живёт в координатах и за кадр сдвигается на шаг в пикселях, пропорциональный скорости,
+// поэтому анимация выглядит одинаково на любом масштабе. Кадр времени — F.hour, его двигает ползунок дрейфа.
+const FLOW_STYLE = {
+  cur: { name: 'Течения', vmax: 0.6, width: 1.6, ramp: ['#7dd3fc', '#38bdf8', '#67e8f9', '#f0fdff'] },
+  wind: { name: 'Ветер 10 м', vmax: 12, width: 1.3, ramp: ['#fde68a', '#fbbf24', '#fb923c', '#f4511e'] },
+};
+const F = { src: null, tz: 0, data: null, loading: null, hour: 0, on: { cur: false, wind: false },
+  parts: { cur: [], wind: [] }, region: null, raf: null, moving: false, canvas: null, ctx: null };
+const FLOW_UV = new Float64Array(2);
+
+function prepFlow(d) {
+  const pack = (f) => f && { u: f.u.map((fr) => Float32Array.from(fr, (x) => x ?? NaN)), v: f.v.map((fr) => Float32Array.from(fr, (x) => x ?? NaN)) };
+  const nx = d.lons.length, ny = d.lats.length;
+  return { ...d, nx, ny, dx: d.lons[1] - d.lons[0], dy: d.lats[1] - d.lats[0], cur: pack(d.currents), wind: pack(d.wind),
+    mask: Uint8Array.from(d.water.bits, (c) => (c === '1' ? 1 : 0)) };
+}
+// Билинейно по сетке и линейно по часам; суша (NaN) выпадает из весов. Результат — в FLOW_UV, м/с
+function sampleFlow(f, lon, lat, h) {
+  const d = F.data, gx = (lon - d.lons[0]) / d.dx, gy = (lat - d.lats[0]) / d.dy;
+  if (!(gx >= 0 && gy >= 0 && gx <= d.nx - 1 && gy <= d.ny - 1)) return false;
+  const i = Math.min(Math.floor(gx), d.nx - 2), j = Math.min(Math.floor(gy), d.ny - 2), a = gx - i, b = gy - j;
+  const h0 = Math.min(Math.floor(h), d.hours), h1 = Math.min(h0 + 1, d.hours), c = h - h0;
+  const k00 = j * d.nx + i, k10 = k00 + 1, k01 = k00 + d.nx, k11 = k01 + 1;
+  const w00 = (1 - a) * (1 - b), w10 = a * (1 - b), w01 = (1 - a) * b, w11 = a * b;
+  let u = 0, v = 0, ws = 0;
+  for (let t = 0; t < 2; t++) {
+    const wh = t ? c : 1 - c;
+    if (wh <= 0) continue;
+    const U = f.u[t ? h1 : h0], V = f.v[t ? h1 : h0];
+    if (U[k00] === U[k00]) { u += wh * w00 * U[k00]; v += wh * w00 * V[k00]; ws += wh * w00; }
+    if (U[k10] === U[k10]) { u += wh * w10 * U[k10]; v += wh * w10 * V[k10]; ws += wh * w10; }
+    if (U[k01] === U[k01]) { u += wh * w01 * U[k01]; v += wh * w01 * V[k01]; ws += wh * w01; }
+    if (U[k11] === U[k11]) { u += wh * w11 * U[k11]; v += wh * w11 * V[k11]; ws += wh * w11; }
+  }
+  if (ws < 0.2) return false;
+  FLOW_UV[0] = u / ws; FLOW_UV[1] = v / ws;
+  return true;
+}
+function flowWater(lon, lat) {
+  const w = F.data.water, x = Math.round((lon - w.lon0) / w.step), y = Math.round((lat - w.lat0) / w.step);
+  return x >= 0 && y >= 0 && x < w.nx && y < w.ny && F.data.mask[y * w.nx + x] === 1;
+}
+// Где засевать штрихи: сетка полей ∩ видимая часть карты
+function flowRegion() {
+  const d = F.data, b = map.getBounds();
+  const x0 = Math.max(d.lons[0], b.getWest()), x1 = Math.min(d.lons[d.nx - 1], b.getEast());
+  const y0 = Math.max(d.lats[0], b.getSouth()), y1 = Math.min(d.lats[d.ny - 1], b.getNorth());
+  return x1 > x0 && y1 > y0 ? [x0, y0, x1, y1] : null;
+}
+function spawnFlow(p, kind, r) {
+  p.xy = null;
+  for (let k = 0; k < 12; k++) {
+    const lon = r[0] + Math.random() * (r[2] - r[0]), lat = r[1] + Math.random() * (r[3] - r[1]);
+    if (kind === 'cur' && !flowWater(lon, lat)) continue;
+    p.lon = lon; p.lat = lat; p.age = 0; p.max = 40 + Math.random() * 60;
+    return;
+  }
+  p.age = p.max = 0;  // воды в окне не нашли — попробуем в следующем кадре
+}
+function resetFlowParticles() {
+  F.parts = { cur: [], wind: [] };
+  F.ctx?.clearRect(0, 0, F.canvas.width, F.canvas.height);
+  if (!F.data) return;
+  const r = F.region = flowRegion();
+  if (!r) return;
+  const a = map.project([r[0], r[3]]), b = map.project([r[2], r[1]]);
+  const n = Math.round(Math.min(1800, Math.max(150, Math.abs((b.x - a.x) * (b.y - a.y)) / 450)));
+  ['cur', 'wind'].forEach((kind) => {
+    if (!F.on[kind] || !F.data[kind]) return;
+    for (let k = 0; k < n; k++) {
+      const p = {};
+      spawnFlow(p, kind, r);
+      p.age = Math.random() * p.max;
+      F.parts[kind].push(p);
+    }
+  });
+}
+function flowFrame() {
+  F.raf = requestAnimationFrame(flowFrame);
+  const ctx = F.ctx, W = F.canvas.width, H = F.canvas.height;
+  if (!F.data || document.hidden) return;
+  if (F.moving) { ctx.clearRect(0, 0, W, H); return; }
+  ctx.globalCompositeOperation = 'destination-in';  // старые штрихи тускнеют — получается хвост
+  ctx.fillStyle = 'rgba(0,0,0,0.94)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
+  const r = F.region;
+  if (!r) return;
+  const dpr = window.devicePixelRatio || 1, z = 2 ** map.getZoom();
+  ['cur', 'wind'].forEach((kind) => {
+    const parts = F.parts[kind], f = F.data[kind], st = FLOW_STYLE[kind];
+    if (!parts.length) return;
+    const paths = st.ramp.map(() => new Path2D());
+    for (const p of parts) {
+      if (++p.age > p.max || !sampleFlow(f, p.lon, p.lat, F.hour)) { spawnFlow(p, kind, r); continue; }
+      const u = FLOW_UV[0], v = FLOW_UV[1], sp = Math.hypot(u, v);
+      if (sp < 1e-4) continue;
+      const cos = Math.cos(p.lat * Math.PI / 180);
+      const m = (0.5 + 2.2 * Math.min(sp / st.vmax, 1.6)) * 40075016.686 * cos / (512 * z);  // шаг в метрах
+      const lon = p.lon + (u / sp) * m / (111320 * cos), lat = p.lat + (v / sp) * m / 111320;
+      if (kind === 'cur' && !flowWater(lon, lat)) { spawnFlow(p, kind, r); continue; }
+      const a = p.xy || map.project([p.lon, p.lat]), b = map.project([lon, lat]);
+      const path = paths[Math.min(st.ramp.length - 1, Math.floor(sp / st.vmax * st.ramp.length))];
+      path.moveTo(a.x * dpr, a.y * dpr);
+      path.lineTo(b.x * dpr, b.y * dpr);
+      p.lon = lon; p.lat = lat; p.xy = b;
+    }
+    ctx.lineCap = 'round';
+    // Тёмная подложка под штрихом — чтобы он читался и на светлой карте, и поверх гексов
+    ctx.lineWidth = (st.width + 1.4) * dpr;
+    ctx.strokeStyle = 'rgba(4,20,28,.35)';
+    paths.forEach((path) => ctx.stroke(path));
+    ctx.lineWidth = st.width * dpr;
+    paths.forEach((path, k) => { ctx.strokeStyle = st.ramp[k]; ctx.stroke(path); });
+  });
+}
+function sizeFlowCanvas() {
+  const m = map.getCanvas(), dpr = window.devicePixelRatio || 1;
+  F.canvas.width = m.clientWidth * dpr; F.canvas.height = m.clientHeight * dpr;
+  F.canvas.style.width = `${m.clientWidth}px`; F.canvas.style.height = `${m.clientHeight}px`;
+  resetFlowParticles();
+}
+function initFlowCanvas() {
+  if (F.canvas) return;
+  F.canvas = document.createElement('canvas');
+  F.canvas.className = 'flow-canvas';
+  map.getCanvas().after(F.canvas);  // над картой, под маркерами
+  F.ctx = F.canvas.getContext('2d');
+  sizeFlowCanvas();
+  map.on('resize', sizeFlowCanvas);
+  map.on('movestart', () => { F.moving = true; });
+  map.on('moveend', () => { F.moving = false; resetFlowParticles(); });
+}
+const flowActive = () => F.on.cur || F.on.wind;
+async function toggleFlow(kind, on) {
+  F.on[kind] = on;
+  initFlowCanvas();
+  if (flowActive() && !F.raf) F.raf = requestAnimationFrame(flowFrame);
+  if (!flowActive()) { cancelAnimationFrame(F.raf); F.raf = null; }
+  renderFlowLegend();
+  if (on && !F.data) await loadFlow();
+  else resetFlowParticles();
+}
+// Откуда брать поля: акватория и дата снимка или точка полевого события; tz — для подписи времени
+function setFlowSource(url, tz) {
+  F.tz = tz;
+  if (F.src === url) return;
+  F.src = url; F.data = null; F.hour = 0;
+  resetFlowParticles();
+  renderFlowLegend();
+  if (flowActive()) loadFlow();
+}
+function setFlowHour(h) {
+  F.hour = h;
+  renderFlowLegend();
+}
+async function loadFlow() {
+  const url = F.src;
+  if (!url || F.loading === url) return;
+  F.loading = url;
+  try {
+    const d = await api(url);
+    if (F.src !== url) return;
+    F.data = prepFlow(d);
+    if (F.on.cur && !F.data.cur) toast('Течений здесь нет: внутренний водоём, только ветер', 4000);
+    resetFlowParticles();
+    renderFlowLegend();
+  } catch (err) { if (F.src === url) toast(`Течения и ветер недоступны: ${err.message}`, 6000); }
+  finally { if (F.loading === url) F.loading = null; }
+}
+function renderFlowLegend() {
+  const box = $('#flow-legend'), kinds = ['cur', 'wind'].filter((k) => F.on[k]);
+  if (!box) return;
+  box.hidden = !kinds.length;
+  if (!kinds.length) return;
+  const d = F.data;
+  const when = d ? `${localTime(new Date(new Date(d.t0).getTime() + F.hour * 3600e3).toISOString(), F.tz)}${F.tz ? '' : ' UTC'}${F.hour ? ` · +${F.hour} ч` : ''}` : 'загрузка…';
+  box.innerHTML = `<div class="flow-legend-title">Течения и ветер · ${esc(when)}</div>` + kinds.map((k) => {
+    const st = FLOW_STYLE[k], none = d && !d[k];
+    return `<div class="leg-row"><span class="sw flow-sw" style="background:linear-gradient(90deg,${st.ramp.join(',')})"></span>${st.name}${none ? ': нет данных' : `: 0 – ${nf(st.vmax, 1)} м/с и быстрее`}</div>`;
+  }).join('') + (d ? `<p class="flow-legend-src">${d.sources.map(esc).join('<br>')}</p>` : '');
+}
+
 function clearDrift() {
   cancelAnimationFrame(S.anim); S.anim = null; S.drift = null;
+  setFlowHour(0);
   ['tracks', 'particles', 'cone', 'coneCenter'].forEach((id) => map.getSource(id)?.setData(EMPTY));
   $('#drift-ctrl').hidden = true;
   $('#drift-play').textContent = '▶';
@@ -1105,6 +1293,7 @@ function showDriftHour(h) {
   $('#drift-hour').value = h;
   const t = new Date(new Date(r.t0).getTime() + h * 3600e3).toISOString();
   $('#drift-hlabel').textContent = `+${h} ч · ${localTime(t, S.aoi.tz)}`;
+  setFlowHour(h);
   const last = r.frames[r.hours];
   map.getSource('particles').setData({ type: 'FeatureCollection', features: r.frames[h].map((c, k) => ({
     type: 'Feature',
@@ -1363,6 +1552,8 @@ $('#l-objects').onchange = async (e) => {
 };
 $('#l-hex').onchange = (e) => vis(['hex-fill', 'hex-research', 'hex-line'], e.target.checked);
 $('#l-sat').onchange = (e) => vis(['sat-lo', 'sat'], e.target.checked);
+$('#l-flow-cur').onchange = (e) => toggleFlow('cur', e.target.checked);
+$('#l-flow-wind').onchange = (e) => toggleFlow('wind', e.target.checked);
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && S.drawing) stopDrawing();
   else if (e.key === 'Escape' && !$('#panel').hidden) closePanel();

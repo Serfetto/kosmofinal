@@ -204,6 +204,64 @@ def _integrate(met: dict, land: LandMask, lon, lat, t: float, hours: int, n_ens:
     return track, beached
 
 
+def flow_frames(met: dict, t0: float, hours: int, land: LandMask, currents: bool = True,
+                max_cells: int = 32, mask_cells: int = 256) -> dict:
+    """Течения и ветер по часам от t0 — для анимации на карте, — и маска воды для штрихов течений.
+
+    Сетка прореживается до `max_cells` узлов по большей стороне; кадр — [ячейка] построчно с юга на север,
+    в строке с запада на восток; NaN (суша у течений) → None. Маска — `mask_cells` клеток по большей стороне,
+    строка из «0»/«1» в том же порядке.
+    """
+    lons, lats = met["lons"], met["lats"]
+    s = max(1, -(-max(len(lons), len(lats)) // max_cells))
+    t = t0 + 3600.0 * np.arange(hours + 1)
+    i = np.clip(np.searchsorted(met["t"], t) - 1, 0, len(met["t"]) - 2)
+    w = np.clip((t - met["t"][i]) / (met["t"][i + 1] - met["t"][i]), 0, 1)[:, None, None]
+
+    def frames(a, nd):
+        a = np.asarray(a, float)[:, ::s, ::s]
+        f = np.round(a[i] * (1 - w) + a[i + 1] * w, nd).reshape(len(t), -1)
+        return [[float(x) if np.isfinite(x) else None for x in row] for row in f]
+
+    x0, x1, y0, y1 = float(lons[0]), float(lons[-1]), float(lats[0]), float(lats[-1])
+    step = max(x1 - x0, y1 - y0) / mask_cells
+    # Клетки строго внутри сетки полей: за её краем признак «море» из течений не определён
+    mx = np.minimum(x0 + step * np.arange(int((x1 - x0) / step + 1e-9) + 1), x1)
+    my = np.minimum(y0 + step * np.arange(int((y1 - y0) / step + 1e-9) + 1), y1)
+    LO, LA = np.meshgrid(mx, my)
+    water = land.is_water(LO.ravel(), LA.ravel())
+    return {
+        "lons": np.round(lons[::s], 5).tolist(), "lats": np.round(lats[::s], 5).tolist(), "hours": hours,
+        "currents": {"u": frames(met["cu"], 2), "v": frames(met["cv"], 2)} if currents else None,
+        "wind": {"u": frames(met["wu"], 1), "v": frames(met["wv"], 1)},
+        "water": {"lon0": round(x0, 5), "lat0": round(y0, 5), "step": step, "nx": len(mx), "ny": len(my),
+                  "bits": "".join("1" if b else "0" for b in water)},
+    }
+
+
+def flow(aoi_id: str, date: str, hours: int = 72) -> dict:
+    """Поля для анимации в акватории: те же течения и ветер Open-Meteo, по которым считается дрейф."""
+    met = fetch_met(aoi_id, date)
+    sea = AOIS[aoi_id]["kind"] == "sea"
+    t0 = scene_time(aoi_id, date)
+    out = flow_frames(met, t0.timestamp(), hours, LandMask(met, PROCESSED / aoi_id / "water.tif", sea), currents=sea)
+    out["t0"] = t0.isoformat()
+    out["sources"] = (["течения: Meteo-France SMOC через Open-Meteo (1/12°, ежечасно, с приливом и стоксовым дрейфом)"]
+                      if sea else []) + ["ветер 10 м: ERA5 / прогноз через Open-Meteo (ежечасно)"]
+    return out
+
+
+def flow_at(lon: float, lat: float, t0: datetime, hours: int = 72) -> dict:
+    """Поля для анимации вокруг точки без снимка — реанализы Copernicus Marine, как у `simulate_at`."""
+    if not globe.is_ocean(lat, lon):
+        raise cmems.CmemsNoData("точка на суше")
+    met = cmems.fetch_met(lon, lat, t0, hours)
+    out = flow_frames(met, t0.timestamp(), hours, LandMask(met))
+    out["t0"] = t0.isoformat()
+    out["sources"] = [str(x) for x in met["sources"]]
+    return out
+
+
 def accumulation(aoi_id: str, date: str, hours: int = 72, spacing_m: float = 600.0) -> dict:
     """Карта вероятных зон скопления: равномерно засеваем акваторию и смотрим, куда соберутся частицы."""
     with rasterio.open(PROCESSED / aoi_id / "water.tif") as s:

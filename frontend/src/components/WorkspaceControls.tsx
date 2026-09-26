@@ -25,6 +25,8 @@ import {
   Sparkles,
   Sun,
   TrendingUp,
+  Waves,
+  Wind,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -325,6 +327,7 @@ export function MapLegend() {
       </button>
       <div className="legend-content" id="legend-content">
         <div id="legend" />
+        <div id="flow-legend" className="flow-legend" hidden />
         <div id="legend-meta" className="legend-meta muted small" />
       </div>
     </aside>
@@ -555,6 +558,16 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
             <span className="layer-icon accent-sky"><CloudSun size={19} /></span>
             <span><strong>Спутниковая подложка</strong><small>Контекст береговой линии</small></span>
             <input type="checkbox" id="l-sat" defaultChecked />
+          </label>
+          <label>
+            <span className="layer-icon accent-sky"><Waves size={19} /></span>
+            <span><strong>Течения</strong><small>Бегущие штрихи: направление и скорость</small></span>
+            <input type="checkbox" id="l-flow-cur" />
+          </label>
+          <label>
+            <span className="layer-icon accent-coral"><Wind size={19} /></span>
+            <span><strong>Ветер</strong><small>10 м над водой, те же поля, что у дрейфа</small></span>
+            <input type="checkbox" id="l-flow-wind" />
           </label>
         </div>
       </div>

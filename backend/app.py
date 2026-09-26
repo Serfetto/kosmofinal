@@ -23,13 +23,13 @@ from pyproj import Transformer
 from backend.case_api import _aoi_date, router, versions
 from backend.report import router as report_router
 from backend.schemas import (PATTERN_HINTS, AccumulationOut, AoiOut, AoiPath, DatePath, DriftAtOut, DriftOut,
-                             DriftPointOut, FeatureCollection, GeoJSONResponse, HealthOut, HoursQuery, RasterGridOut, RouteOut,
+                             DriftPointOut, FeatureCollection, FlowOut, GeoJSONResponse, HealthOut, HoursQuery, RasterGridOut, RouteOut,
                              SceneOut, SeriesOut, StatusesOut, Tag, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
 from pipeline.config import AOIS, H3_RES, PROCESSED, ROOT, cached
 from pipeline.cmems import CmemsUnavailable
-from pipeline.drift import accumulation, simulate, simulate_at
+from pipeline.drift import accumulation, flow, flow_at, simulate, simulate_at
 from pipeline.route import plan
 
 DESCRIPTION = """
@@ -368,6 +368,40 @@ def drift_at(lon: float = Query(ge=-180, le=180, description="Долгота т�
     t0 = t0.replace(tzinfo=timezone.utc) if t0.tzinfo is None else t0.astimezone(timezone.utc)
     res = simulate_at(lon, lat, t0, hours=hours, n_ens=n, seed=2)
     return {**_cone(res, lat), "sources": res["sources"]}
+
+
+@app.get("/api/aois/{aoi}/{date}/flow", tags=[Tag.DRIFT], summary="Течения и ветер по часам (для анимации)",
+         response_model=FlowOut, responses=errors(404, 422, 503))
+def flow_aoi(aoi: AoiPath, date: DatePath, hours: HoursQuery = 72):
+    """Поля, по которым считается дрейф в акватории, — чтобы показать их на карте: течения и ветер 10 м на сетке
+    вокруг акватории, кадры через 1 ч от момента съёмки. Кадр `h` соответствует часу `h` прогноза дрейфа.
+    Маска воды — где рисовать течения (по маске снимка, за её краем — по глобальной маске суши).
+    У внутренних водоёмов `currents` = null: течений нет."""
+    _aoi_date(aoi, date)
+    return _flow_aoi(aoi, date, hours)
+
+
+@lru_cache(maxsize=16)
+def _flow_aoi(aoi: str, date: str, hours: int):
+    return flow(aoi, date, hours)
+
+
+@app.get("/api/flow", tags=[Tag.DRIFT], summary="Течения и ветер вокруг точки без снимка (для анимации)",
+         response_model=FlowOut, responses=errors(404, 422, 503))
+def flow_point(lon: float = Query(ge=-180, le=180, description="Долгота точки", examples=[-139.6]),
+               lat: float = Query(ge=-80, le=80, description="Широта точки", examples=[31.9]),
+               t0: datetime = Query(description="Кадр 0, ISO 8601; без часового пояса — UTC",
+                                    examples=["2015-07-27T15:34:00Z"]),
+               hours: HoursQuery = 72):
+    """Поля, по которым считается `/api/drift`: реанализы Copernicus Marine в той же рамке вокруг точки
+    (сетка прорежена до 32 узлов по большей стороне). Нужен аккаунт Copernicus Marine, как у `/api/drift`."""
+    t0 = t0.replace(tzinfo=timezone.utc) if t0.tzinfo is None else t0.astimezone(timezone.utc)
+    return _flow_at(lon, lat, t0, hours)
+
+
+@lru_cache(maxsize=16)
+def _flow_at(lon: float, lat: float, t0: datetime, hours: int):
+    return flow_at(lon, lat, t0, hours)
 
 
 @lru_cache(maxsize=32)
