@@ -1,4 +1,4 @@
-# Сопоставление полевых событий со снимками. Читается pipeline/pairs.py; обоснование — plan.md §5.3.
+# Сопоставление полевых событий со снимками. Читается pipeline/pairs.py; обоснование — docs/plan.md §5.3.
 
 catalog: https://planetarycomputer.microsoft.com/api/stac/v1
 collection: sentinel-2-l2a

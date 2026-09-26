@@ -647,9 +647,10 @@ def rerun_query(qid: QueryIdPath):
 @router.get("/api/metrics", tags=[Tag.METRICS], summary="Метрики детектора, моделей и проверок",
             responses={200: {"model": MetricsOut}})
 def metrics():
-    """Все результаты проверок одним ответом: детектор на тесте MARIDA и на регионе вне обучения, модели
-    концентрации (групповая CV, отложенная выборка, покрытие интервалов, перенос), реестр пар, связь детекций
-    с полевой концентрацией, проверка прогноза дрейфа, ручная проверка детекций и сводка «что чем подтверждено».
+    """Все результаты проверок одним ответом: детектор на тесте MARIDA, на новых сценах MADOS и на регионе вне
+    обучения, модели концентрации (групповая CV, отложенная выборка, покрытие интервалов, перенос), реестр пар,
+    связь детекций с полевой концентрацией, проверка прогноза дрейфа, ручная проверка детекций и сводка «что чем
+    подтверждено».
     Разделы, для которых проверка ещё не запускалась, отсутствуют или равны null.
     """
     det = EVAL / "detector" / "metrics.json"
@@ -667,12 +668,15 @@ def metrics():
         out["pair_features"] = json.loads(pd.read_csv(feats).to_json(orient="records"))
     for key, path in (("transfer", EVAL / "transfer.json"), ("drift_check", EVAL / "drift_check.json"),
                       ("detector_lro", EVAL / "detector" / "leave_region_out.json"),
+                      ("detector_mados", EVAL / "detector" / "mados.json"),
                       ("review", EVAL / "review" / "score.json")):
         if path.exists():
             out[key] = _read(path)
     out["validated_where"] = [
         {"claim": "Детектор находит скопления плавающего мусора",
-         "field": "—", "satellite_labels": "MARIDA test: P/R/F1/IoU", "pairs": "качественно (фрагменты пар S4)"},
+         "field": "—",
+         "satellite_labels": "MARIDA test и новые сцены MADOS test: P/R/F1/IoU, ложные срабатывания по классам фона",
+         "pairs": "качественно (фрагменты пар S4)"},
         {"claim": "Концентрация профиля, шт./км²",
          "field": "групповая CV + отложенная выборка", "satellite_labels": "—", "pairs": "—"},
         {"claim": "Перенос числа на снимок",

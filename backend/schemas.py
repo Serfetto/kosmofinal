@@ -508,5 +508,7 @@ class MetricsOut(BaseModel):
     transfer: dict[str, Any] | None = Field(None, description="Связь детекций в следе с полевой концентрацией")
     drift_check: dict[str, Any] | None = Field(None, description="Проверка прогноза дрейфа на парах соседних снимков")
     detector_lro: dict[str, Any] | None = Field(None, description="Детектор на регионе, исключённом из обучения")
+    detector_mados: dict[str, Any] | None = Field(None, description="Детектор на новых сценах MADOS test: P/R/F1 и "
+                                                               "ложные срабатывания на нефти, слизи, медузах, платформах")
     review: dict[str, Any] | None = Field(None, description="Ручная проверка фрагментов с детекциями")
     validated_where: list[dict[str, str]] = Field(description="Что чем подтверждено: утверждение → данные проверки")

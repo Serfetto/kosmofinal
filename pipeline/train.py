@@ -1,8 +1,13 @@
 """Обучение пиксельного классификатора на MARIDA (XGBoost на GPU, CUDA).
 
-python -m pipeline.train
+python -m pipeline.train                # модель сервиса → data/models/xgb.joblib, metrics.json
+python -m pipeline.train --with-mados   # эксперимент: плюс новые сцены MADOS → xgb_mados.joblib, metrics_mados.json
+
+В эксперименте сцены MADOS, повторяющие MARIDA, не берутся (иначе те же пиксели вошли бы дважды); нефть MADOS —
+«вода». Test обоих наборов в обучении не участвует. Почему сервис остался на модели без MADOS — docs/mados.md.
 """
 import json
+import sys
 
 import joblib
 import numpy as np
@@ -46,13 +51,36 @@ def balance(X, y):
     return X[keep], y[keep]
 
 
+def group_counts(y) -> dict:
+    return {GROUPS[g]: int((y == g).sum()) for g in np.unique(y)}
+
+
 def main():
     MODELS.mkdir(parents=True, exist_ok=True)
     Xtr, ytr, names = load_split("train")
     Xva, yva, _ = load_split("val")
     Xte, yte, _ = load_split("test")
+    data = {"marida": {"train_px": group_counts(ytr), "val_px": group_counts(yva)}}
+    with_mados = "--with-mados" in sys.argv
+    if with_mados:
+        from . import mados
+
+        if not mados.available():
+            sys.exit(f"нет {mados.ZIP}: скачайте MADOS ({mados.URL})")
+        Mtr, mtr, str_ = mados.training_pixels("train")
+        Mva, mva, sva = mados.training_pixels("val")
+        data["mados"] = {
+            "source": "MADOS, doi:10.5281/zenodo.10664073; только сцены, которых нет в MARIDA",
+            "marida_duplicates_skipped": len(mados.duplicates()),
+            "train_scenes": str_["scenes"], "val_scenes": sva["scenes"],
+            "train_px": group_counts(mtr), "val_px": group_counts(mva),
+            "oil_px_as_water": {"train": str_["oil_px"], "val": sva["oil_px"]},
+        }
+        print("MADOS train:", len(str_["scenes"]), "сцен", group_counts(mtr))
+        Xtr, ytr = np.concatenate([Xtr, Mtr]), np.concatenate([ytr, mtr])
+        Xva, yva = np.concatenate([Xva, Mva]), np.concatenate([yva, mva])
     print("pixels train/val/test:", len(ytr), len(yva), len(yte))
-    print("train groups:", {GROUPS[g]: int((ytr == g).sum()) for g in np.unique(ytr)})
+    print("train groups:", group_counts(ytr))
     Xtr, ytr = balance(Xtr, ytr)
 
     counts = np.bincount(ytr, minlength=len(GROUPS))
@@ -82,11 +110,14 @@ def main():
     metrics = {
         "report": rep, "debris_ap": ap,
         "confusion": confusion_matrix(yte, pred, labels=list(range(len(GROUPS)))).tolist(),
-        "groups": GROUPS, "n_test": int(len(yte)),
+        "groups": GROUPS, "n_test": int(len(yte)), "test": "MARIDA test (размеченные пиксели, без фильтров)",
+        "training_data": data, "device": DEVICE, "n_trees": int(model.best_iteration + 1),
         "importance": [(n, float(v)) for n, v in imp],
     }
-    joblib.dump({"model": model, "names": names, "dense_endmember": dense.tolist()}, MODELS / "xgb.joblib")
-    (MODELS / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=1), encoding="utf-8")
+    sfx = "_mados" if with_mados else ""
+    joblib.dump({"model": model, "names": names, "dense_endmember": dense.tolist(), "training_data": data},
+                MODELS / f"xgb{sfx}.joblib")
+    (MODELS / f"metrics{sfx}.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=1), encoding="utf-8")
     print("top features:", [n for n, _ in imp[:10]])
 
 

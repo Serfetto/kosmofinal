@@ -236,6 +236,24 @@ MARIDA_TO_GROUP = {
     9: 5, 12: 5, 14: 5,
 }
 
+# Классы MADOS (Marine Debris and Oil Spill) и их сведение к тем же 6 группам — для эксперимента с обучением
+# (train --with-mados). Облаков в MADOS нет. Нефть — «вода», то есть «не мусор» (docs/mados.md)
+MADOS_CLASSES = {
+    1: "Marine Debris", 2: "Dense Sargassum", 3: "Sparse Floating Algae", 4: "Natural Organic Material",
+    5: "Ship", 6: "Oil Spill", 7: "Marine Water", 8: "Sediment-Laden Water", 9: "Foam", 10: "Turbid Water",
+    11: "Shallow Water", 12: "Waves & Wakes", 13: "Oil Platform", 14: "Jellyfish", 15: "Sea snot",
+}
+MADOS_OIL = 6
+MADOS_TO_GROUP = {
+    1: 0,
+    2: 1, 3: 1, 4: 1, 14: 1, 15: 1,  # водоросли, медузы, слизь — органика
+    5: 2, 13: 2,                     # платформа — яркий неподвижный объект, как судно
+    6: 4, 7: 4, 8: 4, 10: 4, 11: 4,
+    9: 5, 12: 5,
+}
+# Классы MARIDA в нумерации MADOS — для поиска сцен MARIDA внутри MADOS (облака и Mixed Water в MADOS не вошли)
+MARIDA_TO_MADOS = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12, 14: 12}
+
 # Пользовательские акватории (python -m pipeline.build add ...) хранятся в data/aois.json
 _EXTRA = DATA / "aois.json"
 if _EXTRA.exists():

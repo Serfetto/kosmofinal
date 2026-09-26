@@ -1541,6 +1541,11 @@ async function renderAbout() {
     <table><tr><th>Регион</th><th>Патчей</th><th>P</th><th>R</th><th>F1</th><th>IoU</th></tr>${Object.entries(metrics.detector_lro.regions).map(([k, v]) =>
       `<tr><td>${esc(k)}</td><td>${v.n_patches}</td><td>${nf(v.xgb_filters.precision, 2)}</td><td>${nf(v.xgb_filters.recall, 2)}</td><td>${nf(v.xgb_filters.f1, 2)}</td><td>${nf(v.xgb_filters.iou, 2)}</td></tr>`).join('')}</table>
     <p class="small muted">Средний F1 ${nf(metrics.detector_lro.mean_f1_filters, 2)}, минимальный ${nf(metrics.detector_lro.min_f1_filters, 2)}: на новом районе качество ниже, чем на официальном test.</p>` : ''}
+    ${metrics?.detector_mados ? `<h3>Детектор: новые сцены MADOS test (${metrics.detector_mados.n_scenes} сцен, мусор в ${metrics.detector_mados.n_scenes_with_debris})</h3>
+    <p class="small">P ${nf(metrics.detector_mados.methods.xgb_filters.precision, 3)}, R ${nf(metrics.detector_mados.methods.xgb_filters.recall, 3)}, F1 ${nf(metrics.detector_mados.methods.xgb_filters.f1, 3)} <span class="muted">(${nf(metrics.detector_mados.methods.xgb_filters.ci95.f1[0], 2)}–${nf(metrics.detector_mados.methods.xgb_filters.ci95.f1[1], 2)})</span>. Сцены, которых нет в MARIDA: нефть, слизь, медузы, платформы.</p>
+    <table><tr><th>Класс фона (MADOS)</th><th>FP, пикс.</th><th>Всего</th><th>Доля</th></tr>${Object.entries(metrics.detector_mados.fp_by_class).filter(([, v]) => v.fp_px > 0).map(([k, v]) =>
+      `<tr><td>${esc(k)}</td><td>${nf(v.fp_px, 0)}</td><td>${nf(v.class_px, 0)}</td><td>${pct(v.fp_rate)}%</td></tr>`).join('')}</table>
+    <p class="small muted">Детектор обучен только на MARIDA: слизь и медуз, которых там нет, он часто принимает за мусор.</p>` : ''}
     <h3>Ложные срабатывания основного алгоритма на сложном фоне</h3>
     <table><tr><th>Класс фона</th><th>FP, пикс.</th><th>Всего</th><th>Доля</th></tr>${fpRows}</table>
     <h3>Концентрация, шт./км²</h3>${concBlocks}

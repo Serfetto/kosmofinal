@@ -1,5 +1,5 @@
 # Целевые величины (профили концентрации) и правила отбора полевых наблюдений.
-# Читается pipeline/field.py; обоснование — plan.md §3 и docs/report.md.
+# Читается pipeline/field.py; обоснование — docs/plan.md §3 и docs/report.md.
 
 source_csv: data/field/raw/macroplastic_marine_samples.csv
 # Сегменты прерванных трансект S2 (PANGAEA 931834, Gutow et al. 2021, CC BY 4.0)

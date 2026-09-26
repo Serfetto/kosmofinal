@@ -15,7 +15,10 @@
 Краткий отчёт с результатами и разбором ошибок — [docs/report.md](docs/report.md).
 Справочник API: все ручки с параметрами, полями ответов и примерами — [docs/api.md](docs/api.md);
 интерактивно — `http://localhost:8000/api/docs` (Swagger) и `/api/redoc`, схема — `/api/openapi.json`.
-План интеграции данных кейса — [plan.md](plan.md). Сводка метрик — [data/eval/summary.md](data/eval/summary.md).
+План интеграции данных кейса — [docs/plan.md](docs/plan.md). Сводка метрик — [docs/summary.md](docs/summary.md).
+Данные и модели — [docs/data.md](docs/data.md) и [docs/models.md](docs/models.md). Проверка детектора на наборе
+MADOS и варианты дообучения, которые мы пробовали, — [docs/mados.md](docs/mados.md). Все тесты с описанием —
+[docs/tests.md](docs/tests.md).
 
 | | Типичное решение | AquaFlow |
 |---|---|---|
@@ -115,7 +118,7 @@ docker compose up -d --build
 ```
 
 В образ попадают фронтенд (собирается внутри) и те же данные, что лежат в репозитории, поэтому скачивать и
-обучать ничего не нужно. Локальные снимки и MARIDA в образ не попадают: это задаёт `.dockerignore`. Контейнеру
+обучать ничего не нужно. Локальные снимки, MARIDA и MADOS в образ не попадают: это задаёт `.dockerignore`. Контейнеру
 нужен выход в интернет к Open-Meteo. Течения и ветер для дат, которых нет в репозитории, зоны скопления и
 сохранённые запросы пишутся в том `aquaflow-cache` (`/app/cache`), поэтому переживают пересоздание контейнера и
 пересборку образа и заново не скачиваются. Сбросить кеш (например, после изменений в модели дрейфа):
@@ -127,7 +130,7 @@ docker compose up -d --build
 разбиение, пороги детектора.
 
 ```bash
-# Всё, кроме пересборки карт (~5 мин; MARIDA нужна для шага детектора)
+# Всё, кроме пересборки карт (~5 мин; MARIDA нужна для шага детектора, MADOS — для проверки на нём)
 .venv/Scripts/python -m pipeline.reproduce            # --offline — реестр пар из кеша, без сети
 
 # или по шагам
@@ -137,6 +140,7 @@ docker compose up -d --build
 .venv/Scripts/python -m pipeline.splits build         # группы и отложенная выборка → data/splits/
 .venv/Scripts/python -m pipeline.concentration evaluate   # CV, отложенная выборка, перенос → data/eval/concentration/
 .venv/Scripts/python -m pipeline.eval_detector        # MARIDA test: базовые и основной → data/eval/detector/
+.venv/Scripts/python -m pipeline.eval_detector_mados  # новые сцены MADOS test: нефть, слизь, медузы → mados.json
 .venv/Scripts/python -m pipeline.eval_detector_lro    # детектор на регионе, исключённом из обучения (~10 мин, GPU)
 .venv/Scripts/python -m pipeline.pairs transfer       # перенос «детекции в следе ↔ полевая концентрация»
 .venv/Scripts/python -m pipeline.drift_check          # прогноз дрейфа на парах соседних снимков
@@ -152,6 +156,7 @@ docker compose up -d --build
 
 ```bash
 # 1. обучение детектора (MARIDA: https://zenodo.org/records/5151941 → распаковать в data/raw/marida)
+#    MADOS для проверки: https://zenodo.org/records/10664073 → data/raw/MADOS.zip, не распаковывать
 .venv/Scripts/python -m pipeline.train
 # 2. снимки → детекция → карты всех акваторий (скачивание ~17 ГБ, детекция ~45 мин на GPU)
 .venv/Scripts/python -m pipeline.build run
@@ -167,7 +172,7 @@ docker compose up -d --build
 ```
 
 **Ресурсы.** Сервис на готовых данных: 1 ГБ RAM. Шаги `reproduce`: 4 ГБ RAM, несколько минут на CPU. Проверка
-детектора на MARIDA: около 5 минут; GPU с CUDA ускоряет XGBoost, но не обязателен. Полный пересчёт снимков:
+детектора на MARIDA и MADOS: около 6 минут; GPU с CUDA ускоряет XGBoost, но не обязателен. Полный пересчёт снимков:
 16 ГБ RAM, ~20 ГБ диска.
 
 **Ключи** не нужны: Planetary Computer, Open-Meteo, PANGAEA и Zenodo открыты. Исключение — дрейф без снимка
@@ -193,6 +198,9 @@ docker compose up -d --build
 | `data/eval/review/` | фрагменты детекций и контрольных точек для ручной разметки (`review.csv`, `sheet_*.png`) |
 | `data/models/` | `xgb.joblib` (детектор), `conc_A.json`, `conc_B.json` (модели концентрации) |
 | `data/web/<aoi>/` | карты для сервиса: гексы, ряды, зоны, маска качества, оценки концентрации |
+
+Проверка детектора на новых сценах MADOS лежит в `data/eval/detector/mados.json`. Документы — в [docs/](docs/):
+отчёт, данные, модели, MADOS, тесты, API, план, сводка метрик.
 
 ## Архитектура
 
@@ -243,6 +251,8 @@ Sentinel-2 L2A ──► s2.py ──► features.py (нормализация �
   Для пресных водоёмов (Куйбышевское водохранилище, Волгоград) и других морей концентрация недоступна.
 - Пластик, плавник и водоросли спектрально разделяются не полностью; подтверждение — судно или дрон.
 - Детектор обучен на MARIDA (в основном тропики); нормализация фона снижает сдвиг доменов, но не убирает его.
+- Морскую слизь и медуз детектор часто принимает за мусор: на новых сценах MADOS — 45% и 38% их пикселей
+  ([docs/mados.md](docs/mados.md)).
 - Течения SMOC (1/12°) не разрешают мелкие бухты; для водохранилищ — только ветровой дрейф.
 - Дрейф без снимка в открытом океане идёт по среднесуточным течениям GLORYS12 без прилива; на шельфе Северного
   моря — по ежечасным течениям с приливом. Проверить его не на чем: второго наблюдения того же мусора нет.

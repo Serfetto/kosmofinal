@@ -3,7 +3,8 @@
 В AquaFlow обучаются модели двух видов, и данные у них разные. Детектор скоплений учится на размеченных снимках
 Sentinel-2 из открытого набора MARIDA. Модели концентрации учатся на полевом реестре кейса. Снимки районов кейса
 в обучение не входят: по ним только проверяли перенос (§5). Кроме выданного реестра, мы подключили открытые
-датасеты: MARIDA, ERA5, снимки Sentinel-2 и Landsat, течения SMOC и реанализы Copernicus Marine. Их полный список —
+датасеты: MARIDA, MADOS (для проверки детектора), ERA5, снимки Sentinel-2 и Landsat, течения SMOC и реанализы
+Copernicus Marine. Их полный список —
 в §6.
 
 | Модель | Обучающие данные | Объём | Файл модели |
@@ -88,13 +89,34 @@ train, и в test. Поэтому мы дополнительно обучали
    средний спектр пикселей мусора из train с FDI не ниже 99-го перцентиля. По нему сервис оценивает долю покрытия
    пикселя (§4).
 7. **Проверка.** Порог P ≥ 0,5 задан до проверки на test. На MARIDA test детектор работает так же, как в
-   сервисе: модель, затем те же фильтры (§4). Метрики — в [data/eval/summary.md](../data/eval/summary.md).
+   сервисе: модель, затем те же фильтры (§4). Метрики — в [summary.md](summary.md).
 
 ### Где лежит
 
 Архив распаковывается в `data/raw/marida` (`MARIDA.zip`, `patches/`, `splits/`, `shapefiles/`). В репозиторий и
 Docker-образ он не входит, его нужно скачать с Zenodo. Он нужен только для обучения детектора и проверки на
 MARIDA test.
+
+### MADOS: проверка детектора на сложном фоне
+
+MADOS (Marine Debris and Oil Spill) — https://zenodo.org/records/10664073 (DOI
+[10.5281/zenodo.10664073](https://doi.org/10.5281/zenodo.10664073)), лицензия CC BY 4.0. Статья: Kikaki K.,
+Kakogeorgiou I., Hoteit I., Karantzalos K. (2024). Detecting Marine Pollutants and Sea Surface Features with Deep
+Learning in Sentinel-2 Imagery. *ISPRS Journal of Photogrammetry and Remote Sensing*,
+https://www.sciencedirect.com/science/article/pii/S0924271624000625. Страница проекта —
+https://marine-pollution.github.io/.
+
+174 сцены Sentinel-2 за 2015–2022 гг., 2 803 патча 240×240 пикселей, 15 классов. Кроме классов MARIDA, в нём есть
+нефтяные пятна, нефтяные платформы, морская слизь (Sea snot) и медузы. Координат и дат в наборе нет.
+
+**MADOS включает MARIDA целиком.** Все 63 сцены MARIDA есть в MADOS с тем же числом размеченных пикселей мусора и с
+тем же разбиением. Новых сцен 111 (60 train, 24 val, 27 test), мусора в них 1 297 пикселей.
+
+Детектор сервиса **обучен только на MARIDA**. MADOS используется для проверки: на 27 новых тестовых сценах видно, как
+детектор ведёт себя на фоне, которого нет в MARIDA (`python -m pipeline.eval_detector_mados` →
+`data/eval/detector/mados.json`). Обучение на MADOS мы пробовали в нескольких вариантах; почему модель сервиса пока
+осталась прежней — в [mados.md](mados.md). Код — [pipeline/mados.py](../pipeline/mados.py): архив читается прямо
+из zip (`data/raw/MADOS.zip`, ~4 ГБ), в репозиторий и Docker-образ он не входит.
 
 ## 2. Полевой реестр кейса: модели концентрации
 
@@ -264,6 +286,7 @@ MARIDA. Код — [pipeline/s2.py](../pipeline/s2.py) и [pipeline/detect.py](.
 | Датасет | Что берём | Зачем | Доступ и лицензия |
 |---|---|---|---|
 | MARIDA v1.0.0 | 1 381 размеченный патч Sentinel-2 | обучение и проверка детектора (§1) | Zenodo, DOI [10.5281/zenodo.5151941](https://doi.org/10.5281/zenodo.5151941); CC BY 4.0 |
+| MADOS | 111 сцен Sentinel-2, которых нет в MARIDA: мусор и сложный фон — нефть, морская слизь, медузы, нефтяные платформы | проверка детектора на фоне, которого нет в MARIDA (§1, [mados.md](mados.md)); в обучение модели сервиса не входит | Zenodo, DOI [10.5281/zenodo.10664073](https://doi.org/10.5281/zenodo.10664073); CC BY 4.0 |
 | PANGAEA 931834 | метаданные трансект рейса MSM41 | сегменты и время четырёх прерванных трансект S2 (§2, п. 4) | https://doi.pangaea.de/10.1594/PANGAEA.931834; CC BY 4.0. Лежит в `data/field/raw/` |
 | ERA5, ветер 10 м, через Open-Meteo Historical Weather API | почасовой ветер | кандидат в признаки `wind24_ms` (§3), дрейфовый буфер реестра пар (§5), статус «шторм» у снимков, ветер в дрейфе от снимка | https://open-meteo.com/en/docs/historical-weather-api; Open-Meteo — CC BY 4.0, ERA5 — лицензия Copernicus |
 | Прогноз ветра Open-Meteo (Forecast API) | почасовой ветер 10 м | ветер в дрейфе по свежим снимкам, пока за эти дни нет ERA5 | https://open-meteo.com/en/docs; CC BY 4.0 |

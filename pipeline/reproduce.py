@@ -4,8 +4,9 @@ python -m pipeline.reproduce                 # всё, что не требуе�
 python -m pipeline.reproduce --offline       # реестр пар из кеша STAC и качества (без сети)
 python -m pipeline.reproduce --skip-marida   # без проверки детектора (если MARIDA не скачана)
 python -m pipeline.reproduce --with-web      # плюс пересборка карт акваторий (нужны data/processed)
+python -m pipeline.reproduce --summary       # только пересобрать сводку по готовым метрикам
 
-Итог — data/eval/summary.md с метриками, на которые ссылается docs/report.md.
+Итог — docs/summary.md с метриками, на которые ссылается docs/report.md.
 """
 from __future__ import annotations
 
@@ -13,7 +14,9 @@ import json
 import sys
 import time
 
-from .config import DATA, RAW
+from .config import DATA, RAW, ROOT
+
+SUMMARY = ROOT / "docs" / "summary.md"
 
 
 def step(name: str, fn) -> None:
@@ -35,6 +38,17 @@ def summary() -> str:
             lines.append(f"| {v['name']} | {v['precision']:.3f} | {v['recall']:.3f} | {v['f1']:.3f} "
                          f"({v['ci95']['f1'][0]:.2f}–{v['ci95']['f1'][1]:.2f}) | {v['iou']:.3f} |")
         lines.append("")
+    mad = ev / "detector" / "mados.json"
+    if mad.exists():
+        m = json.loads(mad.read_text(encoding="utf-8"))
+        v = m["methods"]["xgb_filters"]
+        lines += [f"## Детектор — MADOS test, новые сцены ({m['n_scenes']} сцен, мусор в {m['n_scenes_with_debris']})",
+                  "", "| Метод | P | R | F1 (95% ДИ по сценам) | IoU |", "|---|---:|---:|---:|---:|",
+                  f"| XGBoost + фильтры (как в сервисе) | {v['precision']:.3f} | {v['recall']:.3f} | {v['f1']:.3f} "
+                  f"({v['ci95']['f1'][0]:.2f}–{v['ci95']['f1'][1]:.2f}) | {v['iou']:.3f} |", "",
+                  "Доля пикселей фона, принятых за мусор: " + ", ".join(
+                      f"{k} {100 * c['fp_rate']:.2f}%" for k, c in m["fp_by_class"].items() if c["fp_rate"] > 0) + ".",
+                  ""]
     for pid in ("A", "B"):
         p = ev / "concentration" / f"{pid}_metrics.json"
         if not p.exists():
@@ -65,7 +79,16 @@ def summary() -> str:
     return "\n".join(lines)
 
 
+def write_summary() -> str:
+    text = summary()
+    SUMMARY.write_text(text, encoding="utf-8")
+    return text
+
+
 def main() -> None:
+    if "--summary" in sys.argv:
+        print(write_summary())
+        return
     offline = "--offline" in sys.argv
     from . import concentration, field, pairs, splits
 
@@ -75,9 +98,15 @@ def main() -> None:
     step("Концентрация: CV, отложенная выборка, перенос", lambda: [concentration.evaluate(p) for p in ("A", "B")])
     if "--skip-marida" not in sys.argv:
         if (RAW / "marida" / "splits").exists():
-            from . import eval_detector
+            from . import eval_detector, mados
 
             step("Детектор: MARIDA test, базовые и основной", eval_detector.main)
+            if mados.available():
+                from . import eval_detector_mados
+
+                step("Детектор: новые сцены MADOS test", eval_detector_mados.main)
+            else:
+                print(f"MADOS не найден ({mados.ZIP}) — проверка на MADOS пропущена")
         else:
             print("MARIDA не найдена в data/raw/marida — проверка детектора пропущена")
     if "--with-web" in sys.argv:
@@ -87,9 +116,7 @@ def main() -> None:
         for a in AOIS:
             if (PROCESSED / a / "water.tif").exists():
                 step(f"Карта акватории {a}", lambda a=a: aggregate.run(a))
-    text = summary()
-    (DATA / "eval" / "summary.md").write_text(text, encoding="utf-8")
-    print("\n" + text)
+    print("\n" + write_summary())
 
 
 if __name__ == "__main__":

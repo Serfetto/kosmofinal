@@ -1,0 +1,3367 @@
+{
+ "set": "MADOS test, только сцены, которых нет в MARIDA",
+ "n_scenes": 27,
+ "n_patches": 354,
+ "n_scenes_with_debris": 4,
+ "n_debris_px": 592,
+ "p_det": 0.5,
+ "methods": {
+  "xgb_filters": {
+   "precision": 0.19269269269269268,
+   "recall": 0.6503378378378378,
+   "f1": 0.29729729729729726,
+   "iou": 0.1746031746031746,
+   "tp": 385,
+   "fp": 1613,
+   "fn": 207,
+   "ci95": {
+    "precision": [
+     0.011648320217270434,
+     0.5287166900420754
+    ],
+    "recall": [
+     0.5602605863192183,
+     0.967741935483871
+    ],
+    "f1": [
+     0.022907074209734646,
+     0.5951593372884827
+    ],
+    "iou": [
+     0.011586240926573933,
+     0.4236489988413789
+    ]
+   },
+   "object_recall": 0.9357798165137615,
+   "objects": [
+    102,
+    109
+   ]
+  },
+  "xgb": {
+   "precision": 0.17303284950343775,
+   "recall": 0.7652027027027027,
+   "f1": 0.28224299065420566,
+   "iou": 0.16430903155603918,
+   "tp": 453,
+   "fp": 2165,
+   "fn": 139,
+   "ci95": {
+    "precision": [
+     0.012298485731257736,
+     0.45234440518848634
+    ],
+    "recall": [
+     0.6058631921824105,
+     1.0
+    ],
+    "f1": [
+     0.024272761671986734,
+     0.560653337947204
+    ],
+    "iou": [
+     0.012285482311273289,
+     0.38951948805869663
+    ]
+   }
+  }
+ },
+ "fp_by_class": {
+  "Dense Sargassum": {
+   "fp_px": 0,
+   "class_px": 543,
+   "fp_rate": 0.0,
+   "fp_rate_no_filters": 0.0
+  },
+  "Sparse Floating Algae": {
+   "fp_px": 39,
+   "class_px": 905,
+   "fp_rate": 0.0430939226519337,
+   "fp_rate_no_filters": 0.04861878453038674
+  },
+  "Natural Organic Material": {
+   "fp_px": 0,
+   "class_px": 229,
+   "fp_rate": 0.0,
+   "fp_rate_no_filters": 0.0
+  },
+  "Ship": {
+   "fp_px": 73,
+   "class_px": 2400,
+   "fp_rate": 0.030416666666666668,
+   "fp_rate_no_filters": 0.0325
+  },
+  "Oil Spill": {
+   "fp_px": 334,
+   "class_px": 51528,
+   "fp_rate": 0.00648191274646794,
+   "fp_rate_no_filters": 0.015467318739326191
+  },
+  "Marine Water": {
+   "fp_px": 0,
+   "class_px": 115930,
+   "fp_rate": 0.0,
+   "fp_rate_no_filters": 8.625894936599672e-06
+  },
+  "Sediment-Laden Water": {
+   "fp_px": 0,
+   "class_px": 217,
+   "fp_rate": 0.0,
+   "fp_rate_no_filters": 0.0
+  },
+  "Turbid Water": {
+   "fp_px": 0,
+   "class_px": 9942,
+   "fp_rate": 0.0,
+   "fp_rate_no_filters": 0.0
+  },
+  "Shallow Water": {
+   "fp_px": 0,
+   "class_px": 10226,
+   "fp_rate": 0.0,
+   "fp_rate_no_filters": 0.0
+  },
+  "Waves & Wakes": {
+   "fp_px": 8,
+   "class_px": 2966,
+   "fp_rate": 0.0026972353337828725,
+   "fp_rate_no_filters": 0.008428860418071477
+  },
+  "Oil Platform": {
+   "fp_px": 40,
+   "class_px": 4790,
+   "fp_rate": 0.008350730688935281,
+   "fp_rate_no_filters": 0.012943632567849687
+  },
+  "Jellyfish": {
+   "fp_px": 103,
+   "class_px": 274,
+   "fp_rate": 0.3759124087591241,
+   "fp_rate_no_filters": 0.4233576642335766
+  },
+  "Sea snot": {
+   "fp_px": 1016,
+   "class_px": 2234,
+   "fp_rate": 0.4547896150402865,
+   "fp_rate_no_filters": 0.4664279319606088
+  }
+ },
+ "recall_by_label_confidence": {
+  "high": {
+   "debris_px": 472,
+   "found": 293
+  },
+  "moderate": {
+   "debris_px": 120,
+   "found": 92
+  }
+ },
+ "per_scene": [
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 1,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 132,
+   "tp": 0,
+   "fp": 9,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 9,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 7,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 13,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 2,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 6,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 10,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 12,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 7,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 10,
+   "fn_raw": 0
+  },
+  {
+   "scene": 134,
+   "tp": 0,
+   "fp": 15,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 24,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 136,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 137,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 137,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 137,
+   "tp": 0,
+   "fp": 1,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 1,
+   "fn_raw": 0
+  },
+  {
+   "scene": 137,
+   "tp": 0,
+   "fp": 1,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 1,
+   "fn_raw": 0
+  },
+  {
+   "scene": 137,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 13,
+   "fn_raw": 0
+  },
+  {
+   "scene": 137,
+   "tp": 0,
+   "fp": 29,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 98,
+   "fn_raw": 0
+  },
+  {
+   "scene": 138,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 138,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 138,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 144,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 7,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 7,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 26,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 45,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 22,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 63,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 8,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 13,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 2,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 2,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 4,
+   "fn_raw": 0
+  },
+  {
+   "scene": 145,
+   "tp": 0,
+   "fp": 2,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 5,
+   "fn_raw": 0
+  },
+  {
+   "scene": 146,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 146,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 146,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 6,
+   "fn_raw": 0
+  },
+  {
+   "scene": 146,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 8,
+   "fn_raw": 0
+  },
+  {
+   "scene": 146,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 146,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 146,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 146,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 147,
+   "tp": 28,
+   "fp": 0,
+   "fn": 1,
+   "tp_raw": 29,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 147,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 147,
+   "tp": 2,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 2,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 147,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 148,
+   "tp": 20,
+   "fp": 0,
+   "fn": 14,
+   "tp_raw": 33,
+   "fp_raw": 0,
+   "fn_raw": 1
+  },
+  {
+   "scene": 148,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 148,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 148,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 148,
+   "tp": 1,
+   "fp": 0,
+   "fn": 2,
+   "tp_raw": 1,
+   "fp_raw": 0,
+   "fn_raw": 2
+  },
+  {
+   "scene": 148,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 148,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 148,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 149,
+   "tp": 0,
+   "fp": 74,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 85,
+   "fn_raw": 0
+  },
+  {
+   "scene": 149,
+   "tp": 0,
+   "fp": 29,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 31,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 39,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 39,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 64,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 67,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 1,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 3,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 42,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 46,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 21,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 26,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 16,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 305,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 305,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 60,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 60,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 9,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 9,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 3,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 25,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 28,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 45,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 45,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 16,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 17,
+   "fn_raw": 0
+  },
+  {
+   "scene": 150,
+   "tp": 0,
+   "fp": 22,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 23,
+   "fn_raw": 0
+  },
+  {
+   "scene": 151,
+   "tp": 0,
+   "fp": 1,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 1,
+   "fn_raw": 0
+  },
+  {
+   "scene": 151,
+   "tp": 0,
+   "fp": 1,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 3,
+   "fn_raw": 0
+  },
+  {
+   "scene": 151,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 151,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 151,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 151,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 4,
+   "fn_raw": 0
+  },
+  {
+   "scene": 151,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 6,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 7,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 5,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 5,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 5,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 6,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 1,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 5,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 5,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 15,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 15,
+   "fn_raw": 0
+  },
+  {
+   "scene": 152,
+   "tp": 0,
+   "fp": 2,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 2,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 5,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 4,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 2,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 2,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 153,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 16,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 8,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 154,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 155,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 24,
+   "fn_raw": 0
+  },
+  {
+   "scene": 155,
+   "tp": 0,
+   "fp": 2,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 8,
+   "fn_raw": 0
+  },
+  {
+   "scene": 155,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 14,
+   "fn_raw": 0
+  },
+  {
+   "scene": 155,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 3,
+   "fn_raw": 0
+  },
+  {
+   "scene": 155,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 155,
+   "tp": 0,
+   "fp": 8,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 69,
+   "fn_raw": 0
+  },
+  {
+   "scene": 155,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 7,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 1,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 156,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 158,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 158,
+   "tp": 0,
+   "fp": 188,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 193,
+   "fn_raw": 0
+  },
+  {
+   "scene": 158,
+   "tp": 0,
+   "fp": 113,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 116,
+   "fn_raw": 0
+  },
+  {
+   "scene": 158,
+   "tp": 0,
+   "fp": 64,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 65,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 2,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 9,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 1,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 6,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 159,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 30,
+   "fp": 0,
+   "fn": 5,
+   "tp_raw": 33,
+   "fp_raw": 0,
+   "fn_raw": 2
+  },
+  {
+   "scene": 161,
+   "tp": 24,
+   "fp": 0,
+   "fn": 6,
+   "tp_raw": 25,
+   "fp_raw": 0,
+   "fn_raw": 5
+  },
+  {
+   "scene": 161,
+   "tp": 28,
+   "fp": 0,
+   "fn": 6,
+   "tp_raw": 30,
+   "fp_raw": 0,
+   "fn_raw": 4
+  },
+  {
+   "scene": 161,
+   "tp": 8,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 8,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 161,
+   "tp": 47,
+   "fp": 0,
+   "fn": 117,
+   "tp_raw": 54,
+   "fp_raw": 0,
+   "fn_raw": 110
+  },
+  {
+   "scene": 161,
+   "tp": 35,
+   "fp": 0,
+   "fn": 1,
+   "tp_raw": 36,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 4,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 3,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 165,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 4,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 4,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 18,
+   "fp": 0,
+   "fn": 5,
+   "tp_raw": 23,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 5,
+   "fp": 0,
+   "fn": 7,
+   "tp_raw": 11,
+   "fp_raw": 0,
+   "fn_raw": 1
+  },
+  {
+   "scene": 167,
+   "tp": 37,
+   "fp": 0,
+   "fn": 22,
+   "tp_raw": 53,
+   "fp_raw": 0,
+   "fn_raw": 6
+  },
+  {
+   "scene": 167,
+   "tp": 2,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 2,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 4,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 4,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 4,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 4,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 16,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 16,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 7,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 7,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 7,
+   "fp": 0,
+   "fn": 1,
+   "tp_raw": 8,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 3,
+   "fp": 0,
+   "fn": 1,
+   "tp_raw": 4,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 167,
+   "tp": 40,
+   "fp": 0,
+   "fn": 10,
+   "tp_raw": 43,
+   "fp_raw": 0,
+   "fn_raw": 7
+  },
+  {
+   "scene": 167,
+   "tp": 15,
+   "fp": 0,
+   "fn": 9,
+   "tp_raw": 23,
+   "fp_raw": 0,
+   "fn_raw": 1
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 5,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 168,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 1,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 4,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 6,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 4,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 8,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 28,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 2,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 3,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 8,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 8,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 7,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 26,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 49,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 3,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 2,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 2,
+   "fn_raw": 0
+  },
+  {
+   "scene": 171,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 3,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 4,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 15,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 35,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 56,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 59,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 40,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 57,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 26,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 34,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 1,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 1,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 3,
+   "fn_raw": 0
+  },
+  {
+   "scene": 172,
+   "tp": 0,
+   "fp": 4,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 6,
+   "fn_raw": 0
+  },
+  {
+   "scene": 173,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 173,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 173,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 173,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 173,
+   "tp": 0,
+   "fp": 7,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 13,
+   "fn_raw": 0
+  },
+  {
+   "scene": 173,
+   "tp": 0,
+   "fp": 0,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 0,
+   "fn_raw": 0
+  },
+  {
+   "scene": 173,
+   "tp": 0,
+   "fp": 30,
+   "fn": 0,
+   "tp_raw": 0,
+   "fp_raw": 77,
+   "fn_raw": 0
+  }
+ ],
+ "model": null,
+ "meta": {
+  "created_utc": "2026-09-26T14:22:59Z",
+  "git_commit": "bab6726+dirty",
+  "configs": {
+   "detector.yaml": "828442195860"
+  },
+  "python": "3.12.14",
+  "packages": {
+   "numpy": "2.5.3",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "scikit-learn": "1.9.1",
+   "xgboost": "3.4.1",
+   "statsmodels": "0.15.0",
+   "rasterio": "1.5.1",
+   "shapely": "2.1.2",
+   "h3": "4.5.0"
+  }
+ }
+}
