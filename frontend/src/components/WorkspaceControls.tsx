@@ -455,7 +455,7 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
           <button className={view === 'overview' ? 'is-active' : ''} onClick={() => onChangeView('overview')}><Activity size={16} />Сводка</button>
           <button className={view === 'layers' ? 'is-active' : ''} onClick={() => onChangeView('layers')}><Layers3 size={16} />Слои</button>
         </div>
-        <button className="sheet-close" onClick={onClose} data-tooltip="Закрыть центр данных" aria-label="Закрыть"><X size={19} /></button>
+        <button className="sheet-close tooltip-left" onClick={onClose} data-tooltip="Закрыть центр данных" aria-label="Закрыть"><X size={19} /></button>
       </header>
 
       <div className={`sheet-view overview-view ${view === 'overview' ? 'is-active' : ''}`} aria-hidden={view !== 'overview'}>
@@ -500,7 +500,7 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
           </div>
           <div className="subhead">Выгрузка и запрос</div>
           <div className="export-grid">
-            <button className="report-btn" id="exp-report" data-tooltip="PDF с картой, снимками и крупнейшими зонами"><FileText size={14} />Отчёт PDF</button>
+            <button className="report-btn tooltip-up" id="exp-report" data-tooltip="PDF с картой, снимками и крупнейшими зонами"><FileText size={14} />Отчёт PDF</button>
             <button className="ghost" id="exp-zones-geojson"><Download size={13} />Зоны GeoJSON</button>
             <button className="ghost" id="exp-zones-csv"><Download size={13} />Зоны CSV</button>
             <button className="ghost" id="exp-hexes-geojson"><Download size={13} />Гексы GeoJSON</button>
