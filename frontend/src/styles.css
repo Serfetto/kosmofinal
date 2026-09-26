@@ -1763,6 +1763,15 @@ html[data-theme] #tools .tool-trigger { color: var(--theme-text-soft); }
 html[data-theme] #tools .tool-trigger:hover { background: var(--theme-control-hover); color: var(--theme-text); }
 html[data-theme] #tools .tool-trigger.on { background: var(--theme-active); color: var(--theme-active-text); }
 html[data-theme] #tools .tool-trigger.on kbd { color: var(--theme-active-text); opacity: .62; }
+html[data-theme] #tools [data-tooltip]::after {
+  border-color: var(--theme-border-strong);
+  background: var(--theme-surface-solid);
+  box-shadow: 0 14px 34px var(--theme-shadow), inset 0 1px rgba(255, 255, 255, .07);
+  color: var(--theme-text);
+}
+html[data-theme="light"] #tools [data-tooltip]::after {
+  box-shadow: 0 14px 34px var(--theme-shadow), inset 0 1px rgba(255, 255, 255, .88);
+}
 html[data-theme] .dock-caption { border-color: var(--theme-border); }
 
 html[data-theme] .surface-scrim { background: var(--theme-overlay); }
@@ -1893,6 +1902,7 @@ html[data-theme="dark"] #date-label {
   font-size: 11.5px;
   line-height: 1;
 }
+#tools .tool-trigger[data-tool="field"] { min-width: 130px; }
 #tools .tool-trigger svg {
   width: 19px;
   height: 19px;
@@ -2905,6 +2915,15 @@ html[data-theme="light"] #tip {
   #tools .tool-trigger {
     min-height: 44px;
     padding-inline: 5px;
+  }
+  #tools .tool-trigger[data-tool="field"] {
+    min-width: 0;
+    flex-grow: 1.25;
+  }
+  #tools .tool-trigger[data-tool="field"] .tool-label {
+    max-width: 46px;
+    line-height: 1.05;
+    white-space: normal;
   }
   .maplibregl-ctrl-bottom-right {
     right: 10px;
