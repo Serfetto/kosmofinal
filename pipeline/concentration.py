@@ -19,7 +19,7 @@ import pandas as pd
 from . import covariates
 from .config import DATA, MODELS
 from .field import load_events
-from .measure import mae, medae, rmse
+from .measure import group_bootstrap_mae, mae, mae_log, medae, rmse
 from .provenance import load_yaml, run_meta, write_json
 from .splits import haversine_km
 from .splits import load as load_split
@@ -181,8 +181,8 @@ def from_json(j: dict):
 # ---------- оценка ----------
 
 def metrics(y, p) -> dict:
-    return {"mae": mae(y, p), "rmse": rmse(y, p), "medae": medae(y, p), "n": int(len(y)),
-            "bias_median_ratio": float(np.median(p) / max(np.median(y), 1e-9))}
+    return {"mae": mae(y, p), "rmse": rmse(y, p), "medae": medae(y, p), "mae_log": mae_log(y, p, EPS),
+            "n": int(len(y)), "bias_median_ratio": float(np.median(p) / max(np.median(y), 1e-9))}
 
 
 def conformal(y, p, levels) -> dict:
@@ -219,33 +219,55 @@ def evaluate(profile: str) -> dict:
     d = ev.merge(sp, on="event_id", how="inner")
     if len(d) != len(ev):
         raise ValueError("разбиение не совпадает с событиями профиля — пересоберите splits")
-    names = [pcfg["main"]] + pcfg["baselines"]
+    main = pcfg["main"]
+    names = [main] + pcfg["baselines"]
     dev, hold = d[~d["is_holdout"]].reset_index(drop=True), d[d["is_holdout"]].reset_index(drop=True)
+    y_dev, y_hold = dev["conc_items_km2"].to_numpy(float), hold["conc_items_km2"].to_numpy(float)
 
-    def cv_predict(name: str, pc: dict) -> np.ndarray:
-        oof = np.full(len(dev), np.nan)
-        for f in sorted(dev["fold"].unique()):
-            tr, te = dev["fold"] != f, dev["fold"] == f
-            oof[te.to_numpy()] = make(name, pc, cfg).fit(dev[tr]).predict(dev[te])
+    def cv_predict(name: str, pc: dict, frame: pd.DataFrame = dev) -> np.ndarray:
+        oof = np.full(len(frame), np.nan)
+        for f in sorted(frame["fold"].unique()):
+            tr, te = frame["fold"] != f, frame["fold"] == f
+            oof[te.to_numpy()] = make(name, pc, cfg).fit(frame[tr]).predict(frame[te])
         return oof
 
+    def select(frame: pd.DataFrame) -> list[dict]:
+        return [{"features": feats, "cv_mae": mae(frame["conc_items_km2"],
+                                                  cv_predict(main, {**pcfg, "features": feats}, frame))}
+                for feats in pcfg["candidate_features"]]
+
     # Выбор признаков основной модели — только по групповой CV
-    selection = []
-    for feats in pcfg["candidate_features"]:
-        pc = {**pcfg, "features": feats}
-        selection.append({"features": feats, "cv_mae": mae(dev["conc_items_km2"], cv_predict(pcfg["main"], pc))})
+    selection = select(dev)
     best = min(selection, key=lambda s: s["cv_mae"])
     pcfg = {**pcfg, "features": best["features"]}
 
-    # Внефолдовые предсказания на обучающей части (выбор модели, конформные остатки)
+    # Внефолдовые предсказания на обучающей части (выбор признаков, конформные остатки)
     oof = {m: cv_predict(m, pcfg) for m in names}
-    cv = {m: metrics(dev["conc_items_km2"], oof[m]) for m in names}
-    serve = min(names, key=lambda m: cv[m]["mae"])
+    cv = {m: metrics(y_dev, oof[m]) for m in names}
+
+    # Вложенная CV: признаки выбираются заново внутри каждого внешнего фолда, без его событий. CV, по которой
+    # выбирали признаки, оптимистична; вложенная оценивает всю процедуру. У базовых выбора нет — их CV уже честная.
+    oof_nested, nested_selection = np.full(len(dev), np.nan), []
+    for f in sorted(dev["fold"].unique()):
+        te = (dev["fold"] == f).to_numpy()
+        fs = min(select(dev[~te].reset_index(drop=True)), key=lambda s: s["cv_mae"])["features"]
+        oof_nested[te] = make(main, {**pcfg, "features": fs}, cfg).fit(dev[~te]).predict(dev[te])
+        nested_selection.append({"fold": int(f), "features": fs})
+    nested = {main: oof_nested, **{m: oof[m] for m in pcfg["baselines"]}}
+    cv_nested = {m: metrics(y_dev, p) for m, p in nested.items()}
+    boot = {"n_boot": 2000, "seed": int(cfg["seed"])}
+    uncertainty = {"cv_nested": group_bootstrap_mae(y_dev, nested, dev["group_id"], main, **boot)}
+
+    # Модель сервиса — основная, пока базовый алгоритм не точнее её значимо на вложенной CV (95% ДИ разности
+    # MAE выше нуля). Разница в пределах шума — не повод менять модель с признаками на константу или IDW.
+    better = [m for m, v in uncertainty["cv_nested"]["delta"].items() if v["ci"][0] > 0]
+    serve = min(better, key=lambda m: cv_nested[m]["mae"]) if better else main
 
     # Модели на всей обучающей части → отложенная выборка (итоговые числа)
     fitted = {m: make(m, pcfg, cfg).fit(dev) for m in names}
     hp = {m: fitted[m].predict(hold) for m in names}
-    ho = {m: metrics(hold["conc_items_km2"], hp[m]) for m in names}
+    ho = {m: metrics(y_hold, hp[m]) for m in names}
+    uncertainty["holdout"] = group_bootstrap_mae(y_hold, hp, hold["group_id"], main, **boot)
     q = conformal(dev["conc_items_km2"], oof[serve], cfg["interval_levels"])
     cover = {}
     for L, qq in q.items():
@@ -253,24 +275,37 @@ def evaluate(profile: str) -> dict:
         y = hold["conc_items_km2"].to_numpy()
         cover[L] = float(np.mean((y >= lo) & (y <= hi)))
 
-    res = {"profile": profile, "main": pcfg["main"], "baselines": pcfg["baselines"], "features": pcfg["features"],
-           "serve_model": serve, "selected_by": "минимум MAE на групповой CV (без отложенной выборки)",
-           "feature_selection": selection,
+    res = {"profile": profile, "main": main, "baselines": pcfg["baselines"], "features": pcfg["features"],
+           "serve_model": serve, "selected_by": "признаки — минимум MAE на групповой CV (без отложенной выборки)",
+           "serve_rule": "основная модель, если ни один базовый алгоритм не точнее её значимо на вложенной CV "
+                         "(95% ДИ разности MAE по групповому бутстрепу выше нуля)",
+           "feature_selection": selection, "nested_selection": nested_selection,
            "n_dev": len(dev), "n_holdout": len(hold), "n_groups": int(d["group_id"].nunique()),
-           "cv": cv, "holdout": ho, "interval_log_quantiles": q, "holdout_interval_coverage": cover,
+           "n_groups_dev": int(dev["group_id"].nunique()), "n_groups_holdout": int(hold["group_id"].nunique()),
+           "cv": cv, "cv_nested": cv_nested, "holdout": ho, "uncertainty": uncertainty,
+           "interval_log_quantiles": q, "holdout_interval_coverage": cover,
            "poisson_floor_mae_dev": poisson_floor_mae(dev), "poisson_floor_mae_holdout": poisson_floor_mae(hold)}
+
+    # Предсказания и эталоны
+    EVAL.mkdir(parents=True, exist_ok=True)
 
     # Перенос на другой регион / порог размера (профиль B: обучение S4 → проверка S3)
     tc = load_events(profile, "transfer_check")
     if len(tc):
         tc = event_features(tc)
-        res["transfer_check"] = {m: metrics(tc["conc_items_km2"], fitted[m].predict(tc)) for m in names}
+        y_tc, tp = tc["conc_items_km2"].to_numpy(float), {m: fitted[m].predict(tc) for m in names}
+        tg = tc["source_id"] + ":" + tc["date_utc"]  # группа — день рейса, как в разбиении
+        res["transfer_check"] = {m: metrics(y_tc, tp[m]) for m in names}
         res["transfer_check"]["n_events"] = len(tc)
         res["transfer_check"]["target_median_train"] = float(dev["conc_items_km2"].median())
         res["transfer_check"]["target_median_check"] = float(tc["conc_items_km2"].median())
+        uncertainty["transfer_check"] = group_bootstrap_mae(y_tc, tp, tg, main, **boot)
+        pd.DataFrame({"event_id": tc["event_id"], "group_id": tg, "part": "transfer_check", "y_true": y_tc,
+                      "y_true_lo95": tc["conc_lo95"], "y_true_hi95": tc["conc_hi95"],
+                      **{f"pred_{m}": np.round(tp[m], 3) for m in names},
+                      **{k: tc[k] for k in pcfg["features"]}}).to_csv(
+            EVAL / f"{profile}_transfer_predictions.csv", index=False, encoding="utf-8")
 
-    # Предсказания и эталоны
-    EVAL.mkdir(parents=True, exist_ok=True)
     rows = []
     for part, frame, preds in (("cv", dev, oof), ("holdout", hold, hp)):
         lo80, hi80 = apply_interval(preds[serve], q["0.8"])
@@ -279,6 +314,7 @@ def evaluate(profile: str) -> dict:
             rows.append({"event_id": r["event_id"], "group_id": r["group_id"], "fold": r["fold"], "part": part,
                          "y_true": r["conc_items_km2"], "y_true_lo95": r["conc_lo95"], "y_true_hi95": r["conc_hi95"],
                          **{f"pred_{m}": round(float(preds[m][i]), 3) for m in names},
+                         f"pred_{main}_nested": round(float(oof_nested[i]), 3) if part == "cv" else np.nan,
                          "serve_lo80": lo80[i], "serve_hi80": hi80[i], "serve_lo95": lo95[i], "serve_hi95": hi95[i],
                          **{k: r[k] for k in pcfg["features"]}})
     pd.DataFrame(rows).to_csv(EVAL / f"{profile}_predictions.csv", index=False, encoding="utf-8")
@@ -433,10 +469,17 @@ if __name__ == "__main__":
     if cmd == "evaluate":
         for p in sys.argv[2:] or ["A", "B"]:
             r = evaluate(p)
-            print(f"\n=== Профиль {p}: обучение {r['n_dev']}, отложено {r['n_holdout']}, групп {r['n_groups']}")
-            for part in ("cv", "holdout"):
+            print(f"\n=== Профиль {p}: обучение {r['n_dev']} ({r['n_groups_dev']} групп), "
+                  f"отложено {r['n_holdout']} ({r['n_groups_holdout']} групп)")
+            for part in ("cv", "cv_nested", "holdout"):
+                ci = r["uncertainty"].get(part, {}).get("mae_ci", {})
                 for m, v in r[part].items():
-                    print(f"  {part:8s} {m:16s} MAE={v['mae']:7.1f} RMSE={v['rmse']:7.1f} MedAE={v['medae']:7.1f}")
+                    lo_hi = f" [{ci[m][0]:6.1f}; {ci[m][1]:6.1f}]" if m in ci else " " * 17
+                    print(f"  {part:9s} {m:16s} MAE={v['mae']:7.1f}{lo_hi} RMSE={v['rmse']:7.1f} "
+                          f"MedAE={v['medae']:7.1f} ln-ошибка={v['mae_log']:.2f}")
+            for part in ("cv_nested", "holdout"):
+                for m, v in r["uncertainty"][part]["delta"].items():
+                    print(f"  {part:9s} ΔMAE {r['main']} − {m}: {v['value']:+.1f} [{v['ci'][0]:+.1f}; {v['ci'][1]:+.1f}]")
             print(f"  модель сервиса: {r['serve_model']}; покрытие интервалов на отложенной: {r['holdout_interval_coverage']}")
             print(f"  нижняя граница MAE из-за счётного шума: {r['poisson_floor_mae_dev']}")
             if "transfer_check" in r:

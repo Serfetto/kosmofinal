@@ -1721,12 +1721,17 @@ function checksHtml(metrics) {
   const fpRows = main ? Object.entries(main.fp_by_class).filter(([, v]) => v.class_px > 0).map(([k, v]) =>
     `<tr><td>${esc(k)}</td><td>${nf(v.fp_px, 0)}</td><td>${nf(v.class_px, 0)}</td><td>${pct(v.fp_rate)}%</td></tr>`).join('') : '';
   const concBlocks = Object.entries(conc).map(([pid, r]) => {
-    const rows = Object.keys(r.cv).map((m) => `<tr><td>${m}${m === r.serve_model ? ' ★' : ''}${m === r.main ? ' (основная)' : ''}</td><td>${nf(r.cv[m].mae, 1)}</td><td>${nf(r.cv[m].rmse, 1)}</td><td>${nf(r.holdout[m].mae, 1)}</td><td>${nf(r.holdout[m].rmse, 1)}</td></tr>`).join('');
+    const u = r.uncertainty || {};
+    const ci = (part, m) => u[part]?.mae_ci?.[m] ? `<br><span class="small muted">${nf(u[part].mae_ci[m][0], 0)}–${nf(u[part].mae_ci[m][1], 0)}</span>` : '';
+    const rows = Object.keys(r.cv).map((m) => `<tr><td>${m}${m === r.serve_model ? ' ★' : ''}${m === r.main ? ' (основная)' : ''}</td><td>${nf(r.cv[m].mae, 1)}</td><td>${nf(r.cv_nested?.[m]?.mae, 1)}${ci('cv_nested', m)}</td><td>${nf(r.holdout[m].mae, 1)}${ci('holdout', m)}</td><td>${nf(r.holdout[m].rmse, 1)}</td><td>${nf(r.holdout[m].mae_log, 2)}</td></tr>`).join('');
+    const delta = (part, name) => u[part]?.delta ? `<br>Разность MAE ${esc(r.main)} − базовая, ${name}: ${Object.entries(u[part].delta).map(([m, v]) =>
+      `${esc(m)} ${v.value > 0 ? '+' : ''}${nf(v.value, 1)} (${nf(v.ci[0], 1)}…${nf(v.ci[1], 1)})`).join('; ')}.` : '';
     const tc = r.transfer_check ? `<p class="small">Перенос (обучение на ${r.n_dev} событиях S4 → проверка на ${r.transfer_check.n_events} событиях S3, Северное море, >2 см): MAE ${Object.entries(r.transfer_check).filter(([, v]) => v?.mae != null).map(([m, v]) => `${m} ${nf(v.mae, 0)}`).join(', ')} шт./км²; медианы ${nf(r.transfer_check.target_median_train, 0)} → ${nf(r.transfer_check.target_median_check, 0)}. <b>Перенос на другое море не подтверждён.</b></p>` : '';
     return `<h3>Профиль ${pid}: признаки ${esc(r.features.join(', '))}</h3>
-      <table><tr><th>Модель</th><th>CV MAE</th><th>CV RMSE</th><th>Отлож. MAE</th><th>Отлож. RMSE</th></tr>${rows}</table>
-      <p class="small">Обучение ${r.n_dev} событий, отложено ${r.n_holdout}, групп ${r.n_groups}. ★ – модель сервиса (минимум MAE на CV). Покрытие 80%-интервала на отложенной выборке: ${pct(r.holdout_interval_coverage['0.8'])}%.` +
-      (r.poisson_floor_mae_dev ? ` Нижняя граница MAE из-за счётного шума: ${nf(r.poisson_floor_mae_dev, 1)} шт./км².` : '') + `</p>${tc}`;
+      <table><tr><th>Модель</th><th>CV MAE*</th><th>Вложенная CV MAE</th><th>Отлож. MAE</th><th>Отлож. RMSE</th><th>Отлож. ошибка ln</th></tr>${rows}</table>
+      <p class="small">Обучение ${r.n_dev} событий (${r.n_groups_dev ?? '–'} групп), отложено ${r.n_holdout} (${r.n_groups_holdout ?? '–'} групп). MAE и RMSE в шт./км², под MAE — 95% ДИ по групповому бутстрепу; ошибка ln — средняя |ln(Ĉ + 1) − ln(C + 1)|. * По этой CV выбирались признаки, для основной модели она оптимистична; честная — вложенная. ★ – модель сервиса: основная, пока базовая не точнее её значимо на вложенной CV. Покрытие 80%-интервала на отложенной выборке: ${pct(r.holdout_interval_coverage['0.8'])}%.` +
+      (r.poisson_floor_mae_dev ? ` Нижняя граница MAE из-за счётного шума: ${nf(r.poisson_floor_mae_dev, 1)} шт./км².` : '') +
+      delta('cv_nested', 'вложенная CV') + delta('holdout', 'отложенная выборка') + `</p>${tc}`;
   }).join('');
   const fus = Object.entries(metrics?.fusion || {}).map(([pid, e]) => `<tr><td>${pid}</td><td>${nf(e.model.mae, 1)} · ${pct(e.model.cover80)}%</td>` +
     `<td>${nf(e.scenarios.nearby.mae, 1)} · ${pct(e.scenarios.nearby.cover80)}%</td><td>${nf(e.scenarios.isolated.mae, 1)} · ${pct(e.scenarios.isolated.cover80)}%</td></tr>`).join('');

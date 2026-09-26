@@ -55,20 +55,36 @@ def summary() -> str:
         if not p.exists():
             continue
         r = json.loads(p.read_text(encoding="utf-8"))
+        u = r["uncertainty"]
+
+        def ci(part: str, m: str) -> str:
+            lo, hi = u[part]["mae_ci"][m]
+            return f"{lo:.0f}–{hi:.0f}"
+
         lines += [f"## Концентрация, профиль {pid} (признаки: {', '.join(r['features'])})", "",
-                  "| Модель | CV MAE | CV RMSE | Отложенная MAE | Отложенная RMSE |", "|---|---:|---:|---:|---:|"]
+                  "MAE и RMSE в шт./км², в скобках 95% ДИ по групповому бутстрепу; ошибка ln — средняя "
+                  "|ln(Ĉ + 1) − ln(C + 1)|.", "",
+                  "| Модель | CV MAE* | Вложенная CV MAE | Отложенная MAE | Отложенная RMSE | Отложенная ошибка ln |",
+                  "|---|---:|---:|---:|---:|---:|"]
         for m in r["cv"]:
             star = " ★" if m == r["serve_model"] else ""
-            lines.append(f"| {m}{star} | {r['cv'][m]['mae']:.1f} | {r['cv'][m]['rmse']:.1f} | "
-                         f"{r['holdout'][m]['mae']:.1f} | {r['holdout'][m]['rmse']:.1f} |")
-        lines += ["", f"Обучение {r['n_dev']} событий, отложено {r['n_holdout']}, групп {r['n_groups']}; "
-                      f"покрытие 80%-интервала на отложенной {r['holdout_interval_coverage']['0.8']:.0%}."]
+            lines.append(f"| {m}{star} | {r['cv'][m]['mae']:.1f} | {r['cv_nested'][m]['mae']:.1f} "
+                         f"({ci('cv_nested', m)}) | {r['holdout'][m]['mae']:.1f} ({ci('holdout', m)}) | "
+                         f"{r['holdout'][m]['rmse']:.1f} | {r['holdout'][m]['mae_log']:.2f} |")
+        lines += ["", "\\* По этой CV выбирались признаки основной модели, для неё оценка оптимистична; честная — "
+                      "вложенная CV, где признаки выбираются заново без внешнего фолда.", ""]
+        for part, name in (("cv_nested", "вложенная CV"), ("holdout", "отложенная выборка")):
+            lines.append(f"Разность MAE {r['main']} − базовая ({name}, 95% ДИ): " + "; ".join(
+                f"{m} {v['value']:+.1f} ({v['ci'][0]:+.1f}…{v['ci'][1]:+.1f})" for m, v in u[part]["delta"].items()) + ".")
+        lines += ["", f"Обучение {r['n_dev']} событий ({r['n_groups_dev']} групп), отложено {r['n_holdout']} "
+                      f"({r['n_groups_holdout']} групп); покрытие 80%-интервала на отложенной "
+                      f"{r['holdout_interval_coverage']['0.8']:.0%}. Модель сервиса ★: {r['serve_rule']}."]
         if r.get("poisson_floor_mae_dev"):
             lines.append(f"Нижняя граница MAE из-за счётного шума: {r['poisson_floor_mae_dev']:.1f} шт./км².")
         if "transfer_check" in r:
             t = r["transfer_check"]
             lines.append(f"Перенос S4 → S3 ({t['n_events']} событий): MAE " + ", ".join(
-                f"{m} {v['mae']:.0f}" for m, v in t.items() if isinstance(v, dict)) +
+                f"{m} {v['mae']:.0f} ({ci('transfer_check', m)})" for m, v in t.items() if isinstance(v, dict)) +
                 f"; медианы {t['target_median_train']:.0f} → {t['target_median_check']:.0f} шт./км².")
         lines.append("")
     for pid in ("A", "B"):

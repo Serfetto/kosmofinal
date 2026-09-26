@@ -618,11 +618,11 @@
   "S2:MSM41_litter-T42"
  ],
  "meta": {
-  "created_utc": "2026-09-25T15:57:35Z",
-  "git_commit": "6f8b8f8+dirty",
+  "created_utc": "2026-09-26T19:20:53Z",
+  "git_commit": "9e1d6d4+dirty",
   "configs": {
    "concentration.yaml": "c6bce5631d2b",
-   "profiles.yaml": "e893e113d2ea"
+   "profiles.yaml": "f003278eb36f"
   },
   "python": "3.12.14",
   "packages": {

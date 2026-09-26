@@ -68,6 +68,26 @@ def test_events_n_over_a(raw, sel):
     assert (b["conc_source"] == "published").all() and b["conc_lo95"].isna().all()
 
 
+def test_interrupted_transect_area_is_sum_of_segments():
+    # Площадь прерванной трансекты S2 — сумма площадей сегментов PANGAEA 931834 (Σ Lᵢ × 10 м). В реестре стоит
+    # сводная площадь автора, округлённая до 0,01 км² (флаг summary_area_rounded_differs_from_segment_sum):
+    # C = N / A сдвигается не больше чем на 3,5% (T18) и остаётся глубоко внутри 95% ДИ счёта
+    from pipeline.measure import pooled_concentration, strip_area_km2
+
+    ev = field.load_events("A").set_index("event_id")
+    segs = field.s2_segments(field.config())
+    assert len(segs) == 4
+    for eid, ss in segs.items():
+        e = ev.loc[eid]
+        areas = [strip_area_km2(s["length_km"], e["width_m"]) for s in ss]
+        assert sum(s["length_km"] for s in ss) == pytest.approx(e["length_km"], abs=1e-9)
+        assert abs(sum(areas) - e["area_km2"]) < 0.01
+        c = pooled_concentration([e["n_items"]], areas)
+        assert abs(c / e["conc_items_km2"] - 1) < 0.035
+        assert e["conc_lo95"] < c < e["conc_hi95"]
+        assert "summary_area_rounded_differs_from_segment_sum" in e["quality_flags"] or sum(areas) == e["area_km2"]
+
+
 def test_published_matches_n_over_a_within_rounding(raw):
     td = raw[raw["density_numerator_items"].notna() & raw["sampled_area_km2"].notna()
              & raw["concentration_items_km2"].gt(0)]

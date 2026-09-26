@@ -587,8 +587,9 @@ class DatasetOut(BaseModel):
 
 class MetricsOut(BaseModel):
     detector: dict[str, Any] | None = Field(description="Детектор на тесте MARIDA: P/R/F1/IoU по методам и порогам")
-    concentration: dict[str, Any] = Field(description="Модели концентрации по профилям: групповая CV, отложенная "
-                                                      "выборка, покрытие интервалов, проверка переноса")
+    concentration: dict[str, Any] = Field(description="Модели концентрации по профилям: групповая и вложенная CV, "
+                                                      "отложенная выборка, 95% ДИ MAE и разности с базовыми "
+                                                      "(uncertainty), покрытие интервалов, проверка переноса")
     pairs: dict[str, Any] | None = Field(description="Сводка реестра пар «событие ↔ снимок»")
     pair_features: list[dict[str, Any]] | None = Field(None, description="Признаки детектора в следе принятых пар")
     transfer: dict[str, Any] | None = Field(None, description="Связь детекций в следе с полевой концентрацией")

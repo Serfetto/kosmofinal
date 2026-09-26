@@ -18,7 +18,7 @@ import requests
 from shapely.geometry import LineString, MultiLineString, Point, mapping
 
 from .config import DATA, ROOT
-from .measure import field_concentration, poisson_ci
+from .measure import field_concentration, poisson_ci, pooled_concentration, strip_area_km2
 from .provenance import load_yaml, run_meta, write_json
 
 FIELD = DATA / "field"
@@ -276,6 +276,15 @@ def explain(event_id: str) -> None:
             print(f"  C = N / A = {e['n_items']:g} / {e['area_km2']:g} км² = {e['conc_items_km2']:.2f} шт./км²")
             print(f"  95% ДИ (Гарвуд): {e['conc_lo95']:.1f} … {e['conc_hi95']:.1f} шт./км²")
             print(f"  опубликовано: {e['conc_published']:g} шт./км²")
+        if e["geometry_type"] == "segments":
+            segs = s2_segments(config())[event_id]
+            areas = [strip_area_km2(s["length_km"], e["width_m"]) for s in segs]
+            lengths = " + ".join(f"{s['length_km']:g}" for s in segs)
+            print(f"  прерванная трансекта, сегменты PANGAEA 931834: A = Σ Lᵢ·w = ({lengths}) км × {e['width_m']:g} м"
+                  f" = {sum(areas):.5f} км²; в реестре сводная площадь автора {e['area_km2']:g} км² "
+                  f"(округлена, расхождение {100 * (e['area_km2'] / sum(areas) - 1):+.1f}%)")
+            print(f"  C по сегментам = N / Σ Aᵢ = {pooled_concentration([e['n_items']], areas):.2f} шт./км² "
+                  f"(число предметов по сегментам источник не приводит)")
         else:
             print(f"  C = {e['conc_items_km2']:g} шт./км² (опубликованная оценка; N/A проверить нельзя)")
         print(f"  флаги: {e['quality_flags'] or '—'}")

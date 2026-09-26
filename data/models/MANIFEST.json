@@ -7,12 +7,12 @@
    "role": "веса модели"
   },
   "data/models/conc_A.json": {
-   "sha256": "8163a65b3c3ed703150a3096459bc63ef6d73cd682b6313b8e66b84496d837ae",
+   "sha256": "c9adedcc668b500c978c04bf4fea63aa47026815f2d1fa82a4389ff152f06e4a",
    "bytes": 9029,
    "role": "веса модели"
   },
   "data/models/conc_B.json": {
-   "sha256": "bcbd50000c48fe7fa5d95dc0c2c3225e44d9c760e07da89509a64d5b88dd885e",
+   "sha256": "6e1de0067eea6d5fea418350e5124a80fd3562693f0d62476a2513b3ef40b322",
    "bytes": 5165,
    "role": "веса модели"
   },
@@ -92,13 +92,18 @@
    "role": "эталон/предсказания"
   },
   "data/eval/concentration/A_predictions.csv": {
-   "sha256": "932ef150738d445a50afa72c841ea479cd20137d0ccfc1eb347fdaff81ecbbc5",
-   "bytes": 12855,
+   "sha256": "d82c14287d0f6ba127f042f42c4bfc98cf71e443ab38231cca441ef36ba12500",
+   "bytes": 13236,
    "role": "эталон/предсказания"
   },
   "data/eval/concentration/B_predictions.csv": {
-   "sha256": "adc7bcbcc7d845dea863dd5417b8658fffc96b2dee3b5f96bf2171874545488c",
-   "bytes": 5126,
+   "sha256": "5ffa11a88aefe1d63efcae12f66c5eae2c2f6f6c73a6ff3482afeed4f8ed675e",
+   "bytes": 5356,
+   "role": "эталон/предсказания"
+  },
+  "data/eval/concentration/B_transfer_predictions.csv": {
+   "sha256": "76404a19aed1beb80d6446fc6977aa3a84f561da1f614e175d75ad7ef336f4f1",
+   "bytes": 7039,
    "role": "эталон/предсказания"
   },
   "data/eval/fusion/A_predictions.csv": {
