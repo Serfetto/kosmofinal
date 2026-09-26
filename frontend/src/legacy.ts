@@ -236,11 +236,17 @@ function initLayers(corners) {
   map.addLayer({ id: 'hex-research', type: 'line', source: 'hexes', filter: ['==', ['get', 'hatch'], 1], paint: {
     'line-color': '#fbbf24', 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.8, 13, 1.6], 'line-dasharray': [1.2, 1.4], 'line-opacity': 0.9 } });
   map.addLayer({ id: 'sel', type: 'line', source: 'sel', paint: { 'line-color': '#ffffff', 'line-width': 2.2 } });
-  map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', filter: ['==', ['get', 'show'], 1], paint: { 'fill-color': '#ff3b3b', 'fill-opacity': 0.35 } });
-  map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', filter: ['==', ['get', 'show'], 1], paint: {
+  // Контуры зон — с зума 12: мельче они в долю пикселя и только мусорят вокруг точек и кластеров
+  map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', minzoom: 12, filter: ['==', ['get', 'show'], 1], paint: { 'fill-color': '#ff3b3b', 'fill-opacity': 0.35 } });
+  map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', minzoom: 12, filter: ['==', ['get', 'show'], 1], paint: {
     'line-color': '#ffd1d1', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, 2.5] } });
-  map.addLayer({ id: 'zones-dot', type: 'circle', source: 'zones', filter: ['==', ['get', 'show'], 1], maxzoom: 12.5, paint: {
+  // Точки зон на мелком масштабе: соседние в пределах ~40 px сливаются в кластер (кружок с числом — HTML-маркер,
+  // см. syncZoneClusters), при приближении распадаются; с зума 12 — все по отдельности, с 12,5 — контуры зон
+  map.addSource('zonePts', { type: 'geojson', data: EMPTY, cluster: true, clusterRadius: 40, clusterMaxZoom: 11,
+    clusterProperties: { cover: ['+', ['get', 'cover_m2']] } });
+  map.addLayer({ id: 'zones-dot', type: 'circle', source: 'zonePts', filter: ['!', ['has', 'point_count']], maxzoom: 12.5, paint: {
     'circle-radius': 4, 'circle-color': '#ff3b3b', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1 } });
+  map.on('render', syncZoneClusters);
   for (const [id, col] of [['cmpA', COL_A], ['cmpB', COL_B]]) {
     map.addLayer({ id: `${id}-fill`, type: 'fill', source: id, paint: { 'fill-color': col, 'fill-opacity': 0.08 } });
     map.addLayer({ id: `${id}-line`, type: 'line', source: id, paint: { 'line-color': col, 'line-width': 2, 'line-dasharray': [2, 1] } });
@@ -528,6 +534,50 @@ function paintZones() {
     f.properties.show = S.filters.det.has('detected') && S.filters.conc.has(cs) ? 1 : 0;
   }
   map.getSource('zones')?.setData(fc);
+  // В кластеры идут только показанные зоны — иначе скрытые фильтром попадали бы в число на кружке
+  map.getSource('zonePts')?.setData({ type: 'FeatureCollection', features: fc.features.filter((f) => f.properties.show)
+    .map((f) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.properties.lon, f.properties.lat] },
+      properties: { zone_id: f.properties.zone_id, cover_m2: f.properties.cover_m2 } })) });
+  clearZoneClusters();  // id кластеров новых данных совпадают со старыми — маркеры строим заново
+}
+
+// Кластеры зон — HTML-маркеры: у стиля карты нет шрифтов для подписей, а число на кружке нужно.
+// Сверяются с источником на каждой перерисовке карты: лишние убираются, новые добавляются
+const zoneClusters = new Map();  // cluster_id → Marker
+function clearZoneClusters() {
+  zoneClusters.forEach((m) => m.remove());
+  zoneClusters.clear();
+}
+function syncZoneClusters() {
+  const seen = new Set();
+  if ($('#l-zones')?.checked !== false && map.getSource('zonePts') && map.isSourceLoaded('zonePts')) {
+    for (const f of map.querySourceFeatures('zonePts', { filter: ['has', 'point_count'] })) {
+      const id = f.properties.cluster_id;
+      if (seen.has(id)) continue;  // на стыках тайлов один кластер приходит дважды
+      seen.add(id);
+      if (!zoneClusters.has(id)) zoneClusters.set(id, zoneClusterMarker(f));
+    }
+  }
+  for (const [id, m] of zoneClusters) if (!seen.has(id)) { m.remove(); zoneClusters.delete(id); }
+}
+function zoneClusterMarker(f) {
+  const n = f.properties.point_count, [lon, lat] = f.geometry.coordinates;
+  const el = document.createElement('div');
+  el.className = 'zone-cluster-wrap';
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = `zone-cluster${n >= 50 ? ' is-large' : n >= 10 ? ' is-medium' : ''}`;
+  b.textContent = n;
+  const label = `${n} зон детекции рядом, ≈${nf(f.properties.cover, 0)} м² мусора — приблизить`;
+  b.title = label;
+  b.setAttribute('aria-label', label);
+  b.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const zoom = await map.getSource('zonePts').getClusterExpansionZoom(f.properties.cluster_id);
+    map.easeTo({ center: [lon, lat], zoom: Math.min(zoom, 13) });
+  });
+  el.append(b);
+  return new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map);
 }
 
 function renderField() {
@@ -667,6 +717,7 @@ function renderLegend() {
       ? `<p class="small" style="color:#d48628">Концентрация недоступна для профиля ${S.profile} в этой акватории: вне области применения модели.</p>${fieldRow}`
       : `${concGrad}<div class="leg-row"><span class="sw hatch-sw"></span>пунктир – исследовательская оценка (перенос не подтверждён)</div>${fieldRow}
       <div class="leg-row"><span class="sw" style="background:#ff3b3b"></span>зона детекции (площадь, не концентрация)</div>
+      <div class="leg-row"><span class="zone-cluster-sw">12</span>несколько зон рядом – клик приближает</div>
       <p class="muted small">Модельная оценка по полевым данным профиля в центре гекса на момент снимка. Интервал и причины статуса – в карточке гекса.</p>`,
     status: `${statusRows}<p class="muted small">«Не обнаружено» ставится только при ≥50% видимой воды и спокойном море; иначе – «недостаточно данных».</p>`,
     quality: `<div class="grad" style="background:linear-gradient(90deg,${QUAL.map((s) => s[1]).join(',')})"></div><div class="grad-lbl small"><span>0% воды видно</span><span>100%</span></div>
@@ -1540,7 +1591,7 @@ const vis = (ids, on) => ids.forEach((l) => map.getLayer(l) && map.setLayoutProp
 $('#l-rgb').onchange = (e) => vis(rasterIds('rgb'), e.target.checked);
 $('#l-quality').onchange = (e) => vis(rasterIds('quality'), e.target.checked);
 $('#l-debris').onchange = (e) => vis(rasterIds('debris'), e.target.checked);
-$('#l-zones').onchange = (e) => vis(['zones-fill', 'zones-line', 'zones-dot'], e.target.checked);
+$('#l-zones').onchange = (e) => { vis(['zones-fill', 'zones-line', 'zones-dot'], e.target.checked); syncZoneClusters(); };
 $('#l-field').onchange = (e) => vis(['field-casing', 'field-line', 'field-pt', 'field-dot'], e.target.checked);
 $('#ext-scene-close').onclick = clearExtScene;
 $('#l-objects').onchange = async (e) => {

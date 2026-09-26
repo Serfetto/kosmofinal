@@ -2945,3 +2945,44 @@ html[data-theme="light"] #tip {
     max-height: max(120px, calc(100dvh - 284px));
   }
 }
+
+/* Кластер зон детекции: число зон в кружке, кружок растёт с числом. Масштаб при наведении — у кнопки внутри:
+   transform обёртки занят MapLibre (позиция маркера) */
+.zone-cluster {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgba(239, 51, 51, .94);
+  box-shadow: 0 0 0 4px rgba(255, 59, 59, .28), 0 4px 12px rgba(0, 0, 0, .35);
+  color: #fff;
+  cursor: pointer;
+  font: 700 11px/1 "Montserrat", sans-serif;
+  font-variant-numeric: tabular-nums;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.zone-cluster.is-medium { width: 34px; height: 34px; font-size: 12px; }
+.zone-cluster.is-large { width: 42px; height: 42px; font-size: 13px; }
+.zone-cluster:hover,
+.zone-cluster:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 6px rgba(255, 59, 59, .38), 0 4px 14px rgba(0, 0, 0, .4);
+  transform: scale(1.08);
+}
+.zone-cluster-sw {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  background: #ef3333;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+}
+@media (prefers-reduced-motion: reduce) { .zone-cluster { transition: none; } }
