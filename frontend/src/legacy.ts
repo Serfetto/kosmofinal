@@ -858,12 +858,16 @@ async function openField(eventId, fly = false) {
         ['Флаги качества', `<span class="small">${esc(m.quality_flags || '–')}</span>`],
       ])}
       <p class="small">Концентрация относится ко всей обследованной полосе, а не к точке на карте.</p>
+      <h3>Дрейф от места измерения</h3>
+      <button class="primary mb-2" id="field-drift" data-tooltip="Куда течения, волны и ветер унесли бы мусор за 72 ч после измерения">Рассчитать дрейф на 72 ч</button>
+      <p class="muted small" id="field-drift-info">Реанализ Copernicus Marine: работает и там, где снимков нет. Первый расчёт на дату — до минуты.</p>
       <h3>Строки реестра события</h3><table class="card-table field-registry-table"><tr><th>ID образца</th><th>Совокупность</th><th>Решение</th></tr>${rows}</table>
       <h3>Сопоставление со снимками</h3>${pairs ? `<table class="card-table field-pairs-table"><tr><th>Снимок, UTC</th><th>Ярус</th><th>Решение</th></tr>${pairs}</table>` : '<p>Нет кандидатов</p>'}
       ${aois ? `<h3>Акватории сервиса с этим событием</h3><div class="pair-actions">${aois}</div>` : ''}`
       : `<p>Событие не вошло ни в один профиль.</p><table class="card-table field-registry-table">${rows}</table>`;
     $$('#card-body button[data-pair]').forEach((b) => (b.onclick = () => showExtScene(r.pairs[+b.dataset.pair], eventId)));
     $$('#card-body button[data-aoi]').forEach((b) => (b.onclick = () => openAoiDate(b.dataset.aoi, b.dataset.date)));
+    if (m) $('#field-drift').onclick = (e) => fieldDrift(m, e.currentTarget);
     openTool('card', `Измерение ${eventId}`);
     if (fly && m) flyToEvent(eventId);
   } catch (err) { toast(`Не удалось открыть событие: ${err.message}`); }
@@ -915,20 +919,43 @@ async function renderHexPanel() {
   } catch (err) { $('#hex-conc').innerHTML = `<p class="small">Оценка недоступна: ${esc(err.message)}</p>`; }
 }
 
+// Ансамбль траекторий из одной точки на карте; возвращает смещение центра ансамбля за горизонт, км
+function showCone(r, lon, lat) {
+  map.getSource('cone').setData({ type: 'FeatureCollection', features: r.tracks.map((t) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: t } })) });
+  const end = r.center[r.center.length - 1];
+  map.getSource('coneCenter').setData({ type: 'FeatureCollection', features: [
+    { type: 'Feature', geometry: { type: 'LineString', coordinates: r.center } },
+    { type: 'Feature', geometry: { type: 'Point', coordinates: end } }] });
+  return haversine(lon, lat, end[0], end[1]);
+}
 async function hexDrift(trigger = $('#hex-drift')) {
   const p = S.hexes.features[S.sel].properties;
   return withButtonLoading(trigger, 'Рассчитываем прогноз…', async () => {
     try {
       const r = await api(`/api/aois/${S.aoi.id}/${S.series.dates[S.di]}/drift_point?lon=${p.lon}&lat=${p.lat}&hours=72&n=40`);
-      map.getSource('cone').setData({ type: 'FeatureCollection', features: r.tracks.map((t) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: t } })) });
-      const end = r.center[r.center.length - 1];
-      map.getSource('coneCenter').setData({ type: 'FeatureCollection', features: [
-        { type: 'Feature', geometry: { type: 'LineString', coordinates: r.center } },
-        { type: 'Feature', geometry: { type: 'Point', coordinates: end } }] });
-      const km = haversine(p.lon, p.lat, end[0], end[1]);
+      const km = showCone(r, p.lon, p.lat);
       $('#hex-drift-info').innerHTML = `Прогноз: через 72 ч центр ансамбля сместится на <b>${nf(km)} км</b>, разброс ±${nf(r.spread_km[72])} км` +
         ` (24 ч: ±${nf(r.spread_km[24])} км). На берег выброшено ${nf(r.beached_frac * 100, 0)}% частиц.`;
     } catch (err) { toast(`Ошибка прогноза: ${err.message}`); }
+  });
+}
+// Дрейф из места полевого измерения — без снимка, по реанализу. Старт — середина трансекты, а если время
+// неизвестно — полдень UTC даты измерения
+async function fieldDrift(m, trigger) {
+  const utc = (s) => Date.parse(/Z|[+-]\d\d:?\d\d$/.test(s) ? s : `${s}Z`);
+  const t0 = new Date(m.time_known ? (utc(m.t_start_utc) + utc(m.t_end_utc)) / 2 : utc(`${m.date_utc}T12:00:00`)).toISOString();
+  return withButtonLoading(trigger, 'Скачиваем течения и считаем…', async () => {
+    try {
+      const r = await api(`/api/drift?lon=${m.lon}&lat=${m.lat}&t0=${encodeURIComponent(t0)}&hours=72&n=40`);
+      const km = showCone(r, m.lon, m.lat);
+      const pts = r.tracks.flat();
+      const xs = pts.map((c) => c[0]), ys = pts.map((c) => c[1]);
+      map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: viewPadding(), maxZoom: 10 });
+      $('#field-drift-info').innerHTML = `Старт ${esc(t0.slice(0, 16).replace('T', ' '))} UTC${m.time_known ? '' : ' (время измерения неизвестно — полдень)'}. ` +
+        `Через 72 ч центр ансамбля сместится на <b>${nf(km)} км</b>, разброс ±${nf(r.spread_km[72])} км (24 ч: ±${nf(r.spread_km[24])} км); ` +
+        `на берег выброшено ${nf(r.beached_frac * 100, 0)}% частиц.<br><b>Реконструкция, не наблюдение:</b> второго наблюдения того же мусора нет, точность не проверена.` +
+        `<br><span class="small">${r.sources.map(esc).join('<br>')}</span>`;
+    } catch (err) { toast(`Ошибка расчёта дрейфа: ${err.message}`, 6000); }
   });
 }
 function haversine(lon1, lat1, lon2, lat2) {

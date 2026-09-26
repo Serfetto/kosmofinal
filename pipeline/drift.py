@@ -4,6 +4,7 @@
 Течения — Open-Meteo Marine (Meteo-France SMOC: суммарные поверхностные течения
 с приливом и стоксовым дрейфом), ветер — ERA5 / прогноз Open-Meteo. Ключи не нужны.
 Для внутренних водоёмов течений нет — только ветровой дрейф.
+Там, где снимка нет (полевые события 2014–2016 гг.), — `simulate_at` по реанализам Copernicus Marine (`cmems.py`).
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from rasterio.warp import transform as warp_transform
 from scipy.interpolate import RegularGridInterpolator
 from scipy.ndimage import binary_dilation
 
+from . import cmems
 from .config import AOIS, PROCESSED, cached
 
 MARINE_URL = "https://marine-api.open-meteo.com/v1/marine"
@@ -92,38 +94,69 @@ def fetch_met(aoi_id: str, date: str, days: int = 4) -> dict:
 
 
 class LandMask:
-    """Вода/суша по маске акватории; за пределами растра — по наличию течений и глобальной маске суши.
+    """Вода/суша по маске акватории; за пределами растра (или без него) — по наличию течений и глобальной маске суши.
 
     Open-Meteo отдаёт течения и для точек на суше (ближайшая морская клетка), поэтому одного наличия
     течений мало: без global-land-mask (~1 км) частицы за краем снимка уплывают в горы.
     """
 
-    def __init__(self, aoi_id: str, met: dict):
-        with rasterio.open(PROCESSED / aoi_id / "water.tif") as s:
-            self.water = binary_dilation(s.read(1).astype(bool), iterations=4)
-            self.tr, self.crs = s.transform, s.crs
-        self.h, self.w = self.water.shape
-        sea = np.isfinite(met["cu"]).any(0) if AOIS[aoi_id]["kind"] == "sea" else np.zeros(met["cu"].shape[1:], bool)
-        self.sea = RegularGridInterpolator((met["lats"], met["lons"]), sea.astype(float),
+    def __init__(self, met: dict, water_tif=None, sea: bool = True):
+        self.water = None
+        if water_tif is not None:
+            with rasterio.open(water_tif) as s:
+                self.water = binary_dilation(s.read(1).astype(bool), iterations=4)
+                self.tr, self.crs = s.transform, s.crs
+            self.h, self.w = self.water.shape
+        cells = np.isfinite(met["cu"]).any(0) if sea else np.zeros(met["cu"].shape[1:], bool)
+        self.sea = RegularGridInterpolator((met["lats"], met["lons"]), cells.astype(float),
                                            method="nearest", bounds_error=False, fill_value=0.0)
 
     def is_water(self, lon: np.ndarray, lat: np.ndarray) -> np.ndarray:
+        out = (self.sea(np.c_[lat, lon]) > 0.5) & globe.is_ocean(lat, lon)
+        if self.water is None:
+            return out
         x, y = warp_transform("EPSG:4326", self.crs, lon.tolist(), lat.tolist())
         col = ((np.asarray(x) - self.tr.c) / self.tr.a).astype(int)
         row = ((np.asarray(y) - self.tr.f) / self.tr.e).astype(int)
         inside = (row >= 0) & (row < self.h) & (col >= 0) & (col < self.w)
-        out = (self.sea(np.c_[lat, lon]) > 0.5) & globe.is_ocean(lat, lon)
         out[inside] = self.water[row[inside], col[inside]]
         return out
 
 
 def simulate(aoi_id: str, date: str, lon, lat, hours: int = 72, start_offset_h: float = 0.0,
              n_ens: int = 1, windage: float | None = None, diffusivity: float = 5.0, seed: int = 0) -> dict:
-    """Интегрирование RK2 с шагом 30 мин. Возвращает траектории [n, hours+1, 2] и флаги выброса на берег."""
+    """Дрейф с момента съёмки акватории. Возвращает траектории [n, hours+1, 2] и флаги выброса на берег."""
     met = fetch_met(aoi_id, date)
-    rng = np.random.default_rng(seed)
+    sea = AOIS[aoi_id]["kind"] == "sea"
     if windage is None:
-        windage = 0.02 if AOIS[aoi_id]["kind"] == "sea" else 0.03
+        windage = 0.02 if sea else 0.03
+    land = LandMask(met, PROCESSED / aoi_id / "water.tif", sea)
+    t0 = scene_time(aoi_id, date)
+    track, beached = _integrate(met, land, lon, lat, t0.timestamp() + start_offset_h * 3600, hours, n_ens,
+                                windage, diffusivity, seed)
+    return {"track": track, "beached": beached, "t0": t0.isoformat(),
+            "start_offset_h": start_offset_h, "windage": windage}
+
+
+def simulate_at(lon, lat, t0: datetime, hours: int = 72, n_ens: int = 1, windage: float = 0.02,
+                diffusivity: float = 5.0, seed: int = 0) -> dict:
+    """Дрейф в море без снимка: с любого момента, поля — реанализы Copernicus Marine вокруг первой точки."""
+    lon, lat = np.atleast_1d(np.asarray(lon, float)), np.atleast_1d(np.asarray(lat, float))
+    if not globe.is_ocean(lat, lon).all():  # до скачивания полей
+        raise cmems.CmemsNoData("точка старта на суше")
+    met = cmems.fetch_met(float(lon[0]), float(lat[0]), t0, hours)
+    land = LandMask(met)
+    if not land.is_water(lon, lat).all():
+        raise cmems.CmemsNoData("точка старта у берега, где у реанализа течений нет морских клеток")
+    track, beached = _integrate(met, land, lon, lat, t0.timestamp(), hours, n_ens, windage, diffusivity, seed)
+    return {"track": track, "beached": beached, "t0": t0.isoformat(), "windage": windage,
+            "sources": [str(x) for x in met["sources"]]}
+
+
+def _integrate(met: dict, land: LandMask, lon, lat, t: float, hours: int, n_ens: int, windage: float,
+               diffusivity: float, seed: int):
+    """Интегрирование RK2 с шагом 30 мин от момента t (с от эпохи)."""
+    rng = np.random.default_rng(seed)
     pts_lon = np.repeat(np.asarray(lon, float), n_ens)
     pts_lat = np.repeat(np.asarray(lat, float), n_ens)
     n = len(pts_lon)
@@ -139,13 +172,11 @@ def simulate(aoi_id: str, date: str, lon, lat, hours: int = 72, start_offset_h: 
     fv = RegularGridInterpolator(axes, cv, bounds_error=False, fill_value=0.0)
     gu = RegularGridInterpolator(axes, wu, bounds_error=False, fill_value=None)
     gv = RegularGridInterpolator(axes, wv, bounds_error=False, fill_value=None)
-    land = LandMask(aoi_id, met)
 
     def vel(t, x, y):
         q = np.c_[np.full(len(x), t), y, x]
         return fu(q) + wk * gu(q), fv(q) + wk * gv(q)
 
-    t = scene_time(aoi_id, date).timestamp() + start_offset_h * 3600
     dt = 1800.0
     steps_per_h = 2
     x, y = pts_lon.copy(), pts_lat.copy()
@@ -170,8 +201,7 @@ def simulate(aoi_id: str, date: str, lon, lat, hours: int = 72, start_offset_h: 
             x[move], y[move] = nx[move], ny[move]
             t += dt
         track[:, h, 0], track[:, h, 1] = x, y
-    return {"track": track, "beached": beached, "t0": scene_time(aoi_id, date).isoformat(),
-            "start_offset_h": start_offset_h, "windage": windage}
+    return track, beached
 
 
 def accumulation(aoi_id: str, date: str, hours: int = 72, spacing_m: float = 600.0) -> dict:

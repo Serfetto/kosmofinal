@@ -76,7 +76,8 @@ class ErrorOut(BaseModel):
 ERROR_TEXT = {
     404: "Не найдено: неизвестная акватория, нет снимка на эту дату, нет события, гекса или сохранённого запроса",
     422: "Неверные параметры: формат даты, неизвестный профиль, значение вне допустимого диапазона",
-    503: "Open-Meteo не ответил или ограничил частоту запросов — повторить позже",
+    503: "Open-Meteo или Copernicus Marine не ответил, ограничил частоту запросов или не настроен аккаунт — "
+         "повторить позже",
 }
 
 
@@ -401,6 +402,11 @@ class DriftPointOut(BaseModel):
     spread_km: list[float] = Field(description="[час] разброс ансамбля (СКО от центра), км — ширина конуса")
     beached_frac: float = Field(description="Доля членов ансамбля, выброшенных на берег")
     t0: str = Field(description="Старт — момент съёмки, ISO 8601 UTC")
+
+
+class DriftAtOut(DriftPointOut):
+    t0: str = Field(description="Момент старта, ISO 8601 UTC")
+    sources: list[str] = Field(description="Откуда поля: течения, стоксов дрейф, ветер")
 
 
 class AccumulationOut(BaseModel):

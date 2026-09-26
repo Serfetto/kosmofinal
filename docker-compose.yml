@@ -4,6 +4,11 @@ services:
     image: aquaflow
     ports:
       - "8000:8000"
+    environment:
+      # Дрейф без снимка (GET /api/drift) берёт реанализы Copernicus Marine — нужен бесплатный аккаунт.
+      # Логин и пароль — в файле .env рядом с этим (образец — .env.example, в git не попадает); без них ручка отвечает 503
+      COPERNICUSMARINE_SERVICE_USERNAME: ${COPERNICUSMARINE_SERVICE_USERNAME:-}
+      COPERNICUSMARINE_SERVICE_PASSWORD: ${COPERNICUSMARINE_SERVICE_PASSWORD:-}
     volumes:
       # Течения и ветер Open-Meteo, зоны скопления, сохранённые запросы — не скачиваются заново после пересборки
       - aquaflow-cache:/app/cache

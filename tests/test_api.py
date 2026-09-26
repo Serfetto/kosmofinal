@@ -3,6 +3,7 @@ import csv
 import hashlib
 import io
 import json
+import math
 
 import pytest
 from fastapi.testclient import TestClient
@@ -178,6 +179,44 @@ def test_weather_outage_is_503(monkeypatch):
     monkeypatch.setattr(pipeline.drift, "fetch_met", rate_limited)
     r = client.get(f"/api/aois/{AOI}/{_date()}/drift_point?lon=39.72&lat=43.55&hours=24&n=5")
     assert r.status_code == 503 and "Open-Meteo" in r.json()["detail"] and r.headers["Retry-After"]
+
+
+def _uniform_met(lon, lat, t0, hours, u=0.5):
+    """Поля «как из Copernicus Marine»: течение u м/с на восток, штиль."""
+    import numpy as np
+
+    lons, lats = np.arange(lon - 3, lon + 3, 0.1), np.arange(lat - 3, lat + 3, 0.1)
+    t = t0.timestamp() - 86400 + 3600.0 * np.arange(hours + 72)
+    shape = (len(t), len(lats), len(lons))
+    return dict(lons=lons, lats=lats, t=t, cu=np.full(shape, u), cv=np.zeros(shape),
+                wu=np.zeros(shape), wv=np.zeros(shape), sources=np.array(["течения: тест"]))
+
+
+def test_drift_without_imagery(monkeypatch):
+    """Дрейф из места полевого измерения S1 (Тихий океан, 2015): снимка нет, поля — реанализ."""
+    import pipeline.cmems
+
+    monkeypatch.setattr(pipeline.cmems, "fetch_met", _uniform_met)
+    r = client.get("/api/drift?lon=-140&lat=32&t0=2015-07-27T15:34:00&hours=24&n=5")
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["t0"].startswith("2015-07-27T15:34:00") and d["sources"] == ["течения: тест"]
+    assert len(d["tracks"]) == 5 and len(d["center"]) == 25 and d["beached_frac"] == 0
+    # 0,5 м/с на восток за сутки — 43,2 км; диффузия ансамбля сдвигает центр на сотни метров
+    (lon0, lat0), (lon1, lat1) = d["center"][0], d["center"][-1]
+    assert (lon1 - lon0) * 111.32 * math.cos(math.radians(32)) == pytest.approx(43.2, abs=2) and abs(lat1 - lat0) < 0.02
+
+    assert client.get("/api/drift?lon=-100&lat=40&t0=2015-07-27T15:34:00").status_code == 404  # старт на суше
+    assert client.get("/api/drift?lon=-140&lat=32").status_code == 422  # без момента старта
+
+
+def test_drift_without_credentials_is_503(monkeypatch):
+    import pipeline.cmems
+
+    monkeypatch.setattr(pipeline.cmems, "has_credentials", lambda: False)
+    monkeypatch.setattr(pipeline.cmems, "cached", lambda path: path.with_name("no-such-cache.npz"))
+    r = client.get("/api/drift?lon=-140&lat=32&t0=2015-07-27T15:34:00&hours=24&n=5")
+    assert r.status_code == 503 and "Copernicus Marine" in r.json()["detail"] and r.headers["Retry-After"]
 
 
 def test_field_sources_cover_s1_to_s4():

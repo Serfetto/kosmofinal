@@ -3,6 +3,25 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def _load_env(path: Path) -> None:
+    """Переменные из .env в корне проекта (логин Copernicus Marine, AQUAFLOW_CACHE). Уже заданные в окружении
+    не перезаписываются. Тот же файл читает docker compose."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        key, sep, value = line.strip().partition("=")
+        key = key.removeprefix("export ").strip()
+        if sep and key and not key.startswith("#"):
+            value = value.strip()
+            if len(value) > 1 and value[0] == value[-1] and value[0] in "\"'":
+                value = value[1:-1]
+            if value:
+                os.environ.setdefault(key, value)
+
+
+_load_env(ROOT / ".env")
 DATA = ROOT / "data"
 RAW = DATA / "raw"
 PROCESSED = DATA / "processed"

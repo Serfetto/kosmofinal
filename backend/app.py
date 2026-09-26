@@ -6,6 +6,7 @@ uvicorn backend.app:app --port 8000
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from functools import lru_cache
 
 import h3
@@ -21,13 +22,14 @@ from pyproj import Transformer
 
 from backend.case_api import _aoi_date, router, versions
 from backend.report import router as report_router
-from backend.schemas import (PATTERN_HINTS, AccumulationOut, AoiOut, AoiPath, DatePath, DriftOut, DriftPointOut,
-                             FeatureCollection, GeoJSONResponse, HealthOut, HoursQuery, RasterGridOut, RouteOut,
+from backend.schemas import (PATTERN_HINTS, AccumulationOut, AoiOut, AoiPath, DatePath, DriftAtOut, DriftOut,
+                             DriftPointOut, FeatureCollection, GeoJSONResponse, HealthOut, HoursQuery, RasterGridOut, RouteOut,
                              SceneOut, SeriesOut, StatusesOut, Tag, errors)
 from pipeline import status as ST
 from pipeline.aggregate import WEB
 from pipeline.config import AOIS, H3_RES, PROCESSED, ROOT, cached
-from pipeline.drift import accumulation, simulate
+from pipeline.cmems import CmemsUnavailable
+from pipeline.drift import accumulation, simulate, simulate_at
 from pipeline.route import plan
 
 DESCRIPTION = """
@@ -69,7 +71,8 @@ TAGS = [
                                                "оценка в точке с причинами статуса."},
     {"name": Tag.FIELD, "description": "Полевые измерения кейса (C = N / A), отдельные предметы, расшифровка расчёта."},
     {"name": Tag.PAIRS, "description": "Сопоставление полевых событий со снимками Sentinel-2 и решения по каждой паре."},
-    {"name": Tag.DRIFT, "description": "Прогноз дрейфа по течениям и ветру (Open-Meteo), зоны скопления, маршрут судна."},
+    {"name": Tag.DRIFT, "description": "Прогноз дрейфа по течениям и ветру (Open-Meteo; без снимка — реанализы "
+                                       "Copernicus Marine), зоны скопления, маршрут судна."},
     {"name": Tag.EXPORT, "description": "Файлы: GeoJSON, CSV и PDF-отчёт."},
     {"name": Tag.QUERIES, "description": "Сохранение выгрузки и проверка, что она воспроизводится побайтно (sha256)."},
     {"name": Tag.METRICS, "description": "Результаты проверок детектора, моделей концентрации и прогноза дрейфа."},
@@ -117,6 +120,13 @@ async def weather_unavailable(request: Request, exc: requests.RequestException):
     why = "ограничил частоту запросов" if code == 429 else "не ответил"
     return JSONResponse(status_code=503, headers={"Retry-After": "60"},
                         content={"detail": f"сервис погоды Open-Meteo {why}, повторите запрос через минуту"})
+
+
+@app.exception_handler(CmemsUnavailable)
+async def ocean_unavailable(request: Request, exc: CmemsUnavailable):
+    """Дрейф без снимка берёт поля из Copernicus Marine: нет аккаунта или сервис не ответил — 503, нет данных — 404."""
+    headers = {"Retry-After": "60"} if exc.status == 503 else None
+    return JSONResponse(status_code=exc.status, headers=headers, content={"detail": str(exc)})
 
 
 def _json(path):
@@ -328,12 +338,36 @@ def drift_point(aoi: AoiPath, date: DatePath,
     """Ансамбль траекторий из одной точки с разбросом парусности и турбулентной диффузией: треки, центр
     ансамбля и его разброс по часам (ширина конуса), доля выброшенных на берег."""
     _aoi_date(aoi, date)
-    res = simulate(aoi, date, [lon], [lat], hours=hours, n_ens=n, seed=2)
+    return _cone(simulate(aoi, date, [lon], [lat], hours=hours, n_ens=n, seed=2), lat)
+
+
+def _cone(res: dict, lat: float) -> dict:
     tr = res["track"]
     center = tr.mean(0)
     spread = np.sqrt(((tr - center[None]) ** 2 * np.array([np.cos(np.radians(lat)) ** 2, 1.0])).sum(-1).mean(0)) * 111.32
     return {"tracks": np.round(tr.astype(float), 5).tolist(), "center": np.round(center.astype(float), 5).tolist(),
             "spread_km": np.round(spread, 2).tolist(), "beached_frac": float(res["beached"].mean()), "t0": res["t0"]}
+
+
+@app.get("/api/drift", tags=[Tag.DRIFT], summary="Дрейф из точки без снимка (реанализ Copernicus Marine)",
+         response_model=DriftAtOut, responses=errors(404, 422, 503))
+def drift_at(lon: float = Query(ge=-180, le=180, description="Долгота точки старта", examples=[-139.6]),
+             lat: float = Query(ge=-80, le=80, description="Широта точки старта", examples=[31.9]),
+             t0: datetime = Query(description="Момент старта, ISO 8601; без часового пояса — UTC",
+                                  examples=["2015-07-27T15:34:00Z"]),
+             hours: HoursQuery = 72, n: int = Query(40, ge=1, le=200, description="Членов ансамбля")):
+    """Тот же ансамбль, что `drift_point`, но без привязки к акватории и снимку: из любой морской точки
+    с любого момента — например, из места полевого измерения S1–S3 (2014–2016 гг.), где снимков нет, а течений
+    Open-Meteo на эти годы тоже нет. Поля — реанализы Copernicus Marine: течения GLORYS12 (1/12°, среднесуточные;
+    на шельфе Северного моря — NWS, ежечасные с приливом) + стоксов дрейф волн + ветер 10 м (L4). Это реконструкция
+    задним числом: второго наблюдения того же мусора нет, точность не проверена.
+
+    Нужен аккаунт Copernicus Marine: COPERNICUSMARINE_SERVICE_USERNAME и _PASSWORD в `.env` или в окружении,
+    без них — 503. Поля скачиваются на первый запрос (до минуты) и кешируются: соседние точки того же дня
+    считаются из кеша. Нет реанализа на эти даты или точка на суше — 404."""
+    t0 = t0.replace(tzinfo=timezone.utc) if t0.tzinfo is None else t0.astimezone(timezone.utc)
+    res = simulate_at(lon, lat, t0, hours=hours, n_ens=n, seed=2)
+    return {**_cone(res, lat), "sources": res["sources"]}
 
 
 @lru_cache(maxsize=32)

@@ -13,6 +13,7 @@ statsmodels>=0.14
 joblib>=1.4
 h3>=4.0
 global-land-mask>=1.0
+copernicusmarine>=2.0  # дрейф без снимка: реанализы течений, волн и ветра (pipeline/cmems.py)
 shapely>=2.0
 pyproj>=3.6
 requests>=2.31
