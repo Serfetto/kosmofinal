@@ -4,7 +4,7 @@ python -m pipeline.aggregate [aoi ...]
 
 Результат: data/web/<aoi>/ — hexes.geojson (геометрия + сводные метрики), series.json (покрытие,
 статусы и качество по датам), conc_<профиль>.json (концентрация, шт./км², интервалы, статусы),
-<date>/{debris.png, quality.png, rgb.jpg, points.json, zones.geojson}.
+<date>/{debris.png, model_classes_<model-sha>.png, quality.png, rgb.jpg, points.json, zones.geojson}.
 
 Покрытие (м² мусора на км²) — вспомогательный показатель детектора. Концентрация в шт./км²
 берётся из модели по полевым данным (pipeline/concentration.py) и из площади маски не выводится.
@@ -28,6 +28,7 @@ from scipy.ndimage import maximum as ndi_maximum
 from . import status as ST
 from .config import AOIS, DATA, GROUPS, H3_RES, PROCESSED
 from .config import MODELS as MODELS_DIR
+from .class_layer import cache_filename as model_classes_filename, model_classes_png
 from .detect import dates, load_water
 from .provenance import load_yaml, run_meta
 
@@ -410,7 +411,9 @@ def run(aoi_id: str) -> None:
         m = scene_masks(src_dir, d, water, static)
         if m is None:
             continue  # облака или сплошной лёд
-        P, frac, valid, q, glint_px, glinty = m["P"], m["frac"], m["valid"], m["q"], m["glint_px"], m["glinty"]
+        P, frac, G, valid, q, glint_px, glinty = (
+            m["P"], m["frac"], m["G"], m["valid"], m["q"], m["glint_px"], m["glinty"]
+        )
         ice_frac, det = m["ice_frac"], m["det"]
         sc = scenes[d]
         wind = sc.get("wind_max") or sc.get("wind") or 0.0
@@ -442,6 +445,7 @@ def run(aoi_id: str) -> None:
         dd = out_dir / d
         dd.mkdir(exist_ok=True)
         heat_png(P, det, dd / "debris.png")
+        model_classes_png(G, dd / model_classes_filename())
         shutil.copy(src_dir / d / "rgb.jpg", dd / "rgb.jpg")
         quality_png(q, dd / "quality.png")
         qw = q[water]

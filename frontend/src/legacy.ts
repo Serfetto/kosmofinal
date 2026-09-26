@@ -31,6 +31,7 @@ const accentColor = () => document.documentElement.dataset.theme === 'light' ? '
 
 const S = {
   aois: [], aoi: null, hexes: null, series: null, grid: null, conc: null, zones: null, field: null, objects: null, sources: null,
+  statuses: null,
   profiles: [], profile: 'B', di: 0, mode: 'conc', queryId: null,
   filters: { det: new Set(['detected', 'not_detected', 'insufficient_data']), conc: new Set(['model_estimate', 'research_estimate', 'unavailable']) },
   drift: null, accum: null, sel: null, cmp: { A: null, B: null }, drawing: null, draft: [],
@@ -221,6 +222,7 @@ function initLayers(corners) {
     map.addLayer({ id, type: 'raster', source: id, layout, paint });
   });
   raster('rgb', {}, { 'raster-opacity': 0.92, 'raster-fade-duration': 0 });
+  raster('model-classes', { visibility: 'none' }, { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 });
   raster('quality', { visibility: 'none' }, { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 });
   ['hexes', 'sel', 'accumPts', 'draw', 'cmpA', 'cmpB', 'tracks', 'particles', 'cone', 'coneCenter', 'route', 'routeDrift', 'routeObs', 'zones', 'field', 'fieldDots', 'objects'].forEach(addGeo);
   raster('debris', {}, { 'raster-resampling': 'nearest', 'raster-fade-duration': 0 });
@@ -333,7 +335,12 @@ async function loadConc() {
   catch { S.conc = null; }
   renderProfileNote();
 }
-const sceneUrls = (d) => ({ rgb: `/data/${S.aoi.id}/${d}/rgb.jpg`, debris: `/data/${S.aoi.id}/${d}/debris.png`, quality: `/data/${S.aoi.id}/${d}/quality.png` });
+const sceneUrls = (d) => ({
+  rgb: `/data/${S.aoi.id}/${d}/rgb.jpg`,
+  debris: `/data/${S.aoi.id}/${d}/debris.png`,
+  quality: `/data/${S.aoi.id}/${d}/quality.png`,
+  modelClasses: `/api/aois/${S.aoi.id}/${d}/model-classes`,
+});
 
 // Растры лежат в сетке UTM, а MapLibre натягивает image-источник на четыре угла проективно. В меркаторе
 // сетка UTM не такая: целый снимок уезжал внутри до 100 м от зон и гексов. Поэтому каждый растр режется
@@ -342,6 +349,7 @@ const RASTERS = ['rgb', 'quality', 'debris'];
 const SPLIT = 8;
 const rasterIds = (kind) => Array.from({ length: SPLIT * SPLIT }, (_, k) => `${kind}-${k}`);
 let sceneSeq = 0;
+let modelClassesSeq = 0;
 
 // [lon, lat] точки (col, row) сетки 10 м — билинейно между узлами /grid
 function gridLonLat(g, col, row) {
@@ -393,6 +401,20 @@ async function showScene(urls) {
     return img;
   }));
   if (seq === sceneSeq) RASTERS.forEach((kind, j) => sliceRaster(kind, imgs[j], g)); // иначе уже выбрали другую дату
+}
+
+async function showModelClasses(url, notify = false) {
+  const seq = ++modelClassesSeq;
+  vis(rasterIds('model-classes'), false);
+  if (notify) toast('Готовим слой классов модели… Первый расчёт может занять несколько минут.', 0);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = url;
+  await img.decode();
+  if (seq !== modelClassesSeq || !$('#l-model-classes')?.checked) return;
+  sliceRaster('model-classes', img, S.grid);
+  vis(rasterIds('model-classes'), true);
+  if (notify) toast('Слой классов модели готов');
 }
 
 function placeMarkers() {
@@ -472,7 +494,17 @@ async function setDate(i) {
     `<br>Видно воды: <b>${nf(sc.valid_frac * 100, 0)}%</b> · облака ${nf((q.cloud || 0) * 100, 1)}% · блик: ${glint} · море: <b>${sc.sea}</b>` +
     (sc.wind != null ? `, ветер ${nf(sc.wind)} м/с` : '') + (sc.storm ? `<br><span style="color:#ffb24a">Ненадёжная сцена (${sc.reason}): оставлены только крупные скопления, отсутствие мусора не подтверждается</span>` : '') +
     `<br><span class="small">Сцена: ${esc(sc.scene_id || '')}</span>`;
-  showScene(sceneUrls(d)).catch((err) => toast(`Не удалось загрузить снимок: ${err.message}`));
+  const urls = sceneUrls(d);
+  showScene(urls).catch((err) => toast(`Не удалось загрузить снимок: ${err.message}`));
+  if ($('#l-model-classes')?.checked) {
+    showModelClasses(urls.modelClasses).catch((err) => {
+      vis(rasterIds('model-classes'), false);
+      toast(`Не удалось загрузить классы модели: ${err.message}`);
+    });
+  } else {
+    modelClassesSeq++;
+    vis(rasterIds('model-classes'), false);
+  }
   clearDrift(); clearRoute(); S.accum = null;
   setFlowSource(`/api/aois/${S.aoi.id}/${d}/flow?hours=72`, S.aoi.tz);
   if (S.mode === 'forecast' || S.mode === 'accum') setMode('conc');
@@ -724,6 +756,29 @@ function renderLegend() {
   const fieldRow = `<div class="leg-row"><span class="sw field-sw"></span>полевое измерение (C = N/A), цвет – та же шкала</div>`;
   const statusRows = Object.entries(DET_NAME).map(([k, v]) => `<div class="leg-row"><span class="sw" style="background:${DET_COL[k]}"></span>${v}</div>`).join('');
   const na = !S.conc || !S.conc.available;
+  const qualityMask = $('#l-quality')?.checked ? (() => {
+    const rows = (S.statuses?.quality || []).filter((q) => q.rgba?.[3] > 0).map((q) => {
+      const [r, g, b, a] = q.rgba;
+      return `<div class="leg-row"><span class="sw" style="background:rgba(${r},${g},${b},${a / 255})"></span>${esc(q.label)}</div>`;
+    }).join('');
+    return `<div class="layer-legend quality-mask-legend">
+      <div class="layer-legend-title">Маска качества · пиксели</div>
+      <div class="leg-row"><span class="sw transparent-sw"></span>прозрачно — пригодная вода или суша вне маски</div>
+      ${rows}
+      <p class="muted small">Цвет показывает, почему участок снимка исключён из детекции или считается ненадёжным.</p>
+    </div>`;
+  })() : '';
+  const modelClasses = $('#l-model-classes')?.checked ? (() => {
+    const rows = (S.statuses?.model_classes || []).map((q) => {
+      const [r, g, b, a] = q.rgba;
+      return `<div class="leg-row"><span class="sw" style="background:rgba(${r},${g},${b},${a / 255})"></span>${esc(q.label)}</div>`;
+    }).join('');
+    return `<div class="layer-legend model-classes-legend">
+      <div class="layer-legend-title">Классы модели · пиксели</div>
+      ${rows}
+      <p class="muted small">Для спектральных аномалий — класс с наибольшей вероятностью; остальные пригодные пиксели считаются водой. Это результат до порога и фильтров: красный здесь ещё не обязательно итоговая детекция мусора.</p>
+    </div>`;
+  })() : '';
   const L = {
     conc: na
       ? `<p class="small" style="color:#d48628">Концентрация недоступна для профиля ${S.profile} в этой акватории: вне области применения модели.</p>${fieldRow}`
@@ -745,7 +800,7 @@ function renderLegend() {
       <p class="muted small"><b>Прогноз, не наблюдение.</b> Акваторию равномерно засеяли частицами и за 72 ч посчитали, во сколько раз выросла их плотность.</p>`,
     forecast: `${classes()}<p class="muted small"><b>Прогноз, не наблюдение.</b> Покрытие через ${S.drift?.hours ?? 72} ч после пролёта (дрейф детекций течением и ветром).</p>`,
   };
-  $('#legend').innerHTML = L[S.mode];
+  $('#legend').innerHTML = `${L[S.mode]}${modelClasses}${qualityMask}`;
   const p = profileInfo(), sc = S.series?.scenes?.[S.di];
   const fieldDates = (S.field?.features || []).filter((f) => f.properties.profile === S.profile).map((f) => f.properties.date_utc).sort();
   $('#legend-meta').innerHTML = `Единица: <b>шт./км²</b> (концентрация), м²/км² (покрытие)` +
@@ -1775,7 +1830,26 @@ $('#query-save').onclick = saveQuery;
 $('#query-rerun').onclick = rerunQuery;
 const vis = (ids, on) => ids.forEach((l) => map.getLayer(l) && map.setLayoutProperty(l, 'visibility', on ? 'visible' : 'none'));
 $('#l-rgb').onchange = (e) => vis(rasterIds('rgb'), e.target.checked);
-$('#l-quality').onchange = (e) => vis(rasterIds('quality'), e.target.checked);
+$('#l-quality').onchange = (e) => {
+  vis(rasterIds('quality'), e.target.checked);
+  renderLegend();
+};
+$('#l-model-classes').onchange = async (e) => {
+  renderLegend();
+  if (!e.target.checked) {
+    modelClassesSeq++;
+    vis(rasterIds('model-classes'), false);
+    return;
+  }
+  const date = S.series?.dates?.[S.di];
+  if (!date) return;
+  try {
+    await showModelClasses(sceneUrls(date).modelClasses, true);
+  } catch (err) {
+    vis(rasterIds('model-classes'), false);
+    toast(`Не удалось загрузить классы модели: ${err.message}`, 0);
+  }
+};
 $('#l-debris').onchange = (e) => vis(rasterIds('debris'), e.target.checked);
 $('#l-zones').onchange = (e) => { vis(['zones-fill', 'zones-line', 'zones-dot'], e.target.checked); syncZoneClusters(); };
 $('#l-field').onchange = (e) => vis(['field-casing', 'field-line', 'field-pt', 'field-dot'], e.target.checked);
@@ -1803,7 +1877,7 @@ document.addEventListener('keydown', (e) => {
 
 map.on('load', async () => {
   try {
-    [S.aois, S.profiles] = await Promise.all([api('/api/aois'), api('/api/profiles')]);
+    [S.aois, S.profiles, S.statuses] = await Promise.all([api('/api/aois'), api('/api/profiles'), api('/api/statuses')]);
   } catch (err) { toast(`API недоступно: ${err.message}`, 0); return; }
   try { S.field = await api('/api/field'); } catch { S.field = EMPTY; }
   const q = new URLSearchParams(location.search);

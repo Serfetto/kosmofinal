@@ -113,6 +113,7 @@ class StatusesOut(BaseModel):
     concentration: list[StatusItem] = Field(description="Статусы оценки концентрации")
     value_type: list[StatusItem] = Field(description="Тип значения в полевом реестре и выгрузках")
     quality: list[QualityItem] = Field(description="Коды маски качества снимка")
+    model_classes: list[QualityItem] = Field(description="Шесть классов пиксельной модели и цвета слоя model_classes.png")
 
 
 # ---------- акватории ----------
@@ -147,6 +148,7 @@ class AoiOut(BaseModel):
 class SceneLayers(BaseModel):
     rgb: str = Field(description="Снимок в естественных цветах, JPEG, 20 м/пиксель")
     debris: str = Field(description="Вероятность мусора по пикселям, прозрачный PNG")
+    model_classes: str = Field(description="Шесть групп детектора по пикселям до порога и фильтров, прозрачный PNG")
     quality: str = Field(description="Маска качества, прозрачный PNG; коды — `GET /api/statuses` → `quality`")
     zones: str = Field(description="Зоны детекции, GeoJSON")
     points: str = Field(description="Пиксели-детекции [lon, lat, p, frac]")
@@ -175,7 +177,7 @@ class SceneOut(BaseModel):
     cover: float = Field(description="Покрытие на км² пригодной воды, м²/км²")
     quality: dict[str, float] = Field(description="Доли воды по кодам маски качества: ok, cloud, glint, ship…")
     status: dict[str, int] = Field(description="Число гексов по статусам детекции")
-    corners: list[LonLat] = Field(description="Углы растров rgb/debris/quality: верх-лево, верх-право, низ-право, "
+    corners: list[LonLat] = Field(description="Углы растров rgb/debris/model_classes/quality: верх-лево, верх-право, низ-право, "
                                               "низ-лево. Растр целиком по четырём углам ложится на карту со сдвигом "
                                               "внутри до 100 м — для точной привязки `GET /api/aois/{aoi}/grid`")
     layers: SceneLayers = Field(description="Ссылки на слои снимка")

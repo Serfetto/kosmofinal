@@ -1,0 +1,252 @@
+{
+ "dataset": "MADOS v1",
+ "dataset_doi": "10.5281/zenodo.10664073",
+ "evaluation": "external frozen-model test; no training or threshold selection on MADOS",
+ "positive_class": "MADOS 1 Marine Debris",
+ "background_classes": {
+  "2": "Dense Sargassum",
+  "3": "Sparse Floating Algae",
+  "4": "Natural Organic Material",
+  "5": "Ship",
+  "6": "Oil Spill",
+  "7": "Marine Water",
+  "8": "Sediment-Laden Water",
+  "9": "Foam",
+  "10": "Turbid Water",
+  "11": "Shallow Water",
+  "12": "Waves & Wakes",
+  "13": "Oil Platform",
+  "14": "Jellyfish",
+  "15": "Sea snot"
+ },
+ "ignored": "неразмеченные пиксели MADOS (класс 0)",
+ "threshold": 0.5,
+ "split": "официальный MADOS splits/test_X.txt; разбиение по сценам",
+ "n_test_patches": 728,
+ "n_test_scenes": 42,
+ "n_labeled_pixels": 361147,
+ "n_debris_pixels": 973,
+ "methods": {
+  "xgb": {
+   "precision": 0.260551678298438,
+   "recall": 0.8057553956834532,
+   "f1": 0.39377197388247115,
+   "iou": 0.24515322076297685,
+   "tp": 784,
+   "fp": 2225,
+   "fn": 189,
+   "unlabeled_pos": 24507,
+   "object_recall": 0.9518072289156626,
+   "fp_by_class": {
+    "Dense Sargassum": {
+     "fp_px": 0,
+     "class_px": 1303,
+     "fp_rate": 0.0
+    },
+    "Sparse Floating Algae": {
+     "fp_px": 40,
+     "class_px": 1786,
+     "fp_rate": 0.022396416573348264
+    },
+    "Natural Organic Material": {
+     "fp_px": 14,
+     "class_px": 278,
+     "fp_rate": 0.050359712230215826
+    },
+    "Ship": {
+     "fp_px": 115,
+     "class_px": 3574,
+     "fp_rate": 0.032176832680470065
+    },
+    "Oil Spill": {
+     "fp_px": 750,
+     "class_px": 51528,
+     "fp_rate": 0.014555193292966931
+    },
+    "Marine Water": {
+     "fp_px": 6,
+     "class_px": 139465,
+     "fp_rate": 4.3021546624601154e-05
+    },
+    "Sediment-Laden Water": {
+     "fp_px": 23,
+     "class_px": 93254,
+     "fp_rate": 0.0002466382139103953
+    },
+    "Foam": {
+     "fp_px": 3,
+     "class_px": 387,
+     "fp_rate": 0.007751937984496124
+    },
+    "Turbid Water": {
+     "fp_px": 0,
+     "class_px": 42168,
+     "fp_rate": 0.0
+    },
+    "Shallow Water": {
+     "fp_px": 1,
+     "class_px": 12732,
+     "fp_rate": 7.854225573358467e-05
+    },
+    "Waves & Wakes": {
+     "fp_px": 82,
+     "class_px": 6401,
+     "fp_rate": 0.012810498359631307
+    },
+    "Oil Platform": {
+     "fp_px": 70,
+     "class_px": 4790,
+     "fp_rate": 0.014613778705636743
+    },
+    "Jellyfish": {
+     "fp_px": 109,
+     "class_px": 274,
+     "fp_rate": 0.3978102189781022
+    },
+    "Sea snot": {
+     "fp_px": 1012,
+     "class_px": 2234,
+     "fp_rate": 0.4529991047448523
+    }
+   },
+   "ci95": {
+    "precision": [
+     0.10166278059213463,
+     0.49640859942674154
+    ],
+    "recall": [
+     0.6768485384584455,
+     0.9397089372998483
+    ],
+    "f1": [
+     0.18172830633508252,
+     0.6113551058005289
+    ],
+    "iou": [
+     0.09994562802051643,
+     0.44025303728529536
+    ]
+   },
+   "name": "XGBoost"
+  },
+  "xgb_filters": {
+   "precision": 0.2982532751091703,
+   "recall": 0.7019527235354573,
+   "f1": 0.41863315966901626,
+   "iou": 0.26472868217054263,
+   "tp": 683,
+   "fp": 1607,
+   "fn": 290,
+   "unlabeled_pos": 13165,
+   "object_recall": 0.8554216867469879,
+   "fp_by_class": {
+    "Dense Sargassum": {
+     "fp_px": 0,
+     "class_px": 1303,
+     "fp_rate": 0.0
+    },
+    "Sparse Floating Algae": {
+     "fp_px": 34,
+     "class_px": 1786,
+     "fp_rate": 0.019036954087346025
+    },
+    "Natural Organic Material": {
+     "fp_px": 14,
+     "class_px": 278,
+     "fp_rate": 0.050359712230215826
+    },
+    "Ship": {
+     "fp_px": 86,
+     "class_px": 3574,
+     "fp_rate": 0.024062674874090653
+    },
+    "Oil Spill": {
+     "fp_px": 300,
+     "class_px": 51528,
+     "fp_rate": 0.005822077317186773
+    },
+    "Marine Water": {
+     "fp_px": 5,
+     "class_px": 139465,
+     "fp_rate": 3.58512888538343e-05
+    },
+    "Sediment-Laden Water": {
+     "fp_px": 22,
+     "class_px": 93254,
+     "fp_rate": 0.00023591481330559547
+    },
+    "Foam": {
+     "fp_px": 0,
+     "class_px": 387,
+     "fp_rate": 0.0
+    },
+    "Turbid Water": {
+     "fp_px": 0,
+     "class_px": 42168,
+     "fp_rate": 0.0
+    },
+    "Shallow Water": {
+     "fp_px": 0,
+     "class_px": 12732,
+     "fp_rate": 0.0
+    },
+    "Waves & Wakes": {
+     "fp_px": 24,
+     "class_px": 6401,
+     "fp_rate": 0.0037494141540384317
+    },
+    "Oil Platform": {
+     "fp_px": 40,
+     "class_px": 4790,
+     "fp_rate": 0.008350730688935281
+    },
+    "Jellyfish": {
+     "fp_px": 96,
+     "class_px": 274,
+     "fp_rate": 0.35036496350364965
+    },
+    "Sea snot": {
+     "fp_px": 986,
+     "class_px": 2234,
+     "fp_rate": 0.44136078782453
+    }
+   },
+   "ci95": {
+    "precision": [
+     0.11427215637423185,
+     0.6115835053599884
+    ],
+    "recall": [
+     0.6119008000537851,
+     0.8467862229578874
+    ],
+    "f1": [
+     0.19898136432418334,
+     0.657340927254777
+    ],
+    "iou": [
+     0.11048269277931543,
+     0.4895814594275163
+    ]
+   },
+   "name": "XGBoost + фильтры сервиса"
+  }
+ },
+ "meta": {
+  "created_utc": "2026-09-26T12:03:43Z",
+  "git_commit": "e15ae70+dirty",
+  "configs": {},
+  "python": "3.13.5",
+  "packages": {
+   "numpy": "2.5.3",
+   "scipy": "1.18.1",
+   "pandas": "3.0.6",
+   "scikit-learn": "1.9.1",
+   "xgboost": "3.4.1",
+   "statsmodels": "0.15.0",
+   "rasterio": "1.5.1",
+   "shapely": "2.1.2",
+   "h3": "4.5.0"
+  }
+ }
+}

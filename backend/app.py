@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from functools import lru_cache
+from threading import Lock
 
 import h3
 import numpy as np
@@ -59,8 +60,10 @@ DESCRIPTION = """
 запроса. `422` — неверный параметр; для ошибок формата в ответе ещё `errors` с разбором по полям.
 
 ### Растровые слои
-Файлы снимка отдаются статикой: `/data/{aoi}/{date}/rgb.jpg`, `debris.png`, `quality.png`. Растры лежат в сетке
-UTM, привязка — `GET /api/aois/{aoi}/grid`; `corners` в `GET /api/aois/{aoi}/scenes` — только грубая, по углам.
+Готовые файлы снимка отдаются статикой: `/data/{aoi}/{date}/rgb.jpg`, `debris.png`, `quality.png`. Цветная маска
+шести классов модели — `/api/aois/{aoi}/{date}/model-classes`; при первом запросе она строится и кешируется.
+Растры лежат в сетке UTM, привязка — `GET /api/aois/{aoi}/grid`; `corners` в `GET /api/aois/{aoi}/scenes` — только
+грубая, по углам.
 """
 
 TAGS = [
@@ -177,6 +180,8 @@ def statuses():
         "value_type": [{"id": k, "code": None, "label": v, "meaning": VALUE_TYPE_MEANING[k]}
                        for k, v in ST.VALUE_TYPE.items()],
         "quality": [{"code": c, "id": k, "label": label, "rgba": list(rgba)} for c, (k, label, rgba) in ST.QUALITY.items()],
+        "model_classes": [{"code": c, "id": k, "label": label, "rgba": list(rgba)}
+                          for c, (k, label, rgba) in ST.MODEL_CLASSES.items()],
     }
 
 
@@ -216,6 +221,7 @@ def aoi_one(aoi: AoiPath):
 
 def _layers(aoi: str, date: str) -> dict:
     return {"rgb": f"/data/{aoi}/{date}/rgb.jpg", "debris": f"/data/{aoi}/{date}/debris.png",
+            "model_classes": f"/api/aois/{aoi}/{date}/model-classes",
             "quality": f"/data/{aoi}/{date}/quality.png", "zones": f"/api/aois/{aoi}/{date}/zones",
             "points": f"/api/aois/{aoi}/{date}/points", "report": f"/api/report?aoi={aoi}&date={date}"}
 
@@ -273,13 +279,41 @@ def _raster_grid(aoi: str) -> dict:
 @app.get("/api/aois/{aoi}/grid", tags=[Tag.AOIS], summary="Привязка растров снимка", response_model=RasterGridOut,
          responses=errors(404, 422))
 def raster_grid(aoi: AoiPath):
-    """Растры `rgb.jpg`, `debris.png`, `quality.png` лежат в сетке UTM 10 м (rgb и quality — через пиксель).
+    """Растры `rgb.jpg`, `debris.png`, `model_classes.png`, `quality.png` лежат в сетке UTM 10 м
+    (`rgb` и `quality` — через пиксель).
     В меркаторе карты эта сетка не прямоугольник и не трапеция: если растянуть растр целиком по четырём
     `corners`, середина снимка уезжает до 100 м. Здесь узлы сетки через `step` пикселей: растр режется на куски,
     углы каждого куска берутся билинейно между узлами, куски ложатся на карту с точностью до пары метров.
     Сетка одна на все даты акватории."""
     _aoi_date(aoi)
     return _raster_grid(aoi)
+
+
+_class_layer_locks: dict[tuple[str, str], Lock] = {}
+
+
+@app.get("/api/aois/{aoi}/{date}/model-classes", tags=[Tag.DETECTION],
+         summary="Цветная маска шести классов модели", responses=errors(404, 422, 503))
+def model_classes_layer(aoi: AoiPath, date: DatePath):
+    """На спектрально аномальных пригодных пикселях — класс с максимальной вероятностью: мусор, органика, судно,
+    облако/тень, вода или пена/волны. Остальные пригодные пиксели детектор сразу считает водой. Это результат до
+    порога мусора и сервисных фильтров; итоговые детекции находятся в `debris.png` и `zones`.
+
+    Готовый PNG возвращается сразу. Если компактная поставка не содержит исходный `det.tif`, первый запрос повторно
+    читает опубликованную сцену Sentinel-2 из Planetary Computer, запускает замороженную модель и сохраняет PNG в
+    Docker-кеш; это может занять несколько минут. Последующие запросы используют кеш."""
+    _aoi_date(aoi, date)
+    from pipeline.class_layer import build, cache_filename
+
+    path = cached(WEB / aoi / date / cache_filename())
+    lock = _class_layer_locks.setdefault((aoi, date), Lock())
+    with lock:
+        if not path.exists():
+            try:
+                build(aoi, date, path)
+            except Exception as exc:  # noqa: BLE001 — ошибки STAC/GDAL/XGBoost превращаем в понятный ответ API
+                raise HTTPException(503, f"не удалось построить слой классов модели: {type(exc).__name__}: {exc}") from exc
+    return FileResponse(path, media_type="image/png", headers={"Cache-Control": "public, max-age=0, must-revalidate"})
 
 
 @app.get("/api/aois/{aoi}/{date}/points", tags=[Tag.DETECTION], summary="Пиксели с детекцией",

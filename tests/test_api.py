@@ -124,6 +124,7 @@ def test_service_endpoints():
     st = client.get("/api/statuses").json()
     assert {s["id"] for s in st["detection"]} == {"detected", "not_detected", "insufficient_data"}
     assert {s["id"] for s in st["concentration"]} == {"model_estimate", "research_estimate", "unavailable"}
+    assert [s["id"] for s in st["model_classes"]] == ["debris", "organic", "ship", "cloud", "water", "foam"]
 
 
 def test_aoi_and_scenes():
@@ -135,7 +136,34 @@ def test_aoi_and_scenes():
     assert len(last["corners"]) == 4
     for key in ("rgb", "debris", "quality", "zones", "points"):
         assert client.get(last["layers"][key]).status_code == 200, key
+    assert last["layers"]["model_classes"].endswith(f"/{last['date']}/model-classes")
     assert client.get("/api/aois/nope/scenes").status_code == 404
+
+
+def test_model_classes_layer_is_built_and_cached(monkeypatch, tmp_path):
+    import numpy as np
+    from PIL import Image
+
+    import backend.app
+    import pipeline.class_layer
+    from pipeline.class_layer import model_classes_png
+
+    output = tmp_path / "model_classes.png"
+    calls = []
+
+    def build(aoi, date, path):
+        calls.append((aoi, date))
+        model_classes_png(np.array([[0, 1, 2], [3, 4, 5], [255, 4, 0]], np.uint8), path)
+        return path
+
+    monkeypatch.setattr(backend.app, "cached", lambda path: output)
+    monkeypatch.setattr(pipeline.class_layer, "build", build)
+    url = f"/api/aois/{AOI}/{_date()}/model-classes"
+    first, second = client.get(url), client.get(url)
+    assert first.status_code == second.status_code == 200 and first.headers["content-type"] == "image/png"
+    assert calls == [(AOI, _date())]
+    rgba = np.asarray(Image.open(io.BytesIO(first.content)))
+    assert rgba.shape == (3, 3, 4) and rgba[0, 0, 3] > 0 and rgba[2, 0, 3] == 0
 
 
 def test_raster_grid_matches_corners():

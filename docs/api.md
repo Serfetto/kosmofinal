@@ -59,7 +59,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 | Метод | Путь | Что возвращает | Формат |
 |---|---|---|---|
 | GET | [`/api/health`](#get-apihealth) | сервис жив, версии конфигов и моделей | JSON |
-| GET | [`/api/statuses`](#get-apistatuses) | словарь статусов и кодов маски качества | JSON |
+| GET | [`/api/statuses`](#get-apistatuses) | словарь статусов, маски качества и классов модели | JSON |
 | GET | [`/api/aois`](#get-apiaois) | все акватории и их даты | JSON |
 | GET | [`/api/aois/{aoi}`](#get-apiaoisaoi) | одна акватория | JSON |
 | GET | [`/api/aois/{aoi}/scenes`](#get-apiaoisaoiscenes) | снимки: условия съёмки и ссылки на слои | JSON |
@@ -68,6 +68,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 | GET | [`/api/aois/{aoi}/grid`](#get-apiaoisaoigrid) | привязка растров снимка к карте | JSON |
 | GET | [`/api/aois/{aoi}/{date}/zones`](#get-apiaoisaoidatezones) | зоны детекции на снимке | GeoJSON |
 | GET | [`/api/aois/{aoi}/{date}/points`](#get-apiaoisaoidatepoints) | пиксели с детекцией | JSON |
+| GET | `/api/aois/{aoi}/{date}/model-classes` | цветная маска шести групп детектора до порога и фильтров; первый запрос строит и кеширует слой | PNG |
 | GET | [`/api/zones`](#get-apizones) | скопления мусора по всем акваториям и датам: где, когда, сколько | JSON |
 | GET | [`/api/profiles`](#get-apiprofiles) | профили концентрации и качество моделей | JSON |
 | GET | [`/api/aois/{aoi}/concentration`](#get-apiaoisaoiconcentration) | концентрация по гексам на все даты | JSON |
@@ -268,7 +269,7 @@ curl http://localhost:8000/api/field/S4:DOORS3:T30            # расшифро
 | `quality` | object | доли воды по кодам маски качества: `ok`, `cloud`, `shadow`, `cirrus`, `glint`, `ice`, `ship`, `static`, `nodata` |
 | `status` | object | число гексов по статусам детекции |
 | `corners` | [lon, lat][4] | углы растров: верх-лево, верх-право, низ-право, низ-лево. Растр целиком по ним ложится со сдвигом до 100 м внутри снимка — точная привязка в [`grid`](#get-apiaoisaoigrid) |
-| `layers` | object | ссылки: `rgb`, `debris`, `quality` (растры), `zones`, `points`, `report` |
+| `layers` | object | ссылки: `rgb`, `debris`, `model_classes`, `quality` (растры), `zones`, `points`, `report` |
 
 ```json
 [{
@@ -283,6 +284,7 @@ curl http://localhost:8000/api/field/S4:DOORS3:T30            # расшифро
   "corners": [[39.549952, 43.623283], [40.024488, 43.620015], [40.020048, 43.356771], [39.547569, 43.360009]],
   "layers": {
     "rgb": "/data/sochi/2025-04-18/rgb.jpg", "debris": "/data/sochi/2025-04-18/debris.png",
+    "model_classes": "/api/aois/sochi/2025-04-18/model-classes",
     "quality": "/data/sochi/2025-04-18/quality.png", "zones": "/api/aois/sochi/2025-04-18/zones",
     "points": "/api/aois/sochi/2025-04-18/points", "report": "/api/report?aoi=sochi&date=2025-04-18"
   }
@@ -1166,9 +1168,10 @@ CSV содержит только данные: он совпадает, пок�
 |---|---|
 | `/data/{aoi}/{date}/rgb.jpg` | снимок в естественных цветах, JPEG, 20 м/пиксель |
 | `/data/{aoi}/{date}/debris.png` | вероятность мусора по пикселям, прозрачный PNG |
+| `/api/aois/{aoi}/{date}/model-classes` | группы детектора до порога и фильтров: мусор, органика, судно, облако, вода или пена; первый запрос строит и кеширует PNG |
 | `/data/{aoi}/{date}/quality.png` | маска качества, прозрачный PNG; цвета — `quality` в `GET /api/statuses` |
 
-`debris.png` — сетка 10 м как есть. `rgb.jpg` и `quality.png` — каждый второй пиксель этой сетки
+`debris.png` и `model-classes` — сетка 10 м как есть. `rgb.jpg` и `quality.png` — каждый второй пиксель этой сетки
 (`[::2, ::2]`): пиксель `k` — это пиксель `2k` полной сетки, его середина — в `2k + 0,5`.
 
 Источник `image` в MapLibre натягивает картинку на четыре угла проективно, поэтому растр целиком по `corners`

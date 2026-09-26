@@ -540,6 +540,11 @@ export function WorkspaceSheet({ view, onClose, onChangeView }: WorkspaceSheetPr
             <input type="checkbox" id="l-debris" defaultChecked />
           </label>
           <label>
+            <span className="layer-icon accent-lime"><ScanSearch size={19} /></span>
+            <span><strong>Классы модели</strong><small>Мусор, органика, суда, вода, пена</small></span>
+            <input type="checkbox" id="l-model-classes" />
+          </label>
+          <label>
             <span className="layer-icon accent-sky"><ShieldCheck size={19} /></span>
             <span><strong>Маска качества</strong><small>Видимость и надёжность сцены</small></span>
             <input type="checkbox" id="l-quality" />

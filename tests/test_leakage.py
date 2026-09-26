@@ -63,3 +63,19 @@ def test_detector_threshold_fixed_before_test():
         pytest.skip("MARIDA не скачана")
     scenes = {s: {p.rsplit("_", 1)[0] for p in (sp / f"{s}_X.txt").read_text().split()} for s in ("train", "val", "test")}
     assert not scenes["train"] & scenes["test"] and not scenes["val"] & scenes["test"]
+
+
+def test_mados_is_external_frozen_test():
+    m = json.loads((DATA / "eval" / "detector_mados" / "metrics.json").read_text(encoding="utf-8"))
+    assert m["threshold"] == load_yaml("detector.yaml")["p_det"]
+    assert "no training or threshold selection on MADOS" in m["evaluation"]
+    assert m["split"].startswith("официальный MADOS")
+
+    from pipeline.config import RAW
+
+    sp = RAW / "mados" / "splits"
+    if not sp.exists():
+        pytest.skip("MADOS не скачан")
+    scenes = {s: {p.rsplit("_", 1)[0] for p in (sp / f"{s}_X.txt").read_text().split()}
+              for s in ("train", "val", "test")}
+    assert not scenes["train"] & scenes["test"] and not scenes["val"] & scenes["test"]

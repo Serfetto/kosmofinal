@@ -35,5 +35,9 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# Лениво рассчитанный поясняющий слой; имя включает SHA модели и пересоздаётся автоматически.
+data/web/*/*/model_classes_*.png
+data/web/*/*/.model_classes_*.tmp.png
+
 .DS_Store
 *.log
