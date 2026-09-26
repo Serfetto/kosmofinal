@@ -966,8 +966,9 @@ input:focus-visible {
   border-radius: 15px;
   background: rgba(255, 255, 255, .42);
 }
-.command-date > div { width: 86px; min-width: 0; flex: 0 0 86px; overflow: hidden; padding: 0 2px; text-align: center; }
-.command-date strong { display: block; overflow: hidden; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .01em; text-overflow: ellipsis; white-space: nowrap; }
+.command-date > div { flex: 0 0 auto; padding: 0 4px; text-align: center; }
+.command-date small { overflow: visible; text-overflow: clip; }
+.command-date strong { display: block; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .01em; white-space: nowrap; }
 .command-date button,
 .command-actions button,
 .map-actions button,
@@ -1525,7 +1526,7 @@ html[data-theme="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1) hue-r
   .location-control { min-width: 0; padding: 4px 6px; }
   .location-control > svg { display: none; }
   .select-shell select { font-size: 10px; }
-  .command-date > div { width: 76px; flex-basis: 76px; padding: 0; }
+  .command-date > div { padding: 0 2px; }
   .command-date button { width: 28px; flex-basis: 28px; }
   .command-date small { letter-spacing: .07em; }
   #date-label { font-size: 11px; letter-spacing: .01em; }
@@ -1558,7 +1559,6 @@ html[data-theme="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1) hue-r
   .location-control small,
   .command-date small { font-size: 6.5px; }
   .command-date { gap: 0; padding: 2px; }
-  .command-date > div { width: 72px; flex-basis: 72px; }
   .command-date button { width: 26px; flex-basis: 26px; height: 34px; }
   .command-date small { letter-spacing: .04em; }
   #date-label { font-size: 10.5px; }
