@@ -162,8 +162,23 @@ def test_model_classes_layer_is_built_and_cached(monkeypatch, tmp_path):
     first, second = client.get(url), client.get(url)
     assert first.status_code == second.status_code == 200 and first.headers["content-type"] == "image/png"
     assert calls == [(AOI, _date())]
-    rgba = np.asarray(Image.open(io.BytesIO(first.content)))
+    rgba = np.asarray(Image.open(io.BytesIO(first.content)).convert("RGBA"))
     assert rgba.shape == (3, 3, 4) and rgba[0, 0, 3] > 0 and rgba[2, 0, 3] == 0
+
+
+def test_model_classes_layer_is_shipped(monkeypatch):
+    """Слой классов лежит готовым для каждого снимка: сервис не качает сцену и не гоняет модель."""
+    import pipeline.class_layer
+    from pipeline.class_layer import WEB, cache_filename
+
+    def build(*_):
+        raise AssertionError("слой должен быть готовым")
+
+    monkeypatch.setattr(pipeline.class_layer, "build", build)
+    for day in WEB.glob("*/*/zones.geojson"):
+        assert (day.parent / cache_filename()).exists(), day.parent
+    r = client.get(f"/api/aois/{AOI}/{_date()}/model-classes")
+    assert r.status_code == 200 and r.headers["content-type"] == "image/png"
 
 
 def test_raster_grid_matches_corners():

@@ -68,7 +68,7 @@ AquaFlow по снимкам Sentinel-2 находит зоны вероятно
 | GET | [`/api/aois/{aoi}/grid`](#get-apiaoisaoigrid) | привязка растров снимка к карте | JSON |
 | GET | [`/api/aois/{aoi}/{date}/zones`](#get-apiaoisaoidatezones) | зоны детекции на снимке | GeoJSON |
 | GET | [`/api/aois/{aoi}/{date}/points`](#get-apiaoisaoidatepoints) | пиксели с детекцией | JSON |
-| GET | `/api/aois/{aoi}/{date}/model-classes` | цветная маска шести групп детектора до порога и фильтров; первый запрос строит и кеширует слой | PNG |
+| GET | `/api/aois/{aoi}/{date}/model-classes` | цветная маска шести групп детектора до порога и фильтров; готовый PNG, для другой версии модели строится при первом запросе | PNG |
 | GET | [`/api/zones`](#get-apizones) | скопления мусора по всем акваториям и датам: где, когда, сколько | JSON |
 | GET | [`/api/profiles`](#get-apiprofiles) | профили концентрации и качество моделей | JSON |
 | GET | [`/api/aois/{aoi}/concentration`](#get-apiaoisaoiconcentration) | концентрация по гексам на все даты | JSON |
@@ -1168,7 +1168,7 @@ CSV содержит только данные: он совпадает, пок�
 |---|---|
 | `/data/{aoi}/{date}/rgb.jpg` | снимок в естественных цветах, JPEG, 20 м/пиксель |
 | `/data/{aoi}/{date}/debris.png` | вероятность мусора по пикселям, прозрачный PNG |
-| `/api/aois/{aoi}/{date}/model-classes` | группы детектора до порога и фильтров: мусор, органика, судно, облако, вода или пена; первый запрос строит и кеширует PNG |
+| `/api/aois/{aoi}/{date}/model-classes` | группы детектора до порога и фильтров: мусор, органика, судно, облако, вода или пена; PNG с палитрой, готовый для всех снимков |
 | `/data/{aoi}/{date}/quality.png` | маска качества, прозрачный PNG; цвета — `quality` в `GET /api/statuses` |
 
 `debris.png` и `model-classes` — сетка 10 м как есть. `rgb.jpg` и `quality.png` — каждый второй пиксель этой сетки

@@ -35,8 +35,8 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
-# Лениво рассчитанный поясняющий слой; имя включает SHA модели и пересоздаётся автоматически.
-data/web/*/*/model_classes_*.png
+# Слой классов модели model_classes_<sha>.png лежит в репозитории готовым (python -m pipeline.class_layer):
+# без det.tif его построение — повторное скачивание сцены и прогон модели. Здесь — только недописанные файлы.
 data/web/*/*/.model_classes_*.tmp.png
 
 .DS_Store

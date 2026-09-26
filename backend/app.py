@@ -61,7 +61,8 @@ DESCRIPTION = """
 
 ### Растровые слои
 Готовые файлы снимка отдаются статикой: `/data/{aoi}/{date}/rgb.jpg`, `debris.png`, `quality.png`. Цветная маска
-шести классов модели — `/api/aois/{aoi}/{date}/model-classes`; при первом запросе она строится и кешируется.
+шести классов модели — `/api/aois/{aoi}/{date}/model-classes`: готовый PNG, а для другой версии модели строится при
+первом запросе и кешируется.
 Растры лежат в сетке UTM, привязка — `GET /api/aois/{aoi}/grid`; `corners` в `GET /api/aois/{aoi}/scenes` — только
 грубая, по углам.
 """
@@ -299,20 +300,21 @@ def model_classes_layer(aoi: AoiPath, date: DatePath):
     облако/тень, вода или пена/волны. Остальные пригодные пиксели детектор сразу считает водой. Это результат до
     порога мусора и сервисных фильтров; итоговые детекции находятся в `debris.png` и `zones`.
 
-    Готовый PNG возвращается сразу. Если компактная поставка не содержит исходный `det.tif`, первый запрос повторно
-    читает опубликованную сцену Sentinel-2 из Planetary Computer, запускает замороженную модель и сохраняет PNG в
-    Docker-кеш; это может занять несколько минут. Последующие запросы используют кеш."""
+    Для всех опубликованных снимков PNG лежит готовым (`python -m pipeline.class_layer`) и возвращается сразу. Имя
+    файла содержит SHA модели: после замены `xgb.joblib` слой строится заново. Если исходного `det.tif` нет
+    (компактная поставка, Docker), первый запрос повторно читает сцену Sentinel-2 из Planetary Computer и прогоняет
+    замороженную модель — десятки секунд на дату; PNG сохраняется в кеш."""
     _aoi_date(aoi, date)
     from pipeline.class_layer import build, cache_filename
 
     path = cached(WEB / aoi / date / cache_filename())
-    lock = _class_layer_locks.setdefault((aoi, date), Lock())
-    with lock:
-        if not path.exists():
-            try:
-                build(aoi, date, path)
-            except Exception as exc:  # noqa: BLE001 — ошибки STAC/GDAL/XGBoost превращаем в понятный ответ API
-                raise HTTPException(503, f"не удалось построить слой классов модели: {type(exc).__name__}: {exc}") from exc
+    if not path.exists():
+        with _class_layer_locks.setdefault((aoi, date), Lock()):
+            if not path.exists():
+                try:
+                    build(aoi, date, path)
+                except Exception as exc:  # noqa: BLE001 — ошибки STAC/GDAL/XGBoost превращаем в понятный ответ API
+                    raise HTTPException(503, f"не удалось построить слой классов модели: {type(exc).__name__}: {exc}") from exc
     return FileResponse(path, media_type="image/png", headers={"Cache-Control": "public, max-age=0, must-revalidate"})
 
 

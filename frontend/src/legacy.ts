@@ -406,15 +406,20 @@ async function showScene(urls) {
 async function showModelClasses(url, notify = false) {
   const seq = ++modelClassesSeq;
   vis(rasterIds('model-classes'), false);
-  if (notify) toast('Готовим слой классов модели… Первый расчёт может занять несколько минут.', 0);
+  // Готовый слой приходит за доли секунды; о расчёте говорим, только если сервер строит слой заново
+  let slow = false;
+  const timer = notify && setTimeout(() => {
+    slow = true;
+    toast('Готовим слой классов модели… Расчёт на сервере может занять до минуты.', 0);
+  }, 800);
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.src = url;
-  await img.decode();
+  try { await img.decode(); } finally { clearTimeout(timer); }
   if (seq !== modelClassesSeq || !$('#l-model-classes')?.checked) return;
   sliceRaster('model-classes', img, S.grid);
   vis(rasterIds('model-classes'), true);
-  if (notify) toast('Слой классов модели готов');
+  if (slow) toast('Слой классов модели готов');
 }
 
 function placeMarkers() {
