@@ -2922,7 +2922,7 @@ html[data-theme="light"] #tip {
 
 /* Течения и ветер: канвас со штрихами поверх карты и строки легенды */
 .flow-canvas { position: absolute; top: 0; left: 0; pointer-events: none; transition: opacity 200ms ease; }
-.flow-canvas.is-dim { opacity: .45; }
+.flow-canvas.is-dim { opacity: .72; }
 .flow-legend { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--theme-border); font-size: 12px; line-height: 1.4; }
 .flow-legend .leg-row { margin: 6px 0; }
 .flow-legend[hidden] { display: none; }
